@@ -1,0 +1,41 @@
+@import "dimensions.scss";
+
+.form {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  padding: $gutter-size;
+  box-shadow: 1px 1px 5px 1px rgba(196, 191, 191, 0.75);
+  @media (max-width: 500px) {
+    width: 100%;
+  }
+  max-width: 100%;
+  &.tiny {
+    width: 15em;
+  }
+  &.standalone {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  > button {
+    margin-top: $gutter-size;
+    .MuiCircularProgress-root {
+      margin-left: $gutter-size;
+      width: 20px !important;
+      height: 20px !important;
+      position: absolute;
+      right: 15px;
+    }
+    .MuiCircularProgress-colorPrimary {
+      color: white;
+    }
+  }
+  > .MuiFormControl-root:not(:last-child) {
+    margin-bottom: $gutter-size;
+  }
+  &.small {
+    width: 50px;
+  }
+}

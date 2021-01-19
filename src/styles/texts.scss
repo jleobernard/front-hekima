@@ -1,0 +1,42 @@
+@import "colors.scss";
+@import "fonts.scss";
+@import "dimensions";
+
+@mixin unimportant {
+  color: gray;
+  font-size: 0.8em;
+}
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+.centered {
+  text-align: center;
+}
+@mixin text-link {
+
+}
+
+.MuiCard-root a {
+  text-decoration: none;
+  color: inherit;
+  &:visited {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+.website-title-big {
+  text-align: center;
+  font-family: "title-font";
+  font-size: 60px;
+  color: $my-primary-color;
+  @media (max-width: 500px) {
+    margin: $gutter-size 0;
+  }
+}
+
+.website-title-header {
+  font-family: "title-font" !important;
+  font-size: 40px !important;
+}

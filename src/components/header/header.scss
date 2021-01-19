@@ -1,0 +1,52 @@
+@import "../../styles/dimensions";
+@import "../../styles/colors";
+
+$bg-color : lighten($my-primary-color, 0.75);
+
+.toolbar {
+  display: flex;
+  .title {
+    flex-grow: 1;
+  }
+}
+.header-search {
+  position: relative;
+  border-radius: 5px;
+  background-color: $bg-color;
+  &:hover {
+    //backgroundColor: fade(theme.palette.common.white; 0.25);
+  }
+  margin-left: 0;
+  width: auto;
+  height: 2em;
+  display: flex;
+  /*[theme.breakpoints.up(sm)]: {
+    marginLeft: theme.spacing(1);
+    width: auto;
+  };*/
+
+  .search-icon {
+    padding: $mini-gutter-size;
+    height: 100%;
+    position: absolute;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .input-root {
+    color: inherit;
+    margin-left: 30px;
+  }
+  .input-input {
+    padding: $mini-gutter-size;
+    // vertical padding + font size from searchIcon
+    padding-left: $mini-gutter-size;
+    transition: width 200ms ease-out;
+    width: 5em;
+    &:focus {
+      width: 10em;
+    }
+  }
+}
+;

@@ -1,0 +1,36 @@
+@import "dimensions.scss";
+html {
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+.app {
+  padding: 64px $gutter-size $gutter-size;
+  height: 100vh;
+  .with-menu {
+    padding-top: 2 * $gutter-size;
+  }
+}
+
+.wrapper {
+  height: 100%;
+}
+.hidden {
+  display: none;
+}
+.with-margin-right {
+  margin-right: $gutter-size;
+}
+.with-margin-top {
+  margin-top: $gutter-size;
+}
+
+.no-padding {
+  padding: 0 !important;
+  &.MuiButtonBase-root{
+    padding: 0;
+  }
+}

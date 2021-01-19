@@ -1,0 +1,12 @@
+@import "../../styles/layout";
+@import "../../styles/buttons";
+.note-card, .notes-list .MuiListItem-root > li {
+  width: 100%;
+}
+.note-text {
+  white-space: pre-wrap;
+}
+
+.note-image {
+  width: 100%;
+}
