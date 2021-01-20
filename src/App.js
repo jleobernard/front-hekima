@@ -1,5 +1,5 @@
 import React from 'react';
-import {Route, BrowserRouter as Router, Switch} from "react-router-dom";
+import {Route, BrowserRouter as Router, Switch, Redirect} from "react-router-dom";
 import Notes from './pages/notes/notes';
 import './App.css';
 
@@ -11,6 +11,9 @@ function App() {
           <Switch>
             <Route path="/notes">
               <Notes />
+            </Route>
+            <Route exact path="/">
+              <Redirect to="/notes" />
             </Route>
           </Switch>
         </div>

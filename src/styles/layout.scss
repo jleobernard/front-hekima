@@ -34,3 +34,14 @@ html {
     padding: 0;
   }
 }
+
+
+.list-horizontal-display{
+
+  display: flex;
+  flex-drection: row;
+  padding: 0;
+  .MuiListItem-root {
+    width: unset;
+  }
+}

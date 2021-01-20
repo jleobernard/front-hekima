@@ -1,3 +1,5 @@
+@import "dimensions.scss";
+
 .MuiButton-root.button-action {
   background-color: #006064;
   color: white;
@@ -9,4 +11,11 @@
 
 .button-link a {
   text-decoration: none;
+}
+
+
+.fab {
+  position: fixed !important;
+  bottom: $gutter-size;
+  right: $gutter-size;
 }
