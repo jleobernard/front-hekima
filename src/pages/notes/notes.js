@@ -16,15 +16,18 @@ import {Link} from "react-router-dom";
 import Chip from "@material-ui/core/Chip";
 import Fab from "@material-ui/core/Fab";
 import AddIcon from '@material-ui/icons/Add';
-
+import NoteCreation from '../../components/note-creation/note-creation';
 
 class Notes extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      notes: []
+      notes: [],
+      creating: false
     };
+    this.startCreation = this.startCreation.bind(this);
+    this.onDone = this.onDone.bind(this);
   }
 
   componentDidMount() {
@@ -36,20 +39,23 @@ class Notes extends React.Component {
       this.setState({loading: false});
     })
   }
+  startCreation() {
+    this.setState({creating: true});
+  }
 
   getListItem(note) {
     return <li>
       <Card className={"note-card"}>
         {note.hasFile ? <img className="note-image" src={"/api/hekimas/" + note.uri + "/file"} alt={note.valeur}/> : <></>}
         <CardContent>
-          <Typography variant="body" component="p" className={"note-text"} gutterBottom={true}>
+          <Typography component="p" className={"note-text"} gutterBottom={true}>
             {note.valeur}
           </Typography>
           <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
             in {note.source.titre} de {note.source.auteur}
           </Typography>
           <List className="list-horizontal-display">
-            {note.tags.map(t => <ListItem>
+            {note.tags.map(t => <ListItem key={t.uri}>
                 <Chip
                 label={t.valeur}
               />
@@ -64,14 +70,22 @@ class Notes extends React.Component {
     </li>
   }
 
+  onDone(note) {
+    if(note) {
+      // Refresh
+    }
+    this.setState({creating: false});
+  }
+
   render() {
     const notes = this.state.notes;
     return (
-      <div class="app">
+      <div className="app">
         <Header title="Notes" goBack={false} withSearch={true}/>
-        <List className="notes-list">{notes.map(elt => <ListItem>{this.getListItem(elt)}</ListItem>)}</List>
+        <List className="notes-list">{notes.map(elt => <ListItem key={elt.uri}>{this.getListItem(elt)}</ListItem>)}</List>
+        <NoteCreation creating={this.state.creating} onDone={this.onDone}/>
         <Toaster error={this.state.error}/>
-        <Fab color="primary" aria-label="add" className="fab">
+        <Fab color="primary" aria-label="add" className="fab" onClick={() => this.startCreation()}>
           <AddIcon />
         </Fab>
       </div>
