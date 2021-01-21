@@ -1,6 +1,6 @@
 import React from 'react';
 import {withRouter} from "react-router-dom";
-import {get, patch, post} from "../../utils/http";
+import {get, httpDelete} from "../../utils/http";
 import "./notes.scss";
 import "../../styles/layout.scss";
 import Header from "../../components/header/Header";
@@ -17,6 +17,12 @@ import Chip from "@material-ui/core/Chip";
 import Fab from "@material-ui/core/Fab";
 import AddIcon from '@material-ui/icons/Add';
 import NoteCreation from '../../components/note-creation/note-creation';
+import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
+import DialogContent from "@material-ui/core/DialogContent/DialogContent";
+import DialogActions from "@material-ui/core/DialogActions/DialogActions";
+import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
+import Dialog from "@material-ui/core/Dialog/Dialog";
+import DialogContentText from "@material-ui/core/DialogContentText";
 
 class Notes extends React.Component {
 
@@ -24,23 +30,69 @@ class Notes extends React.Component {
     super(props);
     this.state = {
       notes: [],
-      creating: false
+      filter: {count: 20, offset: 0},
+      creating: false,
+      notification: null,
+      deletingNote: null,
+      deleting: false,
+      loading: false,
+      hasMoreNotes: true
     };
     this.startCreation = this.startCreation.bind(this);
     this.onDone = this.onDone.bind(this);
+    this.askDeleteNote = this.askDeleteNote.bind(this);
+    this.loadMore = this.loadMore.bind(this);
   }
 
   componentDidMount() {
     this.setState({loading: true});
-    get('/api/hekimas', {})
+    this.refreshNotes(true);
+  }
+
+  refreshNotes(override = false) {
+    this.setState({loading: true});
+    get('/api/hekimas', this.state.filter)
     .then(notes => {
-      this.setState({notes})
-    }).finally(() => {
+      let newNotes;
+      if(override) {
+        newNotes = notes;
+      } else {
+        newNotes = this.state.notes.concat(notes);
+      }
+      this.setState({notes: newNotes, hasMoreNotes: notes && notes.length > 0})
+    })
+    .catch(err => this.setState({error : "Erreur à la récupération des notes : " + err}))
+    .finally(() => {
       this.setState({loading: false});
     })
   }
+
   startCreation() {
     this.setState({creating: true});
+  }
+  askDeleteNote(note) {
+    this.setState({deletingNote: note});
+  }
+  closeDeleteNote(doDelete) {
+    if(doDelete) {
+      if(!this.state.deleting) {
+        this.setState({deleting: true, error: null});
+        httpDelete('/api/hekimas/' + this.state.deletingNote.uri)
+        .then(() => {
+          this.showNotification("La note " + this.state.deletingNote.valeur + " a bien été supprimée");
+          const notes = this.state.notes.filter(n => n.uri !== this.state.deletingNote.uri);
+          this.setState({deletingNote: null, notes});
+        }).catch(err => this.setState({error: 'Erreur lors de la suppression de la note : ' + err}))
+        .finally(() => this.setState({deleting: false}));
+      }
+    } else {
+      this.setState({deletingNote: null});
+    }
+  }
+
+  showNotification(notification) {
+    this.setState({notification});
+    setTimeout(() => this.setState({notification: null}), 3000);
   }
 
   getListItem(note) {
@@ -51,9 +103,9 @@ class Notes extends React.Component {
           <Typography component="p" className={"note-text"} gutterBottom={true}>
             {note.valeur}
           </Typography>
-          <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
+          {note.source ? <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
             in {note.source.titre} de {note.source.auteur}
-          </Typography>
+          </Typography> : <></>}
           <List className="list-horizontal-display">
             {note.tags.map(t => <ListItem key={t.uri}>
                 <Chip
@@ -63,18 +115,42 @@ class Notes extends React.Component {
           </List>
         </CardContent>
         <CardActions>
-          <Button size="small" color="primary">Supprimer</Button>
+          <Button size="small" color="primary" onClick={() => this.askDeleteNote(note)}>Supprimer</Button>
           <Button size="small" color="primary" className="button-link"><Link to={'/notes/' + note.uri}>Ouvrir</Link></Button>
         </CardActions>
       </Card>
     </li>
   }
 
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    const prevFilter = prevState.filter;
+    const filter = this.state.filter;
+    if(prevFilter && filter) {
+      if(filter.offset > prevFilter.offset) {
+        this.refreshNotes(false);
+      } else if(filter.offset < prevFilter.offset) {
+        this.refreshNotes(true);
+      }
+    }
+  }
+
   onDone(note) {
     if(note) {
-      // Refresh
+      const newNotes = [...this.state.notes];
+      newNotes.unshift(note);
+      this.setState({
+        notification: 'Note sauvegardée',
+        notes: newNotes
+      });
     }
     this.setState({creating: false});
+  }
+
+  loadMore() {
+    this.setState({filter: {
+        ...this.state.filter,
+        offset: this.state.filter.offset+20
+      }})
   }
 
   render() {
@@ -82,9 +158,36 @@ class Notes extends React.Component {
     return (
       <div className="app">
         <Header title="Notes" goBack={false} withSearch={true}/>
-        <List className="notes-list">{notes.map(elt => <ListItem key={elt.uri}>{this.getListItem(elt)}</ListItem>)}</List>
+        <List className="notes-list">
+          {notes.map(elt => <ListItem key={elt.uri}>{this.getListItem(elt)}</ListItem>)}
+          {this.state.hasMoreNotes && !this.state.loading ? <ListItem className="centered-item" key="load-more">
+            <Button size="small" color="primary" onClick={() => this.loadMore()}>Voir plus</Button>
+          </ListItem> : <></>}
+          <ListItem key="spinner-loading" className="centered-item">
+            {this.state.loading? <CircularProgress /> : ''}
+          </ListItem>
+        </List>
         <NoteCreation creating={this.state.creating} onDone={this.onDone}/>
+        <Dialog open={!!this.state.deletingNote}
+                onClose={this.closeDeleteNote}
+                fullScreen={true}
+                aria-labelledby="creation-dialog-title">
+          <DialogTitle id="creation-dialog-title">Suppression de la note</DialogTitle>
+          <DialogContent>
+            <DialogContentText>Vous-vous vraiment supprimer la note {(this.state.deletingNote || {}).valeur} ?</DialogContentText>
+            <Toaster error={this.state.error}/>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.closeDeleteNote} color="primary">
+              Annuler
+            </Button>
+            <Button onClick={() => this.closeDeleteNote(true)} color="primary">
+              Supprimer {this.state.deleting ? <CircularProgress /> : ''}
+            </Button>
+          </DialogActions>
+        </Dialog>
         <Toaster error={this.state.error}/>
+        <Toaster error={this.state.notification} severity="info"/>
         <Fab color="primary" aria-label="add" className="fab" onClick={() => this.startCreation()}>
           <AddIcon />
         </Fab>

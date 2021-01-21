@@ -1,5 +1,5 @@
 import * as React from "react";
-import {get, patch, post} from "../../utils/http";
+import {get, patch, post, upload} from "../../utils/http";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
 import Button from "@material-ui/core/Button";
@@ -12,36 +12,65 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import Chip from "@material-ui/core/Chip";
 import FormHelperText from "@material-ui/core/FormHelperText";
 import "../../styles/forms.scss";
+import * as lodash from 'lodash';
 import debounce from 'lodash/debounce';
 import IconButton from "@material-ui/core/IconButton";
 import CloseIcon from "@material-ui/core/SvgIcon/SvgIcon";
 import "./note-creation.scss"
+import CircularProgress from "@material-ui/core/CircularProgress";
+import Toaster from "../Toaster";
 
 
 class NoteCreation extends React.Component {
 
+  defaultState =  {
+    valeur: "",
+    sources: [],
+    tags: [],
+    tagsSuggestions: [],
+    loadingSources: false,
+    loadingTags: false,
+    debouncedSource: null,
+    debouncedTags: null,
+    preview: null,
+    imageFile: null,
+    saving: false,
+    error: null
+  };
+
   constructor(props) {
     super(props);
-    this.state = {
-      valeur: "",
-      sources: [],
-      tags: [],
-      tagsSuggestions: [],
-      loadingSources: false,
-      loadingTags: false,
-      debouncedSource: null,
-      debouncedTags: null,
-      preview: null
-    };
+    this.state = lodash.cloneDeep(this.defaultState);
     this.handleClose = this.handleClose.bind(this);
-    this.handleChange = this.handleChange.bind(this);
+    this.valueChanged = this.valueChanged.bind(this);
     this.refreshSources = this.refreshSources.bind(this);
     this.selectSource = this.selectSource.bind(this);
     this.selectTags = this.selectTags.bind(this);
     this.refreshTags = this.refreshTags.bind(this);
     this.fileChanged = this.fileChanged.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
-  componentDidMount() {
+  handleSubmit() {
+    if(!this.state.saving) {
+      this.setState({saving: true, error: null});
+      const request = {
+        valeur: this.state.valeur,
+        tags: lodash.map(this.state.tags, t => t.uri),
+        source: this.state.source ? this.state.source.uri : null
+      };
+      post('/api/hekimas', request).then(saved => {
+        if(this.state.imageFile) {
+          upload('/api/hekimas/'+saved.uri+'/file', this.state.imageFile, false)
+          .then(response => {
+            this.handleClose(response);
+          })
+          .catch(err => this.setState({error: "Impossible d'enregistrer le fichier : " + err}))
+          .finally(() => this.setState({saving: false}))
+        } else {
+          this.handleClose(saved);
+        }
+      }).catch(err => this.setState({error: "Impossible de sauvegarder : " + err}))
+    }
   }
 
   refreshSources(q) {
@@ -72,27 +101,13 @@ class NoteCreation extends React.Component {
     this.setState({debouncedTags: debounced});
 
   }
-  handleChange(fieldName, newValue) {
-    const changes = {};
-    changes[fieldName] = newValue;
-    this.setState(changes);
-    if(fieldName === "source") {
-
-    }
-  }
-  handleKeyDown(event ) {
-    if(event.key === 'Enter') {
-      if(!(event.shiftKey || event.altKey)) {
-        if(this.props.onSearch) {
-          this.props.onSearch(this.state.searchInput);
-        }
-      }
-    }
+  valueChanged(event) {
+    this.setState({valeur: event.target.value});
   }
 
-  handleClose(save) {
-    this.setState({creating: false});
-    this.props.onDone('ma super note');
+  handleClose(response) {
+    this.setState(lodash.cloneDeep(this.defaultState));
+    this.props.onDone(response);
   }
 
   selectSource(event, source) {
@@ -116,7 +131,6 @@ class NoteCreation extends React.Component {
     }
   }
   fileChanged(event) {
-    console.log("File changed " + event);
     const file = document.getElementById('hekima-picture');
     if (!file) {
       console.error("Sélectionnez un fichier");
@@ -127,7 +141,9 @@ class NoteCreation extends React.Component {
     };
     reader.onerror = (err) => console.error(err);
     reader.onabort = (err) => console.error(err);
-    reader.readAsDataURL(file.files[0]);
+    const imageFile = file.files[0];
+    reader.readAsDataURL(imageFile);
+    this.setState({imageFile});
   }
 
 
@@ -136,7 +152,7 @@ class NoteCreation extends React.Component {
     const tags = this.state.tagsSuggestions || [];
     return (
       <Dialog open={this.props.creating}
-              onClose={this.handleClose.bind(this, false)}
+              onClose={this.handleClose}
               fullScreen={true}
               aria-labelledby="creation-dialog-title">
         <DialogTitle id="creation-dialog-title">Nouvelle note</DialogTitle>
@@ -158,7 +174,7 @@ class NoteCreation extends React.Component {
             <FormControl>
               <TextField id='valeur' label="Note" required
                          multiline rows={3} rowsMax={10} variant="outlined"
-                         onChange={(event, newValue) => this.handleChange( 'valeur', newValue)} />
+                         onChange={this.valueChanged} />
             </FormControl>
             <FormControl>
               <Autocomplete
@@ -186,14 +202,14 @@ class NoteCreation extends React.Component {
             <FormControl>
               <Autocomplete
                 id="tags"
+                multiple
                 loading={this.state.loadingTags}
                 value={this.state.tags}
                 onChange={this.selectTags}
                 onInputChange={(event) => this.refreshTags(event.target.value)}
                 options={tags}
                 getOptionLabel={tag => {
-                  console.log(tag);
-                  return tag.valeur
+                  return tag.valeur || "";
                 }}
                 renderTags={(tagValue, getTagProps) =>
                   tagValue.map((option, index) => (
@@ -210,13 +226,14 @@ class NoteCreation extends React.Component {
               {this.state.tags && this.state.tags.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez un ou plusieurs tags</FormHelperText>}
             </FormControl>
           </form>
+          <Toaster error={this.state.error}/>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => this.handleClose(false)} color="primary">
+          <Button onClick={this.handleClose} color="primary">
             Annuler
           </Button>
-          <Button onClick={() => this.handleClose(true)} color="primary">
-            Sauvegarder
+          <Button onClick={this.handleSubmit} color="primary">
+            Sauvegarder {this.state.saving ? <CircularProgress /> : ''}
           </Button>
         </DialogActions>
       </Dialog>

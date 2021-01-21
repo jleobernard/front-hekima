@@ -30,6 +30,13 @@ export const refreshToken = (force = false) => {
     }
   });
 };
+export const httpDelete = (url, body, protectedCall = false) => {
+  if(protectedCall) {
+    return refreshToken().then(session => exchange(url, body, session.access, 'DELETE'))
+  } else {
+    return exchange(url, body, null, 'DELETE');
+  }
+};
 export const post = (url, body, protectedCall = false) => {
   if(protectedCall) {
     return refreshToken().then(session => exchange(url, body, session.access))
@@ -48,6 +55,15 @@ export const get = (url, params, protectedCall = false) => {
 export const patch = (url, body) => {
   return refreshToken().then(session => exchange(url, body, session.access, 'PATCH'))
 };
+
+export const upload = (url, file, protectedCall = false) => {
+  if(protectedCall) {
+    return refreshToken().then(session => doUpload(url, file, session.access))
+  } else {
+    return doUpload(url, file);
+  }
+}
+const methodWithBodies = ['POST', 'GET', 'PATCH'];
 const exchange = (url, body, accessToken, method = 'POST') => {
   const headers = {
     'Content-Type': 'application/json'
@@ -59,16 +75,44 @@ const exchange = (url, body, accessToken, method = 'POST') => {
     fetch(rootUrl + url,{
       method: method,
       headers,
-      body: JSON.stringify(body)
+      body: body ? JSON.stringify(body) : null
     }).then(response => {
       if(response.ok) {
-        return response.json().then(resolve).catch(reject);
+        if(methodWithBodies.indexOf(method) >= 0) {
+          return response.json().then(resolve).catch(reject);
+        } else {
+          resolve();
+        }
       } else {
         response.json().then(json => reject(json)).catch(() => reject(response));
       }
     });
   });
 };
+const doUpload = (url, file, accessToken) => {
+  const headers = {
+  };
+  if(accessToken) {
+    headers['Authorization'] =  'Bearer ' + accessToken;
+  }
+  const formData = new FormData()
+  formData.append('file', file)
+  return new Promise((resolve, reject) => {
+    fetch(url, {
+      headers,
+      method: 'POST',
+      body: formData
+    }).then(response => {
+      if(response.ok) {
+        return response.json().then(resolve).catch(reject);
+      } else {
+        response.json().then(json => reject(json)).catch(() => reject(response));
+      }
+    })
+    .catch(reject);
+  })
+}
+
 const doGet = (url, params, accessToken) => {
   const headers = {
     'Content-Type': 'application/json'
