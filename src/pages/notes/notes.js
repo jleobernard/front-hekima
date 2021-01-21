@@ -12,7 +12,6 @@ import CardContent from "@material-ui/core/CardContent";
 import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
-import {Link} from "react-router-dom";
 import Chip from "@material-ui/core/Chip";
 import Fab from "@material-ui/core/Fab";
 import AddIcon from '@material-ui/icons/Add';
@@ -23,6 +22,7 @@ import DialogActions from "@material-ui/core/DialogActions/DialogActions";
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
 import Dialog from "@material-ui/core/Dialog/Dialog";
 import DialogContentText from "@material-ui/core/DialogContentText";
+import * as lodash from 'lodash';
 
 class Notes extends React.Component {
 
@@ -36,17 +36,29 @@ class Notes extends React.Component {
       deletingNote: null,
       deleting: false,
       loading: false,
-      hasMoreNotes: true
+      hasMoreNotes: true,
+      noteDetail: null
     };
     this.startCreation = this.startCreation.bind(this);
     this.onDone = this.onDone.bind(this);
     this.askDeleteNote = this.askDeleteNote.bind(this);
     this.loadMore = this.loadMore.bind(this);
+    this.openNote = this.openNote.bind(this);
+    this.closeNote = this.closeNote.bind(this);
+    this.closeDeleteNote = this.closeDeleteNote.bind(this);
   }
 
   componentDidMount() {
     this.setState({loading: true});
     this.refreshNotes(true);
+  }
+
+  openNote(note) {
+    this.setState({noteDetail: note});
+  }
+
+  closeNote(note) {
+    this.setState({noteDetail: null});
   }
 
   refreshNotes(override = false) {
@@ -107,7 +119,7 @@ class Notes extends React.Component {
             in {note.source.titre} de {note.source.auteur}
           </Typography> : <></>}
           <List className="list-horizontal-display">
-            {note.tags.map(t => <ListItem key={t.uri}>
+            {(note.tags || []).map(t => <ListItem key={t.uri}>
                 <Chip
                 label={t.valeur}
               />
@@ -116,7 +128,7 @@ class Notes extends React.Component {
         </CardContent>
         <CardActions>
           <Button size="small" color="primary" onClick={() => this.askDeleteNote(note)}>Supprimer</Button>
-          <Button size="small" color="primary" className="button-link"><Link to={'/notes/' + note.uri}>Ouvrir</Link></Button>
+          <Button size="small" color="primary" onClick={() => this.openNote(note)}>Ouvrir</Button>
         </CardActions>
       </Card>
     </li>
@@ -137,13 +149,18 @@ class Notes extends React.Component {
   onDone(note) {
     if(note) {
       const newNotes = [...this.state.notes];
-      newNotes.unshift(note);
+      const index = lodash.findIndex(newNotes, n => n.uri === note.uri);
+      if(index >=0) {
+        newNotes[index] = note;
+      } else {
+        newNotes.unshift(note);
+      }
       this.setState({
         notification: 'Note sauvegardée',
         notes: newNotes
       });
     }
-    this.setState({creating: false});
+    this.setState({creating: false, noteDetail: null});
   }
 
   loadMore() {
@@ -167,7 +184,7 @@ class Notes extends React.Component {
             {this.state.loading? <CircularProgress /> : ''}
           </ListItem>
         </List>
-        <NoteCreation creating={this.state.creating} onDone={this.onDone}/>
+        <NoteCreation creating={this.state.creating} note={this.state.noteDetail} onDone={this.onDone}/>
         <Dialog open={!!this.state.deletingNote}
                 onClose={this.closeDeleteNote}
                 fullScreen={true}
@@ -178,7 +195,7 @@ class Notes extends React.Component {
             <Toaster error={this.state.error}/>
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.closeDeleteNote} color="primary">
+            <Button onClick={() => this.closeDeleteNote(false)} color="primary">
               Annuler
             </Button>
             <Button onClick={() => this.closeDeleteNote(true)} color="primary">

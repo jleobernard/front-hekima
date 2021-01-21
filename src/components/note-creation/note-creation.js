@@ -24,6 +24,7 @@ import Toaster from "../Toaster";
 class NoteCreation extends React.Component {
 
   defaultState =  {
+    noteUri: null,
     valeur: "",
     sources: [],
     tags: [],
@@ -50,10 +51,26 @@ class NoteCreation extends React.Component {
     this.fileChanged = this.fileChanged.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    const prevNoteUri = (prevProps.note || {}).uri;
+    const currentNoteUri = (this.props.note || {}).uri;
+    if(currentNoteUri !== prevNoteUri) {
+      const note = (this.props.note || {tags: [], source: {}})
+      this.setState({
+        noteUri: currentNoteUri,
+        valeur: note.valeur,
+        source: note.source,
+        tags: note.tags,
+        hasFile: note.hasFile
+      })
+    }
+  }
+
   handleSubmit() {
     if(!this.state.saving) {
       this.setState({saving: true, error: null});
       const request = {
+        uri: (this.props.note || {}).uri,
         valeur: this.state.valeur,
         tags: lodash.map(this.state.tags, t => t.uri),
         source: this.state.source ? this.state.source.uri : null
@@ -130,7 +147,7 @@ class NoteCreation extends React.Component {
       this.refreshTags("");
     }
   }
-  fileChanged(event) {
+  fileChanged() {
     const file = document.getElementById('hekima-picture');
     if (!file) {
       console.error("Sélectionnez un fichier");
@@ -151,11 +168,11 @@ class NoteCreation extends React.Component {
     const sources = this.state.sources || [];
     const tags = this.state.tagsSuggestions || [];
     return (
-      <Dialog open={this.props.creating}
+      <Dialog open={this.props.creating || !!this.props.note}
               onClose={this.handleClose}
               fullScreen={true}
               aria-labelledby="creation-dialog-title">
-        <DialogTitle id="creation-dialog-title">Nouvelle note</DialogTitle>
+        <DialogTitle id="creation-dialog-title">{this.state.noteUri ? 'Nouvelle note' : 'Modification'}</DialogTitle>
         <DialogContent>
           <form onSubmit={this.handleSubmit} className="form">
             <FormControl>
@@ -170,9 +187,19 @@ class NoteCreation extends React.Component {
                   </div>
                 </div>
                 : <></>}
+              {this.state.hasFile ?
+                <div className="hekima-picture">
+                  <img src={'/api/hekimas/' + this.state.noteUri + '/file'} />
+                  <div className="close-icon">
+                    <IconButton size="small" aria-label="close" color="inherit">
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </div>
+                </div>
+                : <></>}
             </FormControl>
             <FormControl>
-              <TextField id='valeur' label="Note" required
+              <TextField id='valeur' label="Note" required value={this.state.valeur}
                          multiline rows={3} rowsMax={10} variant="outlined"
                          onChange={this.valueChanged} />
             </FormControl>
@@ -182,7 +209,7 @@ class NoteCreation extends React.Component {
                 loading={this.state.loadingSources}
                 value={this.state.source}
                 onChange={this.selectSource}
-                onInputChange={(event) => this.refreshSources(event.target.value)}
+                onInputChange={(event) => event ? this.refreshSources(event.target.value) : null}
                 options={sources}
                 getOptionLabel={source => source.titre}
                 renderTags={(tagValue, getTagProps) =>
@@ -206,7 +233,7 @@ class NoteCreation extends React.Component {
                 loading={this.state.loadingTags}
                 value={this.state.tags}
                 onChange={this.selectTags}
-                onInputChange={(event) => this.refreshTags(event.target.value)}
+                onInputChange={(event) => event ? this.refreshTags(event.target.value) : null}
                 options={tags}
                 getOptionLabel={tag => {
                   return tag.valeur || "";
@@ -229,7 +256,7 @@ class NoteCreation extends React.Component {
           <Toaster error={this.state.error}/>
         </DialogContent>
         <DialogActions>
-          <Button onClick={this.handleClose} color="primary">
+          <Button onClick={() => this.handleClose()} color="primary">
             Annuler
           </Button>
           <Button onClick={this.handleSubmit} color="primary">
