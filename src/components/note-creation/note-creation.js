@@ -221,7 +221,7 @@ class NoteCreation extends React.Component {
                   ))
                 }
                 renderInput={(params) => (
-                  <TextField {...params} label="Source" variant="outlined" placeholder="Langues maternelles" />
+                  <TextField {...params} label="Source" variant="outlined" placeholder="Source" />
                 )}
               />
               {this.state.source ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez la source</FormHelperText>}

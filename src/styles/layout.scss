@@ -41,6 +41,7 @@ html {
   display: flex;
   flex-drection: row;
   padding: 0;
+  overflow-x: auto;
   .MuiListItem-root {
     width: unset;
   }
@@ -48,4 +49,9 @@ html {
 
 .centered-item {
   justify-content: center !important;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
 }

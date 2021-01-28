@@ -46,11 +46,21 @@ class Notes extends React.Component {
     this.openNote = this.openNote.bind(this);
     this.closeNote = this.closeNote.bind(this);
     this.closeDeleteNote = this.closeDeleteNote.bind(this);
+    this.filterChanged = this.filterChanged.bind(this);
   }
 
   componentDidMount() {
     this.setState({loading: true});
     this.refreshNotes(true);
+  }
+  filterChanged(newFilter) {
+    const updated = {
+      count: 20,
+      offset: 0,
+      ...newFilter
+    }
+    this.setState({filter: updated});
+    this.refreshNotes(true, updated)
   }
 
   openNote(note) {
@@ -61,9 +71,10 @@ class Notes extends React.Component {
     this.setState({noteDetail: null});
   }
 
-  refreshNotes(override = false) {
+  refreshNotes(override = false, filter = null) {
+    const _filter = this.getFilter(filter || this.state.filter);
     this.setState({loading: true});
-    get('/api/hekimas', this.state.filter)
+    get('/api/hekimas', _filter)
     .then(notes => {
       let newNotes;
       if(override) {
@@ -77,6 +88,19 @@ class Notes extends React.Component {
     .finally(() => {
       this.setState({loading: false});
     })
+  }
+  getFilter(filter) {
+    const _filter = {
+      offset: filter.offset,
+      count: filter.count
+    };
+    if(filter.source) {
+      _filter.source = filter.source.uri;
+    }
+    if(filter.tags) {
+      _filter.tags = lodash.map(filter.tags, t => t.uri);
+    }
+    return _filter;
   }
 
   startCreation() {
@@ -174,7 +198,7 @@ class Notes extends React.Component {
     const notes = this.state.notes;
     return (
       <div className="app">
-        <Header title="Notes" goBack={false} withSearch={true}/>
+        <Header title="Notes" goBack={false} withSearch={true} filterChanged={this.filterChanged}/>
         <List className="notes-list">
           {notes.map(elt => <ListItem key={elt.uri}>{this.getListItem(elt)}</ListItem>)}
           {this.state.hasMoreNotes && !this.state.loading ? <ListItem className="centered-item" key="load-more">
