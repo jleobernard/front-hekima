@@ -1,5 +1,5 @@
 import * as React from "react";
-import {get, patch, post, upload} from "../../utils/http";
+import {get, post, upload} from "../../utils/http";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
 import Button from "@material-ui/core/Button";
@@ -8,17 +8,14 @@ import DialogActions from "@material-ui/core/DialogActions";
 import {withRouter} from "react-router-dom";
 import TextField from "@material-ui/core/TextField";
 import FormControl from "@material-ui/core/FormControl";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import Chip from "@material-ui/core/Chip";
-import FormHelperText from "@material-ui/core/FormHelperText";
 import "../../styles/forms.scss";
 import * as lodash from 'lodash';
-import debounce from 'lodash/debounce';
 import IconButton from "@material-ui/core/IconButton";
 import CloseIcon from "@material-ui/core/SvgIcon/SvgIcon";
 import "./note-creation.scss"
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Toaster from "../Toaster";
+import NoteFilter from "../filter/filter";
 
 
 class NoteCreation extends React.Component {
@@ -36,7 +33,8 @@ class NoteCreation extends React.Component {
     preview: null,
     imageFile: null,
     saving: false,
-    error: null
+    error: null,
+    version: 0
   };
 
   constructor(props) {
@@ -44,12 +42,9 @@ class NoteCreation extends React.Component {
     this.state = lodash.cloneDeep(this.defaultState);
     this.handleClose = this.handleClose.bind(this);
     this.valueChanged = this.valueChanged.bind(this);
-    this.refreshSources = this.refreshSources.bind(this);
-    this.selectSource = this.selectSource.bind(this);
-    this.selectTags = this.selectTags.bind(this);
-    this.refreshTags = this.refreshTags.bind(this);
     this.fileChanged = this.fileChanged.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.onFilterChanged = this.onFilterChanged.bind(this);
   }
   componentDidUpdate(prevProps, prevState, snapshot) {
     const prevNoteUri = (prevProps.note || {}).uri;
@@ -61,7 +56,8 @@ class NoteCreation extends React.Component {
         valeur: note.valeur,
         source: note.source,
         tags: note.tags,
-        hasFile: note.hasFile
+        hasFile: note.hasFile,
+        version: this.state.version + 1
       })
     }
   }
@@ -90,34 +86,10 @@ class NoteCreation extends React.Component {
     }
   }
 
-  refreshSources(q) {
-    this.setState({loadingSources: true});
-    if(this.state.debouncedSource) {
-      this.state.debouncedSource.cancel();
-    }
-    let debounced = debounce(() => {
-      get('/api/sources', {q}, false)
-      .then(sources => this.setState({sources}))
-      .finally(() => this.setState({loadingSources: false, debouncedSource: null}))
-    }, 1000);
-    debounced();
-    this.setState({debouncedSource: debounced});
+  onFilterChanged(event) {
+    this.setState({source: event.source, tags: event.tags});
   }
 
-  refreshTags(q) {
-    this.setState({loadingTags: true});
-    if(this.state.debouncedTags) {
-      this.state.debouncedTags.cancel();
-    }
-    let debounced = debounce(() => {
-      get('/api/tags', {q}, false)
-      .then(tags => this.setState({tagsSuggestions: tags}))
-      .finally(() => this.setState({loadingTags: false, debouncedTags: null}))
-    }, 1000);
-    debounced();
-    this.setState({debouncedTags: debounced});
-
-  }
   valueChanged(event) {
     this.setState({valeur: event.target.value});
   }
@@ -127,26 +99,6 @@ class NoteCreation extends React.Component {
     this.props.onDone(response);
   }
 
-  selectSource(event, source) {
-    if(this.state.debouncedSource) {
-      this.state.debouncedSource.cancel();
-    }
-    this.setState({debouncedSource: null, source});
-  }
-
-  selectTags(event, tags) {
-    if(this.state.debouncedTags) {
-      this.state.debouncedTags.cancel();
-    }
-    this.setState({debouncedTags: null, tags});
-  }
-
-  componentWillReceiveProps(nextProps, nextContext) {
-    if(nextProps.creating) {
-      this.refreshSources("");
-      this.refreshTags("");
-    }
-  }
   fileChanged() {
     const file = document.getElementById('hekima-picture');
     if (!file) {
@@ -165,8 +117,10 @@ class NoteCreation extends React.Component {
 
 
   render() {
-    const sources = this.state.sources || [];
-    const tags = this.state.tagsSuggestions || [];
+    const filter = {
+      source : this.state.source,
+      tags: this.state.tags || []
+    };
     return (
       <Dialog open={this.props.creating || !!this.props.note}
               onClose={this.handleClose}
@@ -203,55 +157,9 @@ class NoteCreation extends React.Component {
                          multiline rows={3} rowsMax={10} variant="outlined"
                          onChange={this.valueChanged} />
             </FormControl>
-            <FormControl>
-              <Autocomplete
-                id="source"
-                loading={this.state.loadingSources}
-                value={this.state.source}
-                onChange={this.selectSource}
-                onInputChange={(event) => event ? this.refreshSources(event.target.value) : null}
-                options={sources}
-                getOptionLabel={source => source.titre}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip
-                      label={option.titre}
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Source" variant="outlined" placeholder="Source" />
-                )}
-              />
-              {this.state.source ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez la source</FormHelperText>}
-            </FormControl>
-            <FormControl>
-              <Autocomplete
-                id="tags"
-                multiple
-                loading={this.state.loadingTags}
-                value={this.state.tags}
-                onChange={this.selectTags}
-                onInputChange={(event) => event ? this.refreshTags(event.target.value) : null}
-                options={tags}
-                getOptionLabel={tag => {
-                  return tag.valeur || "";
-                }}
-                renderTags={(tagValue, getTagProps) =>
-                  tagValue.map((option, index) => (
-                    <Chip
-                      label={option.valeur}
-                      {...getTagProps({ index })}
-                    />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField {...params} label="Tag" variant="outlined" placeholder="Tags" />
-                )}
-              />
-              {this.state.tags && this.state.tags.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez un ou plusieurs tags</FormHelperText>}
-            </FormControl>
+            <NoteFilter filter={filter} version={0}
+                        onFilterChanged={this.onFilterChanged}
+                        allowCreation={true} />
           </form>
           <Toaster error={this.state.error}/>
         </DialogContent>

@@ -200,6 +200,9 @@ class Notes extends React.Component {
       <div className="app">
         <Header title="Notes" goBack={false} withSearch={true} filterChanged={this.filterChanged}/>
         <List className="notes-list">
+          <ListItem key="spinner-loading-first" className="centered-item">
+            {this.state.loading? <CircularProgress /> : ''}
+          </ListItem>
           {notes.map(elt => <ListItem key={elt.uri}>{this.getListItem(elt)}</ListItem>)}
           {this.state.hasMoreNotes && !this.state.loading ? <ListItem className="centered-item" key="load-more">
             <Button size="small" color="primary" onClick={() => this.loadMore()}>Voir plus</Button>

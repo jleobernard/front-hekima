@@ -9,6 +9,12 @@ import "../../styles/forms.scss";
 import * as lodash from 'lodash';
 import debounce from 'lodash/debounce';
 import Toaster from "../Toaster";
+import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
+import DialogContent from "@material-ui/core/DialogContent/DialogContent";
+import DialogActions from "@material-ui/core/DialogActions/DialogActions";
+import Button from "@material-ui/core/Button";
+import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
+import Dialog from "@material-ui/core/Dialog/Dialog";
 
 
 class NoteFilter extends React.Component {
@@ -19,14 +25,16 @@ class NoteFilter extends React.Component {
     tagsSuggestions: [],
     loadingSources: false,
     loadingTags: false,
+    creatingSource: false,
     debouncedSource: null,
     debouncedTags: null,
+    newSource: {creating: false},
+    createSourceError: null,
     version: 0
   };
 
   constructor(props) {
     super(props);
-    console.log(props);
     this.state = lodash.cloneDeep(this.defaultState);
     this.state = {
       ...this.state,
@@ -37,6 +45,8 @@ class NoteFilter extends React.Component {
     this.selectSource = this.selectSource.bind(this);
     this.selectTags = this.selectTags.bind(this);
     this.refreshTags = this.refreshTags.bind(this);
+    this.closeSourceCreation = this.closeSourceCreation.bind(this);
+    this.newSourceFieldChanged = this.newSourceFieldChanged.bind(this);
     this.refreshSources("");
     this.refreshTags("");
   }
@@ -49,6 +59,7 @@ class NoteFilter extends React.Component {
       });
     }
   }
+
 
   refreshSources(q) {
     this.setState({loadingSources: true});
@@ -83,22 +94,73 @@ class NoteFilter extends React.Component {
     if(this.state.debouncedSource) {
       this.state.debouncedSource.cancel();
     }
-    this.setState({debouncedSource: null, source});
-    this.props.onFilterChanged({source: source, tags: this.state.tags});
+    if(source.inputValue) {
+      const realSource = {...source}
+      realSource.titre = source.inputValue
+      source.titre = source.inputValue
+      const newSource = lodash.cloneDeep(realSource)
+      newSource.creating = true
+      this.setState({newSource})
+    } else {
+      this.setState({debouncedSource: null, source});
+      this.props.onFilterChanged({source: source, tags: this.state.tags});
+    }
+  }
+
+  closeSourceCreation(save) {
+    if(save) {
+      this.setState({creatingSource: true})
+      post('/api/sources', this.state.newSource, false)
+      .then(insertedSource => {
+        this.setState({
+          newSource: {creating: false},
+          source: insertedSource
+        })
+        this.props.onFilterChanged({source: insertedSource, tags: this.state.tags});
+      })
+      .finally(() => this.setState({creatingSource: false}))
+    } else {
+      this.setState({newSource: {creating: false}});
+    }
+  }
+  newSourceFieldChanged(typeName, typeValue) {
+    const _plop = {...this.state.newSource};
+    _plop[typeName] = typeValue
+    this.setState({newSource: _plop});
   }
 
   selectTags(event, tags) {
     if(this.state.debouncedTags) {
       this.state.debouncedTags.cancel();
     }
-    this.setState({debouncedTags: null, tags});
-    this.props.onFilterChanged({source: this.state.source, tags: tags});
+    const lastElement = lodash.last(tags);
+    if(lastElement.inputValue) {
+      const realTags = [...tags];
+      lastElement.valeur = lastElement.inputValue;
+      this.setState({loadingTags: true});
+      post('/api/tags', {valeur: lastElement.valeur}, false)
+      .then(insertedTag => {
+        realTags[realTags.length - 1] = insertedTag;
+        this.setState({tags: realTags});
+        this.props.onFilterChanged({source: this.state.source, tags: realTags});
+      })
+      .finally(() => this.setState({loadingTags: false}))
+    } else {
+      this.setState({debouncedTags: null, tags});
+      this.props.onFilterChanged({source: this.state.source, tags: tags});
+    }
   }
 
 
   render() {
     const sources = this.state.sources || [];
     const tags = this.state.tagsSuggestions || [];
+    const allowCreations = this.props.allowCreation;
+    const types = [
+      {type: 'Livre'},
+      {type: 'MOOC'},
+      {type: 'Journal'}
+    ]
     return (
       <div className="flex-column">
         <FormControl margin="normal">
@@ -118,6 +180,11 @@ class NoteFilter extends React.Component {
                 />
               ))
             }
+            filterOptions={(options, params) => {
+              return allowCreations ?
+                [...options, {titre: 'Ajouter ' + params.inputValue, inputValue: params.inputValue}] :
+                options;
+            }}
             renderInput={(params) => (
               <TextField {...params} label="Source" variant="outlined" placeholder="Source" />
             )}
@@ -144,12 +211,67 @@ class NoteFilter extends React.Component {
                 />
               ))
             }
+            filterOptions={(options, params) => {
+              return allowCreations ?
+                [...options, {valeur: 'Ajouter ' + params.inputValue, inputValue: params.inputValue}] :
+                options;
+            }}
             renderInput={(params) => (
               <TextField {...params} label="Tag" variant="outlined" placeholder="Tags" />
             )}
           />
           {this.state.tags && this.state.tags.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez un ou plusieurs tags</FormHelperText>}
         </FormControl>
+        <Dialog open={this.state.newSource.creating}
+                onClose={() => this.closeSourceCreation(false)}
+                fullScreen={true}
+                aria-labelledby="creation-source-dialog-title">
+          <DialogTitle id="creation-dialog-title">Création d'une source</DialogTitle>
+          <DialogContent>
+            <form onSubmit={this.handleSubmit} className="form">
+              <FormControl>
+                <TextField id='new-source-titre' label="Titre" required value={this.state.newSource.titre}
+                           variant="outlined" onChange={event => this.newSourceFieldChanged('titre', event.target.value)} />
+              </FormControl>
+              <FormControl>
+                <TextField id='new-source-auteur' label="Auteur" required value={this.state.newSource.auteur}
+                           variant="outlined" onChange={event => this.newSourceFieldChanged('auteur', event.target.value)} />
+              </FormControl>
+              <FormControl>
+                <Autocomplete
+                  id="new-source-type"
+                  value={this.state.newSource.type}
+                  onChange={event => this.newSourceFieldChanged('type', event.target.textContent)}
+                  options={types}
+                  getOptionLabel={tag => {
+                    return tag.type || "";
+                  }}
+                  renderTags={(tagValue, getTagProps) =>
+                    tagValue.map((option, index) => (
+                      <Chip
+                        label={option.type}
+                        {...getTagProps({ index })}
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Type" variant="outlined" placeholder="Type" />
+                  )}
+                />
+                {this.state.newSource.type ? <></> : <FormHelperText id="new-source-helper">Sélectionnez un titre</FormHelperText>}
+              </FormControl>
+            </form>
+            <Toaster error={this.state.createSourceError}/>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => this.closeSourceCreation(false)} color="primary">
+              Annuler
+            </Button>
+            <Button onClick={() => this.closeSourceCreation(true)} color="primary">
+              Sauvegarder {this.state.creatingSource ? <CircularProgress /> : ''}
+            </Button>
+          </DialogActions>
+        </Dialog>
         <Toaster error={this.state.error}/>
       </div>
     )
