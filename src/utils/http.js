@@ -1,5 +1,6 @@
 import {getSession, setSession} from "./storage";
 import jwt_decode from "jwt-decode";
+
 const deltaForExpiration = 0;
 const rootUrl = process.env.REACT_APP_API_ROOT_URL ? process.env.REACT_APP_API_ROOT_URL : '';
 export const refreshToken = (force = false) => {
@@ -44,11 +45,25 @@ export const post = (url, body, protectedCall = false) => {
     return exchange(url, body);
   }
 };
+
+function constructUrl(url, params) {
+  let target = url
+  if(params && Object.keys(params).length > 0) {
+    if (target.indexOf('?') < 0) {
+      target += '?'
+    } else {
+      target += '&'
+    }
+    target += asParams(params)
+  }
+  return target
+}
 export const get = (url, params, protectedCall = false) => {
+  const realUrl = constructUrl(url, params)
   if(protectedCall) {
-    return refreshToken().then(session => doGet(url, params, session.access))
+    return refreshToken().then(session => exchange(realUrl, null, session.access, 'GET'))
   } else {
-    return doGet(url, params);
+    return exchange(realUrl, null, null, 'GET');
   }
 };
 
@@ -63,29 +78,53 @@ export const upload = (url, file, protectedCall = false) => {
     return doUpload(url, file);
   }
 }
-const methodWithBodies = ['POST', 'GET', 'PATCH'];
+const methodWithBodies = ['POST', 'GET', 'PATCH', 'PUT'];
 const exchange = (url, body, accessToken, method = 'POST') => {
-  const headers = {
-    'Content-Type': 'application/json'
-  };
+  const headers = {}
+  const loggingIn = url === '/api/login'
+  if(loggingIn) {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    const formBody = [];
+    for (const property in body) {
+      const encodedKey = encodeURIComponent(property);
+      const encodedValue = encodeURIComponent(body[property]);
+      formBody.push(encodedKey + "=" + encodedValue);
+    }
+    body = formBody.join("&");
+  } else {
+    headers['Content-Type'] = 'application/json'
+    body = body ? JSON.stringify(body) : null
+  }
   if(accessToken) {
     headers['Authorization'] =  'Bearer ' + accessToken;
   }
   return new Promise((resolve, reject) => {
     fetch(rootUrl + url,{
       method: method,
+      redirect: 'manual',
       headers,
-      body: body ? JSON.stringify(body) : null
+      body
     }).then(response => {
       if(response.ok) {
-        if(methodWithBodies.indexOf(method) >= 0) {
+        if(!loggingIn && methodWithBodies.indexOf(method) >= 0) {
           return response.json().then(resolve).catch(reject);
         } else {
           resolve();
         }
       } else {
-        response.json().then(json => reject(json)).catch(() => reject(response));
+        if(response.type === 'opaqueredirect') {
+          if(loggingIn) {
+            return resolve();
+          } else {
+            window.location.href = '/login?redirect=' + encodeURIComponent(document.location.pathname+document.location.search);
+          }
+        } else {
+          response.json().then(json => reject(json)).catch(() => reject(response));
+        }
       }
+    }).catch(err => {
+      console.error(err)
+      reject(err)
     });
   });
 };

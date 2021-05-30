@@ -1,7 +1,8 @@
 import React from 'react';
-import {Route, BrowserRouter as Router, Switch, Redirect} from "react-router-dom";
+import {BrowserRouter as Router, Redirect, Route, Switch} from "react-router-dom";
 import Notes from './pages/notes/notes';
 import './App.css';
+import Login from "./pages/login/login";
 
 function App() {
   return (
@@ -14,6 +15,9 @@ function App() {
             </Route>
             <Route exact path="/">
               <Redirect to="/notes" />
+            </Route>
+            <Route path="/login">
+              <Login />
             </Route>
           </Switch>
         </div>

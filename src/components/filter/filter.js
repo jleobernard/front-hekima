@@ -1,5 +1,5 @@
 import * as React from "react";
-import {get, patch, post} from "../../utils/http";
+import {get, post} from "../../utils/http";
 import TextField from "@material-ui/core/TextField";
 import FormControl from "@material-ui/core/FormControl";
 import Autocomplete from "@material-ui/lab/Autocomplete";

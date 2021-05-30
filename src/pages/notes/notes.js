@@ -74,7 +74,7 @@ class Notes extends React.Component {
   refreshNotes(override = false, filter = null) {
     const _filter = this.getFilter(filter || this.state.filter);
     this.setState({loading: true});
-    get('/api/hekimas', _filter)
+    get('/api/notes', _filter)
     .then(notes => {
       let newNotes;
       if(override) {
@@ -113,7 +113,7 @@ class Notes extends React.Component {
     if(doDelete) {
       if(!this.state.deleting) {
         this.setState({deleting: true, error: null});
-        httpDelete('/api/hekimas/' + this.state.deletingNote.uri)
+        httpDelete('/api/notes/' + this.state.deletingNote.uri)
         .then(() => {
           this.showNotification("La note " + this.state.deletingNote.valeur + " a bien été supprimée");
           const notes = this.state.notes.filter(n => n.uri !== this.state.deletingNote.uri);
@@ -134,7 +134,7 @@ class Notes extends React.Component {
   getListItem(note) {
     return <li>
       <Card className={"note-card"}>
-        {note.hasFile ? <img className="note-image" src={"/api/hekimas/" + note.uri + "/file"} alt={note.valeur}/> : <></>}
+        {note.hasFile ? <img className="note-image" src={"/api/notes/" + note.uri + "/file"} alt={note.valeur}/> : <></>}
         <CardContent>
           <Typography component="p" className={"note-text"} gutterBottom={true}>
             {note.valeur}

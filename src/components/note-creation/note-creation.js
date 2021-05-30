@@ -1,12 +1,11 @@
 import * as React from "react";
-import {get, post, upload} from "../../utils/http";
+import {post, upload} from "../../utils/http";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import {withRouter} from "react-router-dom";
-import TextField from "@material-ui/core/TextField";
 import FormControl from "@material-ui/core/FormControl";
 import "../../styles/forms.scss";
 import * as lodash from 'lodash';
@@ -16,6 +15,8 @@ import "./note-creation.scss"
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Toaster from "../Toaster";
 import NoteFilter from "../filter/filter";
+import {Input, InputAdornment, InputLabel} from "@material-ui/core";
+import {Camera} from "@material-ui/icons";
 
 
 class NoteCreation extends React.Component {
@@ -45,12 +46,15 @@ class NoteCreation extends React.Component {
     this.fileChanged = this.fileChanged.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onFilterChanged = this.onFilterChanged.bind(this);
+
+    this.parsePictureChanged = this.parsePictureChanged.bind(this);
+    this.refInputFile = React.createRef();
   }
   componentDidUpdate(prevProps, prevState, snapshot) {
     const prevNoteUri = (prevProps.note || {}).uri;
     const currentNoteUri = (this.props.note || {}).uri;
     if(currentNoteUri !== prevNoteUri) {
-      const note = (this.props.note || {tags: [], source: {}})
+      const note = (this.props.note || {tags: [], source: {}})
       this.setState({
         noteUri: currentNoteUri,
         valeur: note.valeur,
@@ -60,6 +64,11 @@ class NoteCreation extends React.Component {
         version: this.state.version + 1
       })
     }
+  }
+  setParsing(parsing) {
+    this.setState({
+      parsing
+    })
   }
 
   handleSubmit() {
@@ -71,9 +80,9 @@ class NoteCreation extends React.Component {
         tags: lodash.map(this.state.tags, t => t.uri),
         source: this.state.source ? this.state.source.uri : null
       };
-      post('/api/hekimas', request).then(saved => {
+      post('/api/notes', request).then(saved => {
         if(this.state.imageFile) {
-          upload('/api/hekimas/'+saved.uri+'/file', this.state.imageFile, false)
+          upload('/api/notes/'+saved.uri+'/file', this.state.imageFile, false)
           .then(response => {
             this.handleClose(response);
           })
@@ -115,6 +124,24 @@ class NoteCreation extends React.Component {
     this.setState({imageFile});
   }
 
+  parsePictureChanged() {
+    const file = document.getElementById('picture');
+    if (file) {
+      this.setState({parsing: true, error: null});
+      const imageFile = file.files[0]
+      upload(`/api/notes:parse`, imageFile, false)
+      .then(response => {
+        this.setState({valeur: response.lines.join('\n')});
+      })
+      .catch(err => {
+        console.error(err)
+        this.setState({error: "Erreur lors de l'analyse de la photo"})
+      }).finally(() => this.setState({parsing: false}))
+    } else {
+      console.error("Sélectionnez un fichier");
+    }
+  }
+
 
   render() {
     const filter = {
@@ -133,7 +160,7 @@ class NoteCreation extends React.Component {
               <input type="file" id="hekima-picture" accept="image/*" onChange={this.fileChanged}/>
               {this.state.preview ?
                 <div className="hekima-picture">
-                  <img src={this.state.preview} />
+                  <img src={this.state.preview} alt={"Note "}/>
                   <div className="close-icon">
                     <IconButton size="small" aria-label="close" color="inherit">
                       <CloseIcon fontSize="small" />
@@ -143,7 +170,7 @@ class NoteCreation extends React.Component {
                 : <></>}
               {this.state.hasFile ?
                 <div className="hekima-picture">
-                  <img src={'/api/hekimas/' + this.state.noteUri + '/file'} />
+                  <img src={'/api/notes/' + this.state.noteUri + '/file'}  alt={"Note " + this.state.noteUri}/>
                   <div className="close-icon">
                     <IconButton size="small" aria-label="close" color="inherit">
                       <CloseIcon fontSize="small" />
@@ -153,9 +180,25 @@ class NoteCreation extends React.Component {
                 : <></>}
             </FormControl>
             <FormControl>
-              <TextField id='valeur' label="Note" required value={this.state.valeur}
-                         multiline rows={3} rowsMax={10} variant="outlined"
-                         onChange={this.valueChanged} />
+              <InputLabel htmlFor="valeur-ne">Note</InputLabel>
+              <Input
+                id="valeur-ne"
+                required
+                value={this.state.valeur}
+                multiline rows={3} rowsMax={10} variant="outlined"
+                onChange={this.valueChanged}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="analyse image"
+                      onClick={() => this.refInputFile.current.click()}
+                    >
+                      {this.state.parsing ? <CircularProgress /> : <Camera />}
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+              <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
             </FormControl>
             <NoteFilter filter={filter} version={0}
                         onFilterChanged={this.onFilterChanged}
