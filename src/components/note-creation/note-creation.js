@@ -15,9 +15,9 @@ import "./note-creation.scss"
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Toaster from "../Toaster";
 import NoteFilter from "../filter/filter";
-import {Input, InputAdornment, InputLabel} from "@material-ui/core";
+import {ButtonGroup, Input, InputAdornment, InputLabel} from "@material-ui/core";
 import {Camera} from "@material-ui/icons";
-
+import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
 
 class NoteCreation extends React.Component {
 
@@ -38,17 +38,23 @@ class NoteCreation extends React.Component {
     version: 0
   };
 
+
+
   constructor(props) {
     super(props);
     this.state = lodash.cloneDeep(this.defaultState);
+    this.colors = ['red', 'green', 'purple'];
     this.handleClose = this.handleClose.bind(this);
     this.valueChanged = this.valueChanged.bind(this);
     this.fileChanged = this.fileChanged.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onFilterChanged = this.onFilterChanged.bind(this);
-
+    this.addColorTag = this.addColorTag.bind(this);
+    this.addMD = this.addMD.bind(this);
     this.parsePictureChanged = this.parsePictureChanged.bind(this);
+    this.focusBefore = this.focusBefore.bind(this)
     this.refInputFile = React.createRef();
+    this.refValeur = React.createRef();
   }
   componentDidUpdate(prevProps, prevState, snapshot) {
     const prevNoteUri = (prevProps.note || {}).uri;
@@ -142,6 +148,25 @@ class NoteCreation extends React.Component {
     }
   }
 
+  addColorTag(color) {
+    this.setState({valeur: this.state.valeur + `<span style="color:${color}">ici</span>`}, () => this.focusBefore("</span>".length))
+  }
+
+  addMD(md, mdEnd) {
+    if(mdEnd) {
+      this.setState({valeur: this.state.valeur + `${md + 'ici' + mdEnd}`}, () => this.focusBefore(mdEnd.length))
+    } else {
+      this.setState({valeur: this.state.valeur + `${md + 'ici' + md}`}, () => this.focusBefore(md.length))
+    }
+  }
+
+  focusBefore(lengthBeforeEnd) {
+    const element = document.getElementById("valeur-ne")
+    element.focus()
+    const length = element.value.length
+    element.selectionStart = length - lengthBeforeEnd - 3
+    element.selectionEnd = length - lengthBeforeEnd
+  }
 
   render() {
     const filter = {
@@ -183,8 +208,9 @@ class NoteCreation extends React.Component {
               <InputLabel htmlFor="valeur-ne">Note</InputLabel>
               <Input
                 id="valeur-ne"
-                required
+                required autoFocus={true}
                 value={this.state.valeur}
+                ref={this.refValeur}
                 multiline rows={3} rowsMax={10} variant="outlined"
                 onChange={this.valueChanged}
                 endAdornment={
@@ -199,6 +225,23 @@ class NoteCreation extends React.Component {
                 }
               />
               <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
+              <ButtonGroup className="button-group centered">
+                {this.colors.map(color =>
+                  <IconButton style={{color}} aria-label={color} key={color} component="span" onClick={() => this.addColorTag(color)}>
+                    <FiberManualRecordRoundedIcon />
+                  </IconButton>
+                )}
+              </ButtonGroup>
+              <ButtonGroup className="button-group centered">
+                <Button className="block" onClick={() => this.addMD('# ', ' #')}>Titre1</Button>
+                <Button className="block" onClick={() => this.addMD('## ', ' ##')}>Titre2</Button>
+                <Button className="block" onClick={() => this.addMD('### ', ' ###')}>Titre3</Button>
+              </ButtonGroup>
+              <ButtonGroup className="button-group centered">
+                <Button className="block" onClick={() => this.addMD('**')}>Gras</Button>
+                <Button className="block" onClick={() => this.addMD('*')}>Italique</Button>
+                <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}>Barré</Button>
+              </ButtonGroup>
             </FormControl>
             <NoteFilter filter={filter} version={0}
                         onFilterChanged={this.onFilterChanged}
