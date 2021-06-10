@@ -260,8 +260,8 @@ class NoteCreation extends React.Component {
                 <Button className="block" onClick={() => this.addMD('### ', ' ###')}>Titre3</Button>
               </ButtonGroup>
               <ButtonGroup className="button-group centered">
-                <Button className="block" onClick={() => this.addMD('**')}>Gras</Button>
-                <Button className="block" onClick={() => this.addMD('*')}>Italique</Button>
+                <Button className="block" onClick={() => this.addMD('**','**')}>Gras</Button>
+                <Button className="block" onClick={() => this.addMD('*', '*')}>Italique</Button>
                 <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}>Barré</Button>
               </ButtonGroup>
             </FormControl>
