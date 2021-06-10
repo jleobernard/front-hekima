@@ -152,26 +152,6 @@ const doUpload = (url, file, accessToken) => {
   })
 }
 
-const doGet = (url, params, accessToken) => {
-  const headers = {
-    'Content-Type': 'application/json'
-  };
-  if(accessToken) {
-    headers['Authorization'] =  'Bearer ' + accessToken;
-  }
-  return new Promise((resolve, reject) => {
-      fetch(rootUrl + url + "?" + asParams(params),{
-        method: 'GET',
-        headers
-      }).then(response => {
-        if(response.ok) {
-          return response.json().then(resolve).catch(reject);
-        } else {
-          response.json().then(json => reject(json)).catch(() => reject(response));
-        }
-      });
-    })
-};
 const asParams = (params)=> {
   return Object.keys(params || {})
   .map(key => key + "=" + encodeURIComponent(params[key]))

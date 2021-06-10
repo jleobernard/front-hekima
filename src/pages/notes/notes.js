@@ -25,7 +25,7 @@ import DialogContentText from "@material-ui/core/DialogContentText";
 import * as lodash from 'lodash';
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
-
+import gfm from 'remark-gfm'
 
 
 class Notes extends React.Component {
@@ -141,7 +141,7 @@ class Notes extends React.Component {
         {note.hasFile ? <img className="note-image" src={"/api/notes/" + note.uri + "/file"} alt={note.valeur}/> : <></>}
         <CardContent>
           <Typography component="p" className={"note-text"} gutterBottom={true}>
-            <ReactMarkdown rehypePlugins={[rehypeRaw]} children={note.valeur}/>
+            <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={note.valeur}/>
           </Typography>
           {note.source ? <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
             in {note.source.titre} de {note.source.auteur}

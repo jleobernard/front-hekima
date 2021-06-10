@@ -15,9 +15,12 @@ import "./note-creation.scss"
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Toaster from "../Toaster";
 import NoteFilter from "../filter/filter";
-import {ButtonGroup, Input, InputAdornment, InputLabel} from "@material-ui/core";
+import {ButtonGroup, Input, InputAdornment, InputLabel, Paper} from "@material-ui/core";
 import {Camera} from "@material-ui/icons";
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
+import gfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import ReactMarkdown from "react-markdown";
 
 class NoteCreation extends React.Component {
 
@@ -52,7 +55,7 @@ class NoteCreation extends React.Component {
     this.addColorTag = this.addColorTag.bind(this);
     this.addMD = this.addMD.bind(this);
     this.parsePictureChanged = this.parsePictureChanged.bind(this);
-    this.focusBefore = this.focusBefore.bind(this)
+    this.focusAfterFormatting = this.focusAfterFormatting.bind(this)
     this.refInputFile = React.createRef();
     this.refValeur = React.createRef();
   }
@@ -148,24 +151,40 @@ class NoteCreation extends React.Component {
     }
   }
 
-  addColorTag(color) {
-    this.setState({valeur: this.state.valeur + `<span style="color:${color}">ici</span>`}, () => this.focusBefore("</span>".length))
-  }
-
-  addMD(md, mdEnd) {
-    if(mdEnd) {
-      this.setState({valeur: this.state.valeur + `${md + 'ici' + mdEnd}`}, () => this.focusBefore(mdEnd.length))
-    } else {
-      this.setState({valeur: this.state.valeur + `${md + 'ici' + md}`}, () => this.focusBefore(md.length))
+  getCurrentSelection(){
+    const element = document.getElementById("valeur-ne")
+    const start = element.selectionStart || 0
+    const end = element.selectionEnd || 0
+    return {
+      start,
+      end,
+      selecting: start !== end
     }
   }
 
-  focusBefore(lengthBeforeEnd) {
+  addColorTag(color) {
+    this.addMD(`<span style="color:${color}">`, "</span>")
+  }
+
+  addMD(md, mdEnd) {
+    const _mdEnd = mdEnd || ''
+    const valeur = (this.state.valeur || '')
+    const selection = this.getCurrentSelection()
+    const interText = selection.selecting ? valeur.substr(selection.start, selection.end - selection.start) : 'ici'
+    const newValeur = valeur.substr(0, selection.start) + md
+     + interText
+    + _mdEnd + valeur.substr(selection.end, valeur.length - selection.end)
+
+    this.setState({valeur: newValeur}, () => this.focusAfterFormatting(selection, md))
+  }
+
+  focusAfterFormatting(initialSelection, md) {
     const element = document.getElementById("valeur-ne")
     element.focus()
-    const length = element.value.length
-    element.selectionStart = length - lengthBeforeEnd - 3
-    element.selectionEnd = length - lengthBeforeEnd
+    element.selectionStart = initialSelection.start + md.length
+    element.selectionEnd = initialSelection.selecting ?
+      initialSelection.end + md.length :
+      initialSelection.end + md.length + 3
   }
 
   render() {
@@ -224,6 +243,9 @@ class NoteCreation extends React.Component {
                   </InputAdornment>
                 }
               />
+              {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
+                <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
+              </Paper> : <></>}
               <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
               <ButtonGroup className="button-group centered">
                 {this.colors.map(color =>
