@@ -263,6 +263,7 @@ class NoteCreation extends React.Component {
                 <Button className="block" onClick={() => this.addMD('**','**')}>Gras</Button>
                 <Button className="block" onClick={() => this.addMD('*', '*')}>Italique</Button>
                 <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}>Barré</Button>
+                <Button className="block" onClick={() => this.addMD('<ins>', '</ins>')}>Souligné</Button>
               </ButtonGroup>
             </FormControl>
             <NoteFilter filter={filter} version={0}
