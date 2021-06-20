@@ -1,0 +1,31 @@
+@import "../../../styles/dimensions";
+
+$image-file-height: 30vh;
+
+.note-files {
+  display: flex;
+  overflow-x: auto;
+  position: relative;
+  &.unique {
+    .note-image {
+      > img {
+        height: auto;
+        width: 100%;
+      }
+    }
+  }
+  .note-image {
+    > img {
+      height: $image-file-height;
+      width: auto;
+    }
+    margin-right: $gutter-size;
+    position: relative;
+    > img {
+      height: $image-file-height;
+    }
+    &.placeholder {
+      line-height: $image-file-height;
+    }
+  }
+}

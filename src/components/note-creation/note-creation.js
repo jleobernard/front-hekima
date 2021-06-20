@@ -1,5 +1,5 @@
 import * as React from "react";
-import {post, upload} from "../../utils/http";
+import {post, upload, uploadFilesWithRequest} from "../../utils/http";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
 import Button from "@material-ui/core/Button";
@@ -10,7 +10,6 @@ import FormControl from "@material-ui/core/FormControl";
 import "../../styles/forms.scss";
 import * as lodash from 'lodash';
 import IconButton from "@material-ui/core/IconButton";
-import CloseIcon from "@material-ui/core/SvgIcon/SvgIcon";
 import "./note-creation.scss"
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Toaster from "../Toaster";
@@ -21,6 +20,7 @@ import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRo
 import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import ReactMarkdown from "react-markdown";
+import {NoteFilesEdit} from "../note/note-files/note-files-edit";
 
 class NoteCreation extends React.Component {
 
@@ -34,11 +34,10 @@ class NoteCreation extends React.Component {
     loadingTags: false,
     debouncedSource: null,
     debouncedTags: null,
-    preview: null,
-    imageFile: null,
     saving: false,
     error: null,
-    version: 0
+    version: 0,
+    filesChanges: {}
   };
 
 
@@ -80,6 +79,33 @@ class NoteCreation extends React.Component {
     })
   }
 
+  hasImageChanges(){
+    return Object.keys(this.state.filesChanges).length > 0
+  }
+
+  getUploadFilesRequest(savedNote) {
+    const fileChangesIndices = Object.keys(this.state.filesChanges).map(k => parseInt(k) + 1)
+    const lengthArray = Math.max(savedNote.files.length, Math.max(...fileChangesIndices));
+    const request = new Array(lengthArray);
+    const files = new Array(lengthArray);
+    for(let i = 0; i < lengthArray; i++) {
+      let action;
+      files[i] = null
+      if(i in this.state.filesChanges) {
+        if(this.state.filesChanges[i]) {
+          action = "UPSERT"
+          files[i] = this.state.filesChanges[i]
+        } else {
+          action = "DELETE"
+        }
+      } else {
+        action = "NOTHING"
+      }
+      request[i] = action
+    }
+    return {request, files};
+  }
+
   handleSubmit() {
     if(!this.state.saving) {
       this.setState({saving: true, error: null});
@@ -90,17 +116,18 @@ class NoteCreation extends React.Component {
         source: this.state.source ? this.state.source.uri : null
       };
       post('/api/notes', request).then(saved => {
-        if(this.state.imageFile) {
-          upload('/api/notes/'+saved.uri+'/file', this.state.imageFile, false)
+        if(this.hasImageChanges()) {
+          const metadata = this.getUploadFilesRequest(saved)
+          uploadFilesWithRequest('/api/notes/'+saved.uri+'/files', metadata.request, metadata.files, false)
           .then(response => {
-            this.handleClose(response);
+            this.handleClose({...saved, files: response.files});
           })
           .catch(err => this.setState({error: "Impossible d'enregistrer le fichier : " + err}))
           .finally(() => this.setState({saving: false}))
         } else {
           this.handleClose(saved);
         }
-      }).catch(err => this.setState({error: "Impossible de sauvegarder : " + err}))
+      }).catch(err => this.setState({saving: false, error: "Impossible de sauvegarder : " + err}))
     }
   }
 
@@ -117,20 +144,10 @@ class NoteCreation extends React.Component {
     this.props.onDone(response);
   }
 
-  fileChanged() {
-    const file = document.getElementById('hekima-picture');
-    if (!file) {
-      console.error("Sélectionnez un fichier");
-    }
-    const reader = new FileReader();
-    reader.onloadend = result => {
-      this.setState({preview: result.target.result});
-    };
-    reader.onerror = (err) => console.error(err);
-    reader.onabort = (err) => console.error(err);
-    const imageFile = file.files[0];
-    reader.readAsDataURL(imageFile);
-    this.setState({imageFile});
+  fileChanged(idxOfChangedFile, imageFile) {
+    const copy = {...this.state.filesChanges}
+    copy[idxOfChangedFile] = imageFile
+    this.setState({filesChanges: copy})
   }
 
   parsePictureChanged() {
@@ -166,6 +183,16 @@ class NoteCreation extends React.Component {
     this.addMD(`<span style="color:${color}">`, "</span>")
   }
 
+  addSingle(entry) {
+    const valeur = (this.state.valeur || '')
+    const selection = this.getCurrentSelection()
+    const newValeur = valeur.substr(0, selection.start) +
+      entry
+      + valeur.substr(selection.start)
+
+    this.setState({valeur: newValeur}, () => this.focusAt(selection, entry))
+  }
+
   addMD(md, mdEnd) {
     const _mdEnd = mdEnd || ''
     const valeur = (this.state.valeur || '')
@@ -187,6 +214,13 @@ class NoteCreation extends React.Component {
       initialSelection.end + md.length + 3
   }
 
+  focusAt(initialSelection, md) {
+    const element = document.getElementById("valeur-ne")
+    element.focus()
+    element.selectionStart = initialSelection.start + md.length
+    element.selectionEnd = element.selectionStart
+  }
+
   render() {
     const filter = {
       source : this.state.source,
@@ -200,29 +234,7 @@ class NoteCreation extends React.Component {
         <DialogTitle id="creation-dialog-title">{this.state.noteUri ? 'Nouvelle note' : 'Modification'}</DialogTitle>
         <DialogContent>
           <form onSubmit={this.handleSubmit} className="form">
-            <FormControl>
-              <input type="file" id="hekima-picture" accept="image/*" onChange={this.fileChanged}/>
-              {this.state.preview ?
-                <div className="hekima-picture">
-                  <img src={this.state.preview} alt={"Note "}/>
-                  <div className="close-icon">
-                    <IconButton size="small" aria-label="close" color="inherit">
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </div>
-                </div>
-                : <></>}
-              {this.state.hasFile ?
-                <div className="hekima-picture">
-                  <img src={'/api/notes/' + this.state.noteUri + '/file'}  alt={"Note " + this.state.noteUri}/>
-                  <div className="close-icon">
-                    <IconButton size="small" aria-label="close" color="inherit">
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </div>
-                </div>
-                : <></>}
-            </FormControl>
+            <NoteFilesEdit note={this.props.note} onChange={this.fileChanged}/>
             <FormControl>
               <InputLabel htmlFor="valeur-ne">Note</InputLabel>
               <Input
@@ -243,10 +255,6 @@ class NoteCreation extends React.Component {
                   </InputAdornment>
                 }
               />
-              {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
-                <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
-              </Paper> : <></>}
-              <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
               <ButtonGroup className="button-group centered">
                 {this.colors.map(color =>
                   <IconButton style={{color}} aria-label={color} key={color} component="span" onClick={() => this.addColorTag(color)}>
@@ -266,6 +274,17 @@ class NoteCreation extends React.Component {
                 <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}>Barré</Button>
                 <Button className="block" onClick={() => this.addMD('<ins>', '</ins>')}>Souligné</Button>
               </ButtonGroup>
+              <ButtonGroup className="button-group centered">
+                <Button className="block" onClick={() => this.addMD('<sub>','</sub>')}>Indice&nbsp;<sub>bas</sub></Button>
+                <Button className="block" onClick={() => this.addMD('<sup>','</sup>')}>Indice&nbsp;<sub>haut</sub></Button>
+                <Button className="block" onClick={() => this.addSingle('∂')}>∂</Button>
+                <Button className="block" onClick={() => this.addSingle('<span style="font-size: 2em">∘</span>')}><span style={{fontSize: "2em"}}>∘</span></Button>
+              </ButtonGroup>
+              {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
+                <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
+              </Paper> : <></>}
+              <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
+
             </FormControl>
             <NoteFilter filter={filter} version={0}
                         onFilterChanged={this.onFilterChanged}

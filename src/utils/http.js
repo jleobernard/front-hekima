@@ -78,6 +78,13 @@ export const upload = (url, file, protectedCall = false) => {
     return doUpload(url, file);
   }
 }
+export const uploadFilesWithRequest = (url, request, files, protectedCall = false) => {
+  if(protectedCall) {
+    return refreshToken().then(session => doUploadFilesWithRequest(url, request, files, session.access))
+  } else {
+    return doUploadFilesWithRequest(url, request, files);
+  }
+}
 const methodWithBodies = ['POST', 'GET', 'PATCH', 'PUT'];
 const exchange = (url, body, accessToken, method = 'POST') => {
   const headers = {}
@@ -136,6 +143,32 @@ const doUpload = (url, file, accessToken) => {
   }
   const formData = new FormData()
   formData.append('file', file)
+  return new Promise((resolve, reject) => {
+    fetch(url, {
+      headers,
+      method: 'POST',
+      body: formData
+    }).then(response => {
+      if(response.ok) {
+        return response.json().then(resolve).catch(reject);
+      } else {
+        response.json().then(json => reject(json)).catch(() => reject(response));
+      }
+    })
+    .catch(reject);
+  })
+}
+const doUploadFilesWithRequest = (url, request, files, accessToken) => {
+  const headers = {
+  };
+  if(accessToken) {
+    headers['Authorization'] =  'Bearer ' + accessToken;
+  }
+  const formData = new FormData()
+  formData.append('request', JSON.stringify(request))
+  files.forEach(file => {
+    formData.append('files', file)
+  })
   return new Promise((resolve, reject) => {
     fetch(url, {
       headers,

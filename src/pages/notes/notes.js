@@ -26,6 +26,7 @@ import * as lodash from 'lodash';
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import gfm from 'remark-gfm'
+import {NoteFilesDisplay} from "../../components/note/note-files/note-files-display";
 
 
 class Notes extends React.Component {
@@ -138,7 +139,7 @@ class Notes extends React.Component {
   getListItem(note) {
     return <li>
       <Card className={"note-card"}>
-        {note.hasFile ? <img className="note-image" src={"/api/notes/" + note.uri + "/file"} alt={note.valeur}/> : <></>}
+        <NoteFilesDisplay note={note} />
         <CardContent>
           <Typography component="p" className={"note-text"} gutterBottom={true}>
             <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={note.valeur}/>
