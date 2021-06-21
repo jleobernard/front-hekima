@@ -7,11 +7,29 @@ export const NoteFilesDisplay = ({note}) => {
 
   const [openedFile, setOpenedFile] = useState(null)
 
+  function closeFile() {
+    setOpenedFile(null)
+    const elements = document.getElementsByTagName('body');
+    for(let i = 0; i < elements.length;i++) {
+      const elt = elements[i]
+      elt.classList.remove("unscrollable")
+    }
+  }
+
+  function openFile(file) {
+    setOpenedFile(file)
+    const elements = document.getElementsByTagName('body');
+    for(let i = 0; i < elements.length;i++) {
+      const elt = elements[i]
+      elt.classList.add("unscrollable")
+    }
+  }
+
   function renderOpenedFile() {
     if(openedFile) {
-      return (<div class="zoomed-picture">
+      return (<div className="zoomed-picture">
         <img src={"/api/notes/" + note.uri + "/files/" + openedFile.file_id} alt={openedFile.file_id}/>
-        <IconButton aria-label="zoom-picture-close" onClick={() => setOpenedFile(null)} className="note-image-zoom">
+        <IconButton aria-label="zoom-picture-close" onClick={closeFile} className="note-image-zoom">
           <CloseIcon />
         </IconButton>
       </div>)
@@ -23,7 +41,7 @@ export const NoteFilesDisplay = ({note}) => {
   function renderFile(file) {
     return (<div className="note-image">
       <img key={file.file_id} src={"/api/notes/" + note.uri + "/files/" + file.file_id} alt={file.file_id}/>
-      <IconButton aria-label="zoom" onClick={() => setOpenedFile(file)} className="note-image-zoom">
+      <IconButton aria-label="zoom" onClick={() => openFile(file)} className="note-image-zoom">
         <ZoomOutMapIcon />
       </IconButton>
     </div>)
