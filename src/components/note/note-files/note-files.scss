@@ -6,6 +6,28 @@ $image-file-height: 30vh;
   display: flex;
   overflow-x: auto;
   position: relative;
+  .zoomed-picture {
+    position: fixed;
+    z-index: 10000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffffad;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    > img {
+      max-width: 100%;
+    }
+  }
+
+  .note-image-zoom {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: white;
+  }
   &.unique {
     .note-image {
       > img {
