@@ -14,14 +14,22 @@ $image-file-height: 30vh;
     width: 100%;
     height: 100%;
     background-color: #ffffffad;
-    /*display: flex;
-    align-items: center;
-    justify-content: center;*/
     cursor: pointer;
     overflow: auto;
     > img {
       border: 1px solid black;
       cursor: default;
+    }
+    .maxed {
+      overflow: auto;
+    }
+    &:not(.maxed) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      > img {
+        max-width: 100%;
+      }
     }
     .icon {
       position: fixed;
