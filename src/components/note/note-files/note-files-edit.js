@@ -68,7 +68,7 @@ export const NoteFilesEdit = ({note, onChange}) => {
   console.log(previews)
   return (
     <>
-      <div className="note-files">
+      <div className={"note-files " + (!note || !note.files || note.files.length == 0) ? "empty" : ""}>
         {previews.map((_, idx) => renderImage(idx))}
         <div className="note-image placeholder" key="placeholder">
           <IconButton aria-label="select" onClick={() => openFileDialog(previews.length)}>

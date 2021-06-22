@@ -106,7 +106,7 @@ class NoteCreation extends React.Component {
     return {request, files};
   }
 
-  handleSubmit() {
+  handleSubmit(closeAfterSaving) {
     if(!this.state.saving) {
       this.setState({saving: true, error: null});
       const request = {
@@ -120,12 +120,13 @@ class NoteCreation extends React.Component {
           const metadata = this.getUploadFilesRequest(saved)
           uploadFilesWithRequest('/api/notes/'+saved.uri+'/files', metadata.request, metadata.files, false)
           .then(response => {
-            this.handleClose({...saved, files: response.files});
+            this.handleClose({...saved, files: response.files}, closeAfterSaving);
           })
           .catch(err => this.setState({error: "Impossible d'enregistrer le fichier : " + err}))
           .finally(() => this.setState({saving: false}))
         } else {
-          this.handleClose(saved);
+          this.setState({saving: false})
+          this.handleClose(saved, closeAfterSaving);
         }
       }).catch(err => this.setState({saving: false, error: "Impossible de sauvegarder : " + err}))
     }
@@ -139,9 +140,11 @@ class NoteCreation extends React.Component {
     this.setState({valeur: event.target.value});
   }
 
-  handleClose(response) {
-    this.setState(lodash.cloneDeep(this.defaultState));
-    this.props.onDone(response);
+  handleClose(response, closeAfterSaving) {
+    if(closeAfterSaving) {
+      this.setState(lodash.cloneDeep(this.defaultState));
+    }
+    this.props.onDone(response, closeAfterSaving);
   }
 
   fileChanged(idxOfChangedFile, imageFile) {
@@ -228,12 +231,12 @@ class NoteCreation extends React.Component {
     };
     return (
       <Dialog open={this.props.creating || !!this.props.note}
-              onClose={this.handleClose}
+              onClose={() => this.handleClose(null, true)}
               fullScreen={true}
               aria-labelledby="creation-dialog-title">
         <DialogTitle id="creation-dialog-title">{this.state.noteUri ? 'Nouvelle note' : 'Modification'}</DialogTitle>
         <DialogContent>
-          <form onSubmit={this.handleSubmit} className="form">
+          <form onSubmit={() => this.handleSubmit(false)} className="form">
             <NoteFilesEdit note={this.props.note} onChange={this.fileChanged}/>
             <FormControl>
               <InputLabel htmlFor="valeur-ne">Note</InputLabel>
@@ -293,11 +296,14 @@ class NoteCreation extends React.Component {
           <Toaster error={this.state.error}/>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => this.handleClose()} color="primary">
-            Annuler
+          <Button onClick={() => this.handleClose(null,true)} color="primary">
+            Fermer
           </Button>
-          <Button onClick={this.handleSubmit} color="primary">
+          <Button onClick={_ => this.handleSubmit(false)} color="primary">
             Sauvegarder {this.state.saving ? <CircularProgress /> : ''}
+          </Button>
+          <Button onClick={_ => this.handleSubmit(true)} color="primary">
+            Sauvegarder et fermer{this.state.saving ? <CircularProgress /> : ''}
           </Button>
         </DialogActions>
       </Dialog>

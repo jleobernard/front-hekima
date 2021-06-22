@@ -1,11 +1,23 @@
 @import "../../../styles/dimensions";
 
 $image-file-height: 30vh;
+$empty-height : 20px;
 
 .note-files {
   display: flex;
   overflow-x: auto;
   position: relative;
+  &.empty {
+    height: $empty-height;
+    .note-image {
+      > img {
+        height: $empty-height;
+      }
+      &.placeholder {
+        line-height: $empty-height;
+      }
+    }
+  }
   .zoomed-picture {
     position: fixed;
     z-index: 10000;

@@ -57,7 +57,14 @@ class Notes extends React.Component {
   componentDidMount() {
     this.setState({loading: true});
     this.refreshNotes(true);
+    this.setState({keepAlive: setInterval(() => get("/api/user", false), 60 * 1000)})
   }
+  componentWillUnmount() {
+    if(this.state.keepAlive) {
+      clearInterval(this.state.keepAlive())
+    }
+  }
+
   filterChanged(newFilter) {
     const updated = {
       count: 20,
@@ -175,7 +182,7 @@ class Notes extends React.Component {
     }
   }
 
-  onDone(note) {
+  onDone(note, closeAfterSaving) {
     if(note) {
       const newNotes = [...this.state.notes];
       const index = lodash.findIndex(newNotes, n => n.uri === note.uri);
@@ -189,7 +196,11 @@ class Notes extends React.Component {
         notes: newNotes
       });
     }
-    this.setState({creating: false, noteDetail: null});
+    if(closeAfterSaving) {
+      this.setState({creating: false, noteDetail: null});
+    } else {
+      this.setState({noteDetail: note})
+    }
   }
 
   loadMore() {
