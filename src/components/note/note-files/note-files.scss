@@ -17,18 +17,21 @@ $image-file-height: 30vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    overflow: auto;
     > img {
-      max-width: 100%;
       border: 1px solid black;
+      cursor: default;
     }
+    .icon {
+      position: fixed;
+      top: 5px;
+      right: 5px;
+      background: white;
+    }
+
   }
 
-  .note-image-zoom {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: white;
-  }
   &.unique {
     .note-image {
       > img {
@@ -41,6 +44,7 @@ $image-file-height: 30vh;
     > img {
       height: $image-file-height;
       width: auto;
+      cursor: pointer;
     }
     margin-right: $gutter-size;
     position: relative;
