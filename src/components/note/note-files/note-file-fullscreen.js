@@ -1,10 +1,8 @@
 import {IconButton} from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import "./note-files.scss"
-import {constant, findIndex, times} from "lodash";
+import {findIndex} from "lodash";
 import CloseIcon from "@material-ui/icons/Close";
-import ZoomOutMapIcon from "@material-ui/icons/ZoomOutMap";
 
 export const NoteFileFullscreen = ({note, file, onClose}) => {
 
