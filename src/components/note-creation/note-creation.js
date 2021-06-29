@@ -21,6 +21,7 @@ import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import ReactMarkdown from "react-markdown";
 import {NoteFilesEdit} from "../note/note-files/note-files-edit";
+import "../../styles/science.scss";
 
 class NoteCreation extends React.Component {
 
@@ -37,7 +38,8 @@ class NoteCreation extends React.Component {
     saving: false,
     error: null,
     version: 0,
-    filesChanges: {}
+    filesChanges: {},
+    toolbar: ''
   };
 
 
@@ -143,6 +145,8 @@ class NoteCreation extends React.Component {
   handleClose(response, closeAfterSaving) {
     if(closeAfterSaving) {
       this.setState(lodash.cloneDeep(this.defaultState));
+    } else {
+      this.setState({filesChanges: {}})
     }
     this.props.onDone(response, closeAfterSaving);
   }
@@ -224,6 +228,84 @@ class NoteCreation extends React.Component {
     element.selectionEnd = element.selectionStart
   }
 
+  setToolbar(tb) {
+    if (this.state.toolbar === tb) {
+      this.setState({toolbar: ''})
+    } else {
+      this.setState({toolbar: tb})
+    }
+  }
+
+  renderColours() {
+    return (
+      <ButtonGroup className="button-group centered with-margin-top">
+        {this.colors.map(color =>
+          <IconButton style={{color}} aria-label={color} key={color} component="span" onClick={() => this.addColorTag(color)}>
+            <FiberManualRecordRoundedIcon />
+          </IconButton>
+        )}
+      </ButtonGroup>
+    )
+  }
+
+  renderTitles() {
+    return (
+      <ButtonGroup className="button-group centered">
+        <Button className="block" onClick={() => this.addMD('# ', ' #')}>Titre1</Button>
+        <Button className="block" onClick={() => this.addMD('## ', ' ##')}>Titre2</Button>
+        <Button className="block" onClick={() => this.addMD('### ', ' ###')}>Titre3</Button>
+        <Button className="block" onClick={() => this.addMD('#### ', ' ####')}>Titre4</Button>
+      </ButtonGroup>
+    )
+  }
+
+  renderText() {
+    return (
+      <ButtonGroup className="button-group centered">
+        <Button className="block" onClick={() => this.addMD('<span style="font-size:2em">','</span>')}>Important</Button>
+        <Button className="block" onClick={() => this.addMD('**','**')}>Gras</Button>
+        <Button className="block" onClick={() => this.addMD('*', '*')}>Italique</Button>
+        <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}>Barré</Button>
+        <Button className="block" onClick={() => this.addMD('<ins>', '</ins>')}>Souligné</Button>
+      </ButtonGroup>
+    )
+  }
+
+  renderMaths() {
+    return (
+      <ButtonGroup className="button-group centered">
+        <Button className="block" onClick={() => this.addMD('<sub>','</sub>')}>Indice&nbsp;<sub>bas</sub></Button>
+        <Button className="block" onClick={() => this.addMD('<sup>','</sup>')}>Indice&nbsp;<sup>haut</sup></Button>
+        <Button className="block" onClick={() => this.addSingle('∂')}>∂</Button>
+        <Button className="block" onClick={() => this.addSingle('<span style="font-size: 2em">∘</span>')}><span style={{fontSize: "2em"}}>∘</span></Button>
+        <Button className="block scientific-notation" onClick={() => this.addMD('<fraction><numer>','</numer></fraction>')}><fraction><numer>a</numer>b</fraction></Button>
+      </ButtonGroup>
+    )
+  }
+
+  renderGreek() {
+    const lower = ['α', 'β', 'γ', 'δ', 'ε', 'ζ','η','θ','λ','μ','ξ','π','ρ','σ','φ','ϕ','ψ','ω']
+    const upper = ['Γ','Δ','Θ','Λ','Ξ','Π','Σ','Φ','Ψ','Ω']
+    return (
+      <div>
+        <ButtonGroup className="button-group centered" key="lowercase">
+          {lower.map(letter =>
+            <IconButton key={"greek-" + letter} component="span" onClick={() => this.addSingle(letter)}>
+              <span>{letter}</span>
+            </IconButton>
+          )}
+        </ButtonGroup>
+        <ButtonGroup className="button-group centered" key="uppercase">
+          {upper.map(letter =>
+            <IconButton key={"greek-" + letter} component="span" onClick={() => this.addSingle(letter)}>
+              <span>{letter}</span>
+            </IconButton>
+          )}
+        </ButtonGroup>
+      </div>
+    )
+  }
+
   render() {
     const filter = {
       source : this.state.source,
@@ -245,7 +327,7 @@ class NoteCreation extends React.Component {
                 required autoFocus={true}
                 value={this.state.valeur}
                 ref={this.refValeur}
-                multiline rows={3} rowsMax={10} variant="outlined"
+                multiline rows={3} rowsMax={25} variant="outlined"
                 onChange={this.valueChanged}
                 endAdornment={
                   <InputAdornment position="end">
@@ -258,34 +340,20 @@ class NoteCreation extends React.Component {
                   </InputAdornment>
                 }
               />
-              <ButtonGroup className="button-group centered">
-                {this.colors.map(color =>
-                  <IconButton style={{color}} aria-label={color} key={color} component="span" onClick={() => this.addColorTag(color)}>
-                    <FiberManualRecordRoundedIcon />
-                  </IconButton>
-                )}
+              <ButtonGroup className="button-group centered with-margin-top">
+                <Button className="block" onClick={() => this.setToolbar("titles")}>Titres</Button>
+                <Button className="block" onClick={() => this.setToolbar('colours')}>Couleurs</Button>
+                <Button className="block" onClick={() => this.setToolbar('text')}>Texte</Button>
+                <Button className="block" onClick={() => this.setToolbar('maths')}>Maths</Button>
+                <Button className="block" onClick={() => this.setToolbar('greek')}>Grec</Button>
               </ButtonGroup>
-              <ButtonGroup className="button-group centered">
-                <Button className="block" onClick={() => this.addMD('# ', ' #')}>Titre1</Button>
-                <Button className="block" onClick={() => this.addMD('## ', ' ##')}>Titre2</Button>
-                <Button className="block" onClick={() => this.addMD('### ', ' ###')}>Titre3</Button>
-              </ButtonGroup>
-              <ButtonGroup className="button-group centered">
-                <Button className="block" onClick={() => this.addMD('<span style="font-size:2em">','</span>')}>Important</Button>
-                <Button className="block" onClick={() => this.addMD('**','**')}>Gras</Button>
-                <Button className="block" onClick={() => this.addMD('*', '*')}>Italique</Button>
-                <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}>Barré</Button>
-                <Button className="block" onClick={() => this.addMD('<ins>', '</ins>')}>Souligné</Button>
-              </ButtonGroup>
-              <ButtonGroup className="button-group centered">
-                <Button className="block" onClick={() => this.addMD('<sub>','</sub>')}>Indice&nbsp;<sub>bas</sub></Button>
-                <Button className="block" onClick={() => this.addMD('<sup>','</sup>')}>Indice&nbsp;<sub>haut</sub></Button>
-                <Button className="block" onClick={() => this.addSingle('∂')}>∂</Button>
-                <Button className="block" onClick={() => this.addSingle('<span style="font-size: 2em">∘</span>')}><span style={{fontSize: "2em"}}>∘</span></Button>
-              </ButtonGroup>
-              {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
-                <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
-              </Paper> : <></>}
+              <div className="with-margin-top with-margin-bottom">
+                {this.state.toolbar === 'colours' ? this.renderColours(): <></>}
+                {this.state.toolbar === 'titles'  ? this.renderTitles(): <></>}
+                {this.state.toolbar === 'text'    ? this.renderText() : <></>}
+                {this.state.toolbar === 'maths'   ? this.renderMaths() : <></>}
+                {this.state.toolbar === 'greek'   ? this.renderGreek(): <></>}
+              </div>
               <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
 
             </FormControl>
@@ -293,6 +361,9 @@ class NoteCreation extends React.Component {
                         onFilterChanged={this.onFilterChanged}
                         allowCreation={true} />
           </form>
+          {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
+            <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
+          </Paper> : <></>}
           <Toaster error={this.state.error}/>
         </DialogContent>
         <DialogActions>

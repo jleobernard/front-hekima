@@ -1,0 +1,14 @@
+
+fraction {
+  display: inline-grid;
+
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+
+  font-size: 0.8em; // You can change fraction size here. I recommend 0.5em ~ 0.8em
+  vertical-align: top;
+}
+
+numer {
+  border-bottom: 1px solid;
+}
