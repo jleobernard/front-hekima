@@ -61,6 +61,16 @@ $empty-height : 20px;
     }
   }
   .note-image {
+    &.deleted:after {
+      content: " ";
+      position: absolute;
+      background-color: #ab303063;
+      display: block;
+      width: 100%;
+      height: calc(100% - 45px);
+      top: 0;
+      left: 0;
+    }
     > img {
       height: $image-file-height;
       width: auto;

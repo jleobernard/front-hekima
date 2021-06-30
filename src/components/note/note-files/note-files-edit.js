@@ -3,11 +3,13 @@ import AddIcon from "@material-ui/icons/Add";
 import {useEffect, useRef, useState} from "react";
 import "./note-files.scss"
 import {constant, times} from "lodash";
+import {Delete} from "@material-ui/icons";
 
 export const NoteFilesEdit = ({note, onChange}) => {
 
   const [previews, setPreviews] = useState(times(note && note.files ? note.files.length : 0, constant({})))
   const [modifyingImageIdx, setModifyingImageIdx] = useState(-1)
+  const [deleted, setDeleted] = useState({})
   const refInputFile = useRef(null)
 
   useEffect(() => {
@@ -43,32 +45,43 @@ export const NoteFilesEdit = ({note, onChange}) => {
     refInputFile.current.click()
   }
 
+  function deleteImage(idx) {
+    const copy = {...deleted}
+    copy[idx] = true
+    setDeleted(copy)
+    onChange(idx, null)
+  }
+
   function renderImage(idx) {
     const preview = previews[idx]
     if(preview && preview.data) {
       return (
-        <div className="note-image" key={preview.key}>
+        <div className={"note-image " + (deleted[idx] ? "deleted" : "")} key={preview.key}>
           <img src={preview.data}
              alt={"en construction"}/>
+          <IconButton className="top-right-icon" aria-label="delete-image" onClick={() => deleteImage(idx)}>
+            <Delete />
+          </IconButton>
         </div>
       )
     } else if(note && note.files && note.files.length > idx){
       const file = note.files[idx]
       return (
-        <div className="note-image" key={file.file_id}>
-          <img className="note-image"
-               src={"/api/notes/" + note.uri + "/files/" + file.file_id}
+        <div className={"note-image " + (deleted[idx] ? "deleted" : "")} key={file.file_id}>
+          <img src={"/api/notes/" + note.uri + "/files/" + file.file_id}
                alt={file.file_id}/>
+          <IconButton className="top-right-icon" aria-label="delete-image" onClick={() => deleteImage(idx)}>
+            <Delete />
+          </IconButton>
         </div>
       )
     } else {
       return (<div key={Date.now()}></div>)
     }
   }
-  console.log(previews)
   return (
     <>
-      <div className={"note-files " + (!note || !note.files || note.files.length == 0) ? "empty" : ""}>
+      <div className={"note-files " + ((!note || !note.files || note.files.length === 0) ? "empty" : "")}>
         {previews.map((_, idx) => renderImage(idx))}
         <div className="note-image placeholder" key="placeholder">
           <IconButton aria-label="select" onClick={() => openFileDialog(previews.length)}>
