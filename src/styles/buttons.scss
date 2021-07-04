@@ -1,5 +1,9 @@
 @import "dimensions.scss";
 
+.MuiButtonGroup-root.button-group {
+  flex-wrap: wrap;
+}
+
 .MuiButton-root.button-action {
   background-color: #006064;
   color: white;

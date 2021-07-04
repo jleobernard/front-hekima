@@ -15,3 +15,32 @@ numer {
 denom {
   display: block;
 }
+
+superposed {
+  display: inline-flex;
+  flex-direction: column;
+  text-align: center;
+  > up {
+    font-size: 1.25em;
+    line-height: 1em;
+  }
+  > down {
+    font-size: 0.75em;
+    line-height: 0.5em;
+  }
+}
+
+upperposed {
+  display: inline-flex;
+  flex-direction: column;
+  text-align: center;
+  transform: translateY(-0.75em);
+  > up {
+    font-size: 0.75em;
+    line-height: 0.5em;
+  }
+  > down {
+    font-size: 1.25em;
+    line-height: 1em;
+  }
+}

@@ -47,7 +47,7 @@ class NoteCreation extends React.Component {
   constructor(props) {
     super(props);
     this.state = lodash.cloneDeep(this.defaultState);
-    this.colors = ['red', 'green', 'purple'];
+    this.colors = ['red', 'green', 'purple', 'gray'];
     this.handleClose = this.handleClose.bind(this);
     this.valueChanged = this.valueChanged.bind(this);
     this.fileChanged = this.fileChanged.bind(this);
@@ -274,19 +274,27 @@ class NoteCreation extends React.Component {
   renderMaths() {
     return (
       <ButtonGroup className="button-group centered">
-        <Button className="block" onClick={() => this.addMD('<sub>','</sub>')}>Indice&nbsp;<sub>bas</sub></Button>
-        <Button className="block" onClick={() => this.addMD('<sup>','</sup>')}>Indice&nbsp;<sup>haut</sup></Button>
+        <Button className="block" onClick={() => this.addMD('<sub>','</sub>')}>I&nbsp;<sub>bas</sub></Button>
+        <Button className="block" onClick={() => this.addMD('<sup>','</sup>')}>Is&nbsp;<sup>haut</sup></Button>
         <Button className="block" onClick={() => this.addSingle('∂')}>∂</Button>
         <Button className="block" onClick={() => this.addSingle('&nabla;')}>&nabla;</Button>
         <Button className="block" onClick={() => this.addSingle('&forall;')}>&forall;</Button>
         <Button className="block" onClick={() => this.addSingle('&isin;')}>&isin;</Button>
-        <Button className="block" onClick={() => this.addSingle('&Implies;')}>&Implies;</Button>
+        <Button className="block" onClick={() => this.addSingle('&sube;')}>&sube;</Button>
+        <Button className="block" onClick={() => this.addSingle('∃')}>∃</Button>
+        <Button className="block" onClick={() => this.addSingle('⇒')}>⇒</Button>
         <Button className="block" onClick={() => this.addSingle('&int;')}>&int;</Button>
-        <Button className="block" onClick={() => this.addSingle('&Intersection;')}>&Intersection;</Button>
-        <Button className="block" onClick={() => this.addSingle('&longmapsto;')}>&longmapsto;</Button>
-        <Button className="block" onClick={() => this.addSingle('&reals;')}>&reals;</Button>
+        <Button className="block" onClick={() => this.addSingle('⋂')}>⋂</Button>
+        <Button className="block" onClick={() => this.addSingle('⋃')}>⋃</Button>
+        <Button className="block" onClick={() => this.addSingle('&xrarr;')}>&rarr;</Button>
+        <Button className="block" onClick={() => this.addSingle('⇔')}>⇔</Button>
+        <Button className="block" onClick={() => this.addSingle('⇒')}>⇒</Button>
+        <Button className="block" onClick={() => this.addSingle('⟼')}>⟼</Button>
+        <Button className="block" onClick={() => this.addSingle('ℝ')}>ℝ</Button>
         <Button className="block" onClick={() => this.addSingle('<span style="font-size: 2em">∘</span>')}><span style={{fontSize: "2em"}}>∘</span></Button>
         <Button className="block scientific-notation" onClick={() => this.addMD('<fraction><numer>','</numer><denom></denom></fraction>')}><fraction><numer>a</numer>b</fraction></Button>
+        <Button className="block scientific-notation" onClick={() => this.addMD('<superposed><up>','</up><down></down></superposed>')}><superposed><up>a</up><down>b</down></superposed></Button>
+        <Button className="block scientific-notation" onClick={() => this.addMD('<upperposed><up>','</up><down></down></upperposed>')}><upperposed><up>a</up><down>b</down></upperposed></Button>
       </ButtonGroup>
     )
   }
