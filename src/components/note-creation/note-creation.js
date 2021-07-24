@@ -39,7 +39,8 @@ class NoteCreation extends React.Component {
     error: null,
     version: 0,
     filesChanges: {},
-    toolbar: ''
+    toolbar: '',
+    parsedResult: null
   };
 
 
@@ -57,9 +58,12 @@ class NoteCreation extends React.Component {
     this.addMD = this.addMD.bind(this);
     this.parsePictureChanged = this.parsePictureChanged.bind(this);
     this.focusAfterFormatting = this.focusAfterFormatting.bind(this)
+    this.addParsedResult = this.addParsedResult.bind(this)
+    this.parsedResultChanged = this.parsedResultChanged.bind(this)
     this.refInputFile = React.createRef();
     this.refValeur = React.createRef();
   }
+
   componentDidUpdate(prevProps, prevState, snapshot) {
     const prevNoteUri = (prevProps.note || {}).uri;
     const currentNoteUri = (this.props.note || {}).uri;
@@ -142,6 +146,17 @@ class NoteCreation extends React.Component {
     this.setState({valeur: event.target.value});
   }
 
+  parsedResultChanged(event) {
+    this.setState({parsedResult: event.target.value})
+  }
+
+  addParsedResult() {
+    this.setState({
+      valeur: (this.state.valeur || '') + '\n' + this.state.parsedResult,
+      parsedResult: null
+    })
+  }
+
   handleClose(response, closeAfterSaving) {
     if(closeAfterSaving) {
       this.setState(lodash.cloneDeep(this.defaultState));
@@ -164,7 +179,7 @@ class NoteCreation extends React.Component {
       const imageFile = file.files[0]
       upload(`/api/notes:parse`, imageFile, false)
       .then(response => {
-        this.setState({valeur: response.lines.join('\n')});
+        this.setState({parsedResult: response.lines.join('\n')});
       })
       .catch(err => {
         console.error(err)
@@ -328,72 +343,102 @@ class NoteCreation extends React.Component {
       tags: this.state.tags || []
     };
     return (
-      <Dialog open={this.props.creating || !!this.props.note}
-              onClose={() => this.handleClose(null, true)}
-              fullScreen={true}
-              aria-labelledby="creation-dialog-title">
-        <DialogTitle id="creation-dialog-title">{this.state.noteUri ? 'Nouvelle note' : 'Modification'}</DialogTitle>
-        <DialogContent>
-          <form onSubmit={() => this.handleSubmit(false)} className="form">
-            <NoteFilesEdit note={this.props.note} onChange={this.fileChanged}/>
-            <FormControl>
-              <InputLabel htmlFor="valeur-ne">Note</InputLabel>
-              <Input
-                id="valeur-ne"
-                required autoFocus={true}
-                value={this.state.valeur}
-                ref={this.refValeur}
-                multiline rows={3} rowsMax={25} variant="outlined"
-                onChange={this.valueChanged}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="analyse image"
-                      onClick={() => this.refInputFile.current.click()}
-                    >
-                      {this.state.parsing ? <CircularProgress /> : <Camera />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-              <ButtonGroup className="button-group centered with-margin-top">
-                <Button className="block" onClick={() => this.setToolbar("titles")}>Titres</Button>
-                <Button className="block" onClick={() => this.setToolbar('colours')}>Couleurs</Button>
-                <Button className="block" onClick={() => this.setToolbar('text')}>Texte</Button>
-                <Button className="block" onClick={() => this.setToolbar('maths')}>Maths</Button>
-                <Button className="block" onClick={() => this.setToolbar('greek')}>Grec</Button>
-              </ButtonGroup>
-              <div className="with-margin-top with-margin-bottom">
-                {this.state.toolbar === 'colours' ? this.renderColours(): <></>}
-                {this.state.toolbar === 'titles'  ? this.renderTitles(): <></>}
-                {this.state.toolbar === 'text'    ? this.renderText() : <></>}
-                {this.state.toolbar === 'maths'   ? this.renderMaths() : <></>}
-                {this.state.toolbar === 'greek'   ? this.renderGreek(): <></>}
-              </div>
-              <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
+      <>
+        <Dialog open={this.props.creating || !!this.props.note} key="main-dialog"
+                onClose={() => this.handleClose(null, true)}
+                fullScreen={true}
+                aria-labelledby="creation-dialog-title">
+          <DialogTitle id="creation-dialog-title">{this.state.noteUri ? 'Nouvelle note' : 'Modification'}</DialogTitle>
+          <DialogContent>
+            <form onSubmit={() => this.handleSubmit(false)} className="form">
+              <NoteFilesEdit note={this.props.note} onChange={this.fileChanged}/>
+              <FormControl>
+                <InputLabel htmlFor="valeur-ne">Note</InputLabel>
+                <Input
+                  id="valeur-ne"
+                  required autoFocus={true}
+                  value={this.state.valeur}
+                  ref={this.refValeur}
+                  multiline rows={3} rowsMax={25} variant="outlined"
+                  onChange={this.valueChanged}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="analyse image"
+                        onClick={() => this.refInputFile.current.click()}
+                      >
+                        {this.state.parsing ? <CircularProgress /> : <Camera />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+                <ButtonGroup className="button-group centered with-margin-top">
+                  <Button className="block" onClick={() => this.setToolbar("titles")}>Titres</Button>
+                  <Button className="block" onClick={() => this.setToolbar('colours')}>Couleurs</Button>
+                  <Button className="block" onClick={() => this.setToolbar('text')}>Texte</Button>
+                  <Button className="block" onClick={() => this.setToolbar('maths')}>Maths</Button>
+                  <Button className="block" onClick={() => this.setToolbar('greek')}>Grec</Button>
+                </ButtonGroup>
+                <div className="with-margin-top with-margin-bottom">
+                  {this.state.toolbar === 'colours' ? this.renderColours(): <></>}
+                  {this.state.toolbar === 'titles'  ? this.renderTitles(): <></>}
+                  {this.state.toolbar === 'text'    ? this.renderText() : <></>}
+                  {this.state.toolbar === 'maths'   ? this.renderMaths() : <></>}
+                  {this.state.toolbar === 'greek'   ? this.renderGreek(): <></>}
+                </div>
+                <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
 
-            </FormControl>
-            <NoteFilter filter={filter} version={0}
-                        onFilterChanged={this.onFilterChanged}
-                        allowCreation={true} />
-          </form>
-          {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
-            <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
-          </Paper> : <></>}
-          <Toaster error={this.state.error}/>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => this.handleClose(null,true)} color="primary">
-            Fermer
-          </Button>
-          <Button onClick={_ => this.handleSubmit(false)} color="primary">
-            Sauvegarder {this.state.saving ? <CircularProgress /> : ''}
-          </Button>
-          <Button onClick={_ => this.handleSubmit(true)} color="primary">
-            Sauvegarder et fermer{this.state.saving ? <CircularProgress /> : ''}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              </FormControl>
+              <NoteFilter filter={filter} version={0}
+                          onFilterChanged={this.onFilterChanged}
+                          allowCreation={true} />
+            </form>
+            {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
+              <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
+            </Paper> : <></>}
+            <Toaster error={this.state.error}/>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => this.handleClose(null,true)} color="primary">
+              Fermer
+            </Button>
+            <Button onClick={_ => this.handleSubmit(false)} color="primary">
+              Sauvegarder {this.state.saving ? <CircularProgress /> : ''}
+            </Button>
+            <Button onClick={_ => this.handleSubmit(true)} color="primary">
+              Sauvegarder et fermer{this.state.saving ? <CircularProgress /> : ''}
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={this.state.parsedResult} key="parsed-result"
+                onClose={() => this.setState({parsedResult: null})}
+                fullScreen={true}
+                aria-labelledby="parsed-result-dialog-title">
+          <DialogTitle id="parsed-result-dialog-title">Résultat de l'analyse</DialogTitle>
+          <DialogContent>
+            <form onSubmit={this.addParsedResult} className="form">
+              <FormControl>
+                <InputLabel htmlFor="parsed-value">Texte analysé</InputLabel>
+                <Input
+                  id="parsed-value"
+                  required autoFocus={true}
+                  value={this.state.parsedResult}
+                  multiline rows={3} rowsMax={25} variant="outlined"
+                  onChange={this.parsedResultChanged}
+                />
+              </FormControl>
+            </form>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => this.setState({parsedResult: null})} color="primary">
+              Fermer
+            </Button>
+            <Button onClick={this.addParsedResult} color="primary">
+              Ajouter
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </>
     )
   }
 }
