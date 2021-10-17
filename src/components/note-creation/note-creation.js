@@ -1,5 +1,5 @@
 import * as React from "react";
-import {post, upload, uploadFilesWithRequest} from "../../utils/http";
+import {post, get, upload, uploadFilesWithRequest} from "../../utils/http";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
 import Button from "@material-ui/core/Button";
@@ -15,7 +15,7 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import Toaster from "../Toaster";
 import NoteFilter from "../filter/filter";
 import {ButtonGroup, Input, InputAdornment, InputLabel, Paper} from "@material-ui/core";
-import {Camera} from "@material-ui/icons";
+import {Camera, Search} from "@material-ui/icons";
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
 import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -40,7 +40,9 @@ class NoteCreation extends React.Component {
     version: 0,
     filesChanges: {},
     toolbar: '',
-    parsedResult: null
+    parsedResult: null,
+    searchsubs: '',
+    searchingSubs: false
   };
 
 
@@ -60,10 +62,21 @@ class NoteCreation extends React.Component {
     this.focusAfterFormatting = this.focusAfterFormatting.bind(this)
     this.addParsedResult = this.addParsedResult.bind(this)
     this.parsedResultChanged = this.parsedResultChanged.bind(this)
+    this.searchSubs = this.searchSubs.bind(this)
+    this.searchChanged = this.searchChanged.bind(this);
     this.refInputFile = React.createRef();
     this.refValeur = React.createRef();
   }
 
+  searchSubs(q) {
+    this.setState({searchingSubs: true})
+    get('/kosubs/api/search', {q: this.state.searchsubs})
+    .then(results => {
+      console.log(results)
+      this.setState({subs: results})
+    })
+    .finally(() => this.setState({searchingSubs: false}))
+  }
   componentDidUpdate(prevProps, prevState, snapshot) {
     const prevNoteUri = (prevProps.note || {}).uri;
     const currentNoteUri = (this.props.note || {}).uri;
@@ -144,6 +157,10 @@ class NoteCreation extends React.Component {
 
   valueChanged(event) {
     this.setState({valeur: event.target.value});
+  }
+
+  searchChanged(event) {
+    this.setState({searchsubs: event.target.value});
   }
 
   parsedResultChanged(event) {
@@ -279,9 +296,9 @@ class NoteCreation extends React.Component {
       <ButtonGroup className="button-group centered">
         <Button className="block" onClick={() => this.addMD('<span style="font-size:2em">','</span>')}>Important</Button>
         <Button className="block" onClick={() => this.addMD('**','**')}>Gras</Button>
-        <Button className="block" onClick={() => this.addMD('*', '*')}>Italique</Button>
-        <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}>Barré</Button>
-        <Button className="block" onClick={() => this.addMD('<ins>', '</ins>')}>Souligné</Button>
+        <Button className="block" onClick={() => this.addMD('*', '*')}><i>Italique</i></Button>
+        <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}><strike>Barré</strike></Button>
+        <Button className="block" onClick={() => this.addMD('<ins>', '</ins>')}><ins>Souligné</ins></Button>
       </ButtonGroup>
     )
   }
@@ -335,6 +352,15 @@ class NoteCreation extends React.Component {
         </ButtonGroup>
       </div>
     )
+  }
+  renderSubs() {
+    if(this.state.subs && this.state.subs.length > 0) {
+      return (<div class="videos">
+        {this.state.subs.map(sub => <video controls width="200"><source src={"/kosubs/" + sub.name + "#t=" + Math.floor(sub.from) +"," + Math.ceil(sub.to)} type="video/mp4" /></video>)}
+      </div>)
+    } else {
+      return (<></>)
+    }
   }
 
   render() {
@@ -392,7 +418,20 @@ class NoteCreation extends React.Component {
               <NoteFilter filter={filter} version={0}
                           onFilterChanged={this.onFilterChanged}
                           allowCreation={true} />
+              <FormControl>
+                <InputLabel htmlFor="valeur-ne">Sous-titres</InputLabel>
+                <Input id="search-subs" value={this.state.searchsubs} onChange={this.searchChanged}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton aria-label="analyse image" onClick={() => this.searchSubs(this.state.searchsubs)}>
+                        {this.state.searchingSubs ? <CircularProgress /> : <Search />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+              </FormControl>
             </form>
+            {this.renderSubs()}
             {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
               <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
             </Paper> : <></>}
