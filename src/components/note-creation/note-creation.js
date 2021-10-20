@@ -22,11 +22,15 @@ import rehypeRaw from "rehype-raw";
 import ReactMarkdown from "react-markdown";
 import {NoteFilesEdit} from "../note/note-files/note-files-edit";
 import "../../styles/science.scss";
+import VideoList from "../medias/video-list";
+import {getKey} from "../../utils/keys";
 
 class NoteCreation extends React.Component {
 
   defaultState =  {
     noteUri: null,
+    selectedSubs: [],
+    subs: [],
     valeur: "",
     sources: [],
     tags: [],
@@ -64,17 +68,38 @@ class NoteCreation extends React.Component {
     this.parsedResultChanged = this.parsedResultChanged.bind(this)
     this.searchSubs = this.searchSubs.bind(this)
     this.searchChanged = this.searchChanged.bind(this);
+    this.setSubsChanged = this.setSubsChanged.bind(this)
     this.refInputFile = React.createRef();
     this.refValeur = React.createRef();
+  }
+
+  setSubsChanged(sub, fromSelectedList) {
+    const selectedSubs = [...this.state.selectedSubs]
+    const suggestedSubs = [...this.state.subs]
+    if(fromSelectedList) {
+      let index = lodash.findIndex(selectedSubs, {key: sub.key})
+      if (sub.selected) {
+        selectedSubs[index] = sub
+      } else {
+        suggestedSubs.unshift(sub)
+        selectedSubs.splice(index, 1)
+      }
+    } else {
+      let index = lodash.findIndex(suggestedSubs, {key: sub.key})
+      if (sub.selected) {
+        selectedSubs.unshift(sub)
+        suggestedSubs.splice(index, 1)
+      } else {
+        suggestedSubs[index] = sub
+      }
+    }
+    this.setState({subs: suggestedSubs, selectedSubs: selectedSubs})
   }
 
   searchSubs(q) {
     this.setState({searchingSubs: true})
     get('/kosubs/api/search', {q: this.state.searchsubs})
-    .then(results => {
-      console.log(results)
-      this.setState({subs: results})
-    })
+    .then(results => this.setState({subs: (results || []).map(r => ({...r, selected: false, key: getKey("subs")}))}))
     .finally(() => this.setState({searchingSubs: false}))
   }
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -88,7 +113,10 @@ class NoteCreation extends React.Component {
         source: note.source,
         tags: note.tags,
         hasFile: note.hasFile,
-        version: this.state.version + 1
+        version: this.state.version + 1,
+        selectedSubs: (note.subs || []).map(s => {
+          return {... s, selected: true, key: getKey("subs") }
+        })
       })
     }
   }
@@ -132,7 +160,8 @@ class NoteCreation extends React.Component {
         uri: (this.props.note || {}).uri,
         valeur: this.state.valeur,
         tags: lodash.map(this.state.tags, t => t.uri),
-        source: this.state.source ? this.state.source.uri : null
+        source: this.state.source ? this.state.source.uri : null,
+        subs: (this.state.selectedSubs || []).map(s => ({name: s.name, from: s.from, to: s.to}))
       };
       post('/api/notes', request).then(saved => {
         if(this.hasImageChanges()) {
@@ -353,15 +382,6 @@ class NoteCreation extends React.Component {
       </div>
     )
   }
-  renderSubs() {
-    if(this.state.subs && this.state.subs.length > 0) {
-      return (<div class="videos">
-        {this.state.subs.map(sub => <video controls width="200"><source src={"/kosubs/" + sub.name + "#t=" + Math.floor(sub.from) +"," + Math.ceil(sub.to)} type="video/mp4" /></video>)}
-      </div>)
-    } else {
-      return (<></>)
-    }
-  }
 
   render() {
     const filter = {
@@ -418,6 +438,8 @@ class NoteCreation extends React.Component {
               <NoteFilter filter={filter} version={0}
                           onFilterChanged={this.onFilterChanged}
                           allowCreation={true} />
+
+              <VideoList key={"selected-subs"} title={"Sous-titres"} videos={this.state.selectedSubs} editable={true} onChange={(sub) => this.setSubsChanged(sub, true)}/>
               <FormControl>
                 <InputLabel htmlFor="valeur-ne">Sous-titres</InputLabel>
                 <Input id="search-subs" value={this.state.searchsubs} onChange={this.searchChanged}
@@ -430,8 +452,8 @@ class NoteCreation extends React.Component {
                   }
                 />
               </FormControl>
+              <VideoList key={"suggested-subs"} title={"Sous-titres trouvées"} videos={this.state.subs} editable={true} onChange={(sub) => this.setSubsChanged(sub, false)}/>
             </form>
-            {this.renderSubs()}
             {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
               <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
             </Paper> : <></>}

@@ -2,6 +2,9 @@
 @import "fonts.scss";
 @import "dimensions";
 
+$normal-text-size: $font-size;
+$minor-title-font-size: $font-size * 1.25;
+
 @mixin unimportant {
   color: gray;
   font-size: 0.8em;

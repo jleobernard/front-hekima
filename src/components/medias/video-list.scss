@@ -1,0 +1,22 @@
+@import "../../styles/dimensions";
+@import "../../styles/texts";
+.videos-container {
+  > .title {
+    font-size: $minor-title-font-size;
+  }
+  .videos {
+    overflow-x: auto;
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    > .video {
+      width: 50%;
+      margin-right: $gutter-size;
+      display: inline-block;
+      flex-shrink: 0;
+      > video {
+        width: 100%;
+      }
+    }
+  }
+}
