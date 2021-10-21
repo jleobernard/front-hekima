@@ -98,7 +98,7 @@ class NoteCreation extends React.Component {
 
   searchSubs(q) {
     this.setState({searchingSubs: true})
-    get('/kosubs/api/search', {q: this.state.searchsubs})
+    get('/api/kosubs', {q: this.state.searchsubs})
     .then(results => this.setState({subs: (results || []).map(r => ({...r, selected: false, key: getKey("subs")}))}))
     .finally(() => this.setState({searchingSubs: false}))
   }

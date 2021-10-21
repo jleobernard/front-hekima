@@ -13,7 +13,7 @@ export default function VideoList({title, videos, editable, onChange}) {
   function renderVideo(videoMetadata, index) {
     return (
       <div className="video" key={videoMetadata.key || index}>
-        <video controls>
+        <video controls loop>
           <source src={"/kosubs/" + videoMetadata.name + "#t=" + Math.floor(videoMetadata.from) +"," + Math.ceil(videoMetadata.to)} type="video/mp4" />
         </video>
         {editable ?
