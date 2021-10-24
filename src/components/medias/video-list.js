@@ -1,8 +1,11 @@
 import "./video-list.scss"
 import * as React from "react";
 import {Checkbox, Input} from "@material-ui/core";
+import {useState} from "react";
 
 export default function VideoList({title, videos, editable, onChange}) {
+
+  const [errorsCount, setErrorsCount] = useState({});
 
   function valueChanged(md, fieldName, value) {
     md[fieldName] = value
@@ -10,11 +13,42 @@ export default function VideoList({title, videos, editable, onChange}) {
       onChange(md)
     }
   }
+  function handleVideoError(err) {
+    const video = err.currentTarget
+    const source = video.children[0]
+    const src = source.src
+    let keepTrying = false;
+    let newCounts = {...errorsCount}
+    if(src in errorsCount) {
+      if(errorsCount[src] < 10) {
+        newCounts[src] = newCounts[src] + 1
+        keepTrying = true
+      }
+    } else {
+      keepTrying = true
+      newCounts[src] = 1
+    }
+    if(keepTrying) {
+      setErrorsCount(newCounts)
+      setTimeout(() => {
+        console.log("Tentative de recharger ", src, " pour la ", newCounts[src], " fois")
+        video.load()
+      }, 1000)
+    }
+  }
   function renderVideo(videoMetadata, index) {
+    let from = videoMetadata.from
+    let to = videoMetadata.to
+    let src;
+    if(editable) {
+      src = "/kosubs/" + videoMetadata.name + ".mp4#t=" + from +"," + to
+    } else {
+      src ="/kosubs/loop/" + videoMetadata.name + "/" + from + "/" + to + ".mp4"
+    }
     return (
       <div className="video" key={videoMetadata.key || index}>
-        <video controls loop>
-          <source src={"/kosubs/" + videoMetadata.name + "#t=" + Math.floor(videoMetadata.from) +"," + Math.ceil(videoMetadata.to)} type="video/mp4" />
+        <video controls loop onError={err => handleVideoError(err)}>
+          <source src={src} type="video/mp4" />
         </video>
         {editable ?
           <div>
