@@ -27,7 +27,7 @@ import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 import gfm from 'remark-gfm'
 import {NoteFilesDisplay} from "../../components/note/note-files/note-files-display";
-import VideoList from "../../components/medias/video-list";
+import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
 
 
 class Notes extends React.Component {
@@ -148,7 +148,7 @@ class Notes extends React.Component {
     return <li>
       <Card className={"note-card"}>
         <NoteFilesDisplay note={note} />
-        {note.subs  && note.subs.length > 0 ? <VideoList title="" editable={false} videos={note.subs} />: <></>}
+        {note.subs  && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs} />: <></>}
         <CardContent>
           <Typography component="p" className={"note-text"} gutterBottom={true}>
             <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={note.valeur}/>

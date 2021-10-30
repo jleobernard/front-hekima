@@ -47,7 +47,7 @@ export default function VideoList({title, videos, editable, onChange}) {
     }
     return (
       <div className="video" key={videoMetadata.key || index}>
-        <video controls loop onError={err => handleVideoError(err)}>
+        <video controls loop={!editable} onError={err => handleVideoError(err)}>
           <source src={src} type="video/mp4" />
         </video>
         {editable ?

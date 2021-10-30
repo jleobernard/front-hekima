@@ -1,0 +1,20 @@
+@import "../../styles/dimensions";
+@import "../../styles/texts";
+.thumbnails-container {
+  > .title {
+    font-size: $minor-title-font-size;
+  }
+  .thumbnails {
+    overflow-x: auto;
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    cursor: pointer;
+    > img {
+      width: 50%;
+      margin-right: $gutter-size;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+  }
+}
