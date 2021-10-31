@@ -76,6 +76,18 @@ const NoteView = ({match}) => {
         return (<NoteCreation creating={false} note={note} onDone={load}/>)
     }
 
+    function goBack() {
+        const fields = ['src', 'tags', 'offset', 'count']
+        const urlParams = new URLSearchParams(history.location.search)
+        const params = fields.filter(f => urlParams.get(f))
+            .map(f => `${f}=${urlParams.get(f)}`);
+        if(note && note.uri) {
+            params.push(`note=${note.uri}`)
+        }
+        const getParams = params.length > 0 ? '?' + params.join('&') : '';
+        history.push('/notes'+getParams)
+    }
+
     function renderDisplay() {
         return (
             <div>
@@ -96,7 +108,7 @@ const NoteView = ({match}) => {
                 </List>
                 <ButtonGroup className="button-group centered with-margin-top spread bottom coloured">
                     <IconButton type='submit' color="primary"
-                                onClick={() => history.push('/notes'+(note ? '#'+note.uri : ''))}>
+                                onClick={() => goBack()}>
                         <ArrowBackIcon/>
                     </IconButton>
                     <IconButton type='submit' color="secondary"

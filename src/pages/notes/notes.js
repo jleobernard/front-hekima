@@ -25,13 +25,20 @@ import {NoteFilesDisplay} from "../../components/note/note-files/note-files-disp
 import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
 
 
+function orDefault(count, defaultValue) {
+  if(count) {
+    return parseInt(count)
+  }
+  return defaultValue
+}
+
 class Notes extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
       notes: [],
-      filter: {count: 20, offset: 0},
+      filter: {count: 20, offset: 0, initialized: false},
       creating: false,
       notification: null,
       deletingNote: null,
@@ -51,17 +58,26 @@ class Notes extends React.Component {
 
   componentDidMount() {
     this.setState({loading: true})
-    this.refreshNotes(true)
+    //this.refreshNotes(true)
   }
 
   filterChanged(newFilter) {
     const updated = {
       count: 20,
       offset: 0,
+      initialized: true,
       ...newFilter
     }
     this.setState({filter: updated});
-    this.refreshNotes(true, updated)
+    //this.refreshNotes(true, updated)
+    this.updateRouteParams(updated)
+  }
+
+  updateRouteParams(newFilter) {
+    const _filter = newFilter || this.state.filter
+    const src = _filter.source ? _filter.source.uri : ''
+    const tags = (_filter.tags || []).map(t => t.uri).join(',')
+    this.props.history.push(`/notes?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}`)
   }
 
   refreshNotes(override = false, filter = null) {
@@ -111,7 +127,7 @@ class Notes extends React.Component {
       <Card className={"note-card"}>
         <NoteFilesDisplay note={note} />
         {note.subs  && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs} />: <></>}
-        <CardContent onClick={() => this.props.history.push('/notes/' + note.uri)}>
+        <CardContent onClick={() => this.navigateToNote(note)}>
           <Typography component="p" className={"note-text"} gutterBottom={true}>
             <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={note.valeur}/>
           </Typography>
@@ -137,12 +153,83 @@ class Notes extends React.Component {
   componentDidUpdate(prevProps, prevState, snapshot) {
     const prevFilter = prevState.filter;
     const filter = this.state.filter;
-    if(prevFilter && filter) {
+    if(!filter.initialized) {
+      const promises = []
+      const params = new URLSearchParams(this.props.history.location.search)
+      const src = params.get('src')
+      if(src) {
+        promises.push(get('/api/sources/'+src))
+      }
+      (params.get('tags') || '').split(',').filter(uri => uri).forEach(uri => promises.push(get('/api/tags/'+uri)))
+      const _filter = {
+        ...filter,
+        initialized: true,
+        count: orDefault(params.get('count'), 20),
+        offset: orDefault(params.get('offset'), 0)
+      }
+      let promiseLoadAll;
+      if(promises.length > 0) {
+        promiseLoadAll = new Promise((resolve) => {
+          Promise.all(promises).then(responses => {
+            let beginTags;
+            if(src) {
+              _filter.source = responses[0]
+              beginTags = 1
+            } else {
+              beginTags = 0
+            }
+            if(beginTags < promises.length - 1) {
+              _filter.tags = responses.subarray(beginTags)
+            }
+            resolve()
+          }).catch(err => resolve())
+        })
+      } else {
+        promiseLoadAll = new Promise((resolve) => resolve())
+      }
+      promiseLoadAll.then(() => {
+        const nbToLoad = _filter.offset + _filter.count
+        if(nbToLoad > 0) {
+          const _filterForSearch = this.getFilter(_filter)
+          _filterForSearch.count = nbToLoad
+          _filterForSearch.offset = 0
+          get("/api/notes", _filterForSearch).then(notes => {
+            this.setState({
+              notes,
+              hasMoreNotes: notes && notes.length > 0,
+              filter: _filter,
+              loading: false
+            })
+            this.seekNote(params.get('note'))
+          })
+        } else {
+          this.setState({
+            notes: [],
+            hasMoreNotes: true,
+            filter: _filter,
+            loading: false
+          })
+        }
+      }).catch(err => this.setState({loading: false}))
+    } else if(prevFilter && filter && prevFilter.initialized) {
       if(filter.offset > prevFilter.offset) {
         this.refreshNotes(false);
       } else if(filter.offset < prevFilter.offset) {
         this.refreshNotes(true);
       }
+    }
+  }
+
+  seekNote(noteUri) {
+    if(noteUri) {
+      setTimeout(() => {
+        const elt = document.getElementById(noteUri);
+        if(elt) {
+          elt.scrollIntoView()
+        } else {
+          this.seekHashTag(noteUri)
+        }
+      }, 100)
     }
   }
 
@@ -195,6 +282,14 @@ class Notes extends React.Component {
         </Fab>
       </div>
     );
+  }
+
+  navigateToNote(note) {
+    const _filter = this.state.filter || {}
+    const src = _filter.source ? _filter.source.uri : ''
+    const tags = (_filter.tags || []).map(t => t.uri).join(',')
+    this.props.history.push(`/notes/${note.uri}?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}`)
+    return undefined;
   }
 }
 
