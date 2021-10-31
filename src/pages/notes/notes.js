@@ -211,13 +211,20 @@ class Notes extends React.Component {
           })
         }
       }).catch(err => this.setState({loading: false}))
-    } else if(prevFilter && filter && prevFilter.initialized) {
+    } else if(prevFilter && filter && prevFilter.initialized && this.hasChanged(filter, prevFilter)) {
       if(filter.offset > prevFilter.offset) {
         this.refreshNotes(false);
-      } else if(filter.offset < prevFilter.offset) {
+      } else {
         this.refreshNotes(true);
       }
+      this.updateRouteParams()
     }
+  }
+  hasChanged(filter, prevFilter) {
+    return filter.offset !== prevFilter.offset ||
+        filter.count !== prevFilter.count ||
+        filter.source  !== prevFilter.source ||
+        filter.tags  !== prevFilter.tags
   }
 
   seekNote(noteUri) {
@@ -227,7 +234,7 @@ class Notes extends React.Component {
         if(elt) {
           elt.scrollIntoView()
         } else {
-          this.seekHashTag(noteUri)
+          this.seekNote(noteUri)
         }
       }, 100)
     }
