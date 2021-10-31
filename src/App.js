@@ -1,16 +1,24 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {BrowserRouter as Router, Redirect, Route, Switch} from "react-router-dom";
 import Notes from './pages/notes/notes';
 import './App.css';
 import Login from "./pages/login/login";
+import NoteView from "./pages/note-view/note-view";
+import {get} from "./utils/http";
 
 function App() {
+  useEffect(() => {
+    setInterval(() => get("/api/user", false), 60 * 1000)
+  }, [])
   return (
     <div className="root">
       <Router>
         <div className="app-wrapper">
           <Switch>
-            <Route path="/notes">
+            <Route path="/notes/:uri">
+              <NoteView />
+            </Route>
+            <Route exact path="/notes">
               <Notes />
             </Route>
             <Route exact path="/">

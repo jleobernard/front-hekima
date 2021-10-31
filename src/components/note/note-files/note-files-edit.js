@@ -5,7 +5,7 @@ import "./note-files.scss"
 import {constant, times} from "lodash";
 import {Delete} from "@material-ui/icons";
 
-export const NoteFilesEdit = ({note, onChange}) => {
+export const NoteFilesEdit = ({note, onChange, editable}) => {
 
   const [previews, setPreviews] = useState(times(note && note.files ? note.files.length : 0, constant({})))
   const [modifyingImageIdx, setModifyingImageIdx] = useState(-1)

@@ -19,13 +19,17 @@ class Header extends React.Component {
       filter: {}
     };
     this.goBack = this.goBack.bind(this);
+    this.goHome = this.goHome.bind(this);
     this.toggleDrawer = this.toggleDrawer.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.startSearch = this.startSearch.bind(this);
     this.updateFilter = this.updateFilter.bind(this);
   }
   goBack() {
-    this.props.history.goBack();
+    this.props.history.goBack()
+  }
+  goHome() {
+    this.props.history.push("/notes")
   }
   handleKeyDown(event ) {
     if(event.key === 'Enter') {
@@ -73,15 +77,16 @@ class Header extends React.Component {
     return (
       <AppBar position="fixed">
         <Toolbar className="toolbar">
-          <Typography variant="h5" className={"title " + (!this.props.title ? 'website-title-header' : '')} noWrap>
+          <Typography variant="h5" className={"title " + (!this.props.title ? 'website-title-header' : '')} noWrap
+            onClick={() => this.goHome()}>
             {this.props.title || 'Notes'}
           </Typography>
           {this.props.withSearch ? <SearchIcon onClick={this.startSearch}/>: ''}
           {this.props.goBack ? <div className="back-icon" onClick={this.goBack}><ArrowBackIcon /></div> : ''}
         </Toolbar>
         <SearchFilter open={this.state.openFilter}
-                      filter={this.state.filter}
-                      onDone={this.updateFilter}></SearchFilter>
+    filter={this.state.filter}
+    onDone={this.updateFilter}/>
       </AppBar>
     )
   }

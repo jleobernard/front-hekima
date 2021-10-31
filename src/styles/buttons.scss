@@ -1,7 +1,24 @@
 @import "dimensions.scss";
+@import "colors.scss";
 
 .MuiButtonGroup-root.button-group {
   flex-wrap: wrap;
+  &.spread {
+    display: flex;
+    justify-content: space-between;
+  }
+  &.bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+  }
+  &.coloured {
+    background-color: $my-primary-color;
+    > button {
+      color: white;
+    }
+  }
 }
 
 .MuiButton-root.button-action {

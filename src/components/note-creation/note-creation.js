@@ -24,124 +24,90 @@ import {NoteFilesEdit} from "../note/note-files/note-files-edit";
 import "../../styles/science.scss";
 import VideoList from "../medias/video-list";
 import {getKey} from "../../utils/keys";
+import {useEffect, useState} from "react";
+import LoadingMask from "../loading-mask/loading-mask";
 
-class NoteCreation extends React.Component {
+const NoteCreation = ({note, creating, onDone}) => {
 
-  defaultState =  {
-    noteUri: null,
-    selectedSubs: [],
-    subs: [],
-    valeur: "",
-    sources: [],
-    tags: [],
-    tagsSuggestions: [],
-    loadingSources: false,
-    loadingTags: false,
-    debouncedSource: null,
-    debouncedTags: null,
-    saving: false,
-    error: null,
-    version: 0,
-    filesChanges: {},
-    toolbar: '',
-    parsedResult: null,
-    searchsubs: '',
-    searchingSubs: false
-  };
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [parsing, setParsing] = useState(false)
+  const [searchingSubs, setSearchingSubs] = useState(false)
+  const [error, setError] = useState("");
+  const [errorSev, setErrorSev] = useState("error");
+  const [noteUri, setNoteUri] = useState(note && note.uri ? note.uri : null)
+  const [selectedSubs, setSelectedSubs] = useState([])
+  const [subs, setSubs] = useState([])
+  const [valeur, setValeur] = useState("")
+  const [source, setSource] = useState({})
+  const [tags, setTags] = useState([])
+  const [filesChanges, setFilesChanges] = useState(false)
+  const [toolbar, setToolbar] = useState('')
+  const [parsedResult, setParsedResult] = useState(null)
+  const [searchSubs, setSearchSubs] = useState('')
+  const colors = ['red', 'green', 'purple', 'gray'];
+  const refInputFile = React.createRef()
+  const refValeur = React.createRef()
 
+  const _noteUri = (note || {}).uri
+  useEffect(() => {
+      const _note = (note || {})
+      setNoteUri(_note.uri)
+      setValeur(_note.valeur)
+      setSource({...(_note.source || {}) })
+      setTags([...(_note.tags || [])])
+      setSelectedSubs((_note.subs || []).map(s => {
+        return {...s, selected: true, key: getKey("subs") }
+      }))
+  }, [_noteUri]);
 
-
-  constructor(props) {
-    super(props);
-    this.state = lodash.cloneDeep(this.defaultState);
-    this.colors = ['red', 'green', 'purple', 'gray'];
-    this.handleClose = this.handleClose.bind(this);
-    this.valueChanged = this.valueChanged.bind(this);
-    this.fileChanged = this.fileChanged.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.onFilterChanged = this.onFilterChanged.bind(this);
-    this.addColorTag = this.addColorTag.bind(this);
-    this.addMD = this.addMD.bind(this);
-    this.parsePictureChanged = this.parsePictureChanged.bind(this);
-    this.focusAfterFormatting = this.focusAfterFormatting.bind(this)
-    this.addParsedResult = this.addParsedResult.bind(this)
-    this.parsedResultChanged = this.parsedResultChanged.bind(this)
-    this.searchSubs = this.searchSubs.bind(this)
-    this.searchChanged = this.searchChanged.bind(this);
-    this.setSubsChanged = this.setSubsChanged.bind(this)
-    this.refInputFile = React.createRef();
-    this.refValeur = React.createRef();
-  }
-
-  setSubsChanged(sub, fromSelectedList) {
-    const selectedSubs = [...this.state.selectedSubs]
-    const suggestedSubs = [...this.state.subs]
+  function setSubsChanged(sub, fromSelectedList) {
+    const _selectedSubs = [...selectedSubs]
+    const suggestedSubs = [...subs]
     if(fromSelectedList) {
-      let index = lodash.findIndex(selectedSubs, {key: sub.key})
+      let index = lodash.findIndex(_selectedSubs, {key: sub.key})
       if (sub.selected) {
-        selectedSubs[index] = sub
+        _selectedSubs[index] = sub
       } else {
         suggestedSubs.unshift(sub)
-        selectedSubs.splice(index, 1)
+        _selectedSubs.splice(index, 1)
       }
     } else {
       let index = lodash.findIndex(suggestedSubs, {key: sub.key})
       if (sub.selected) {
-        selectedSubs.unshift(sub)
+        _selectedSubs.unshift(sub)
         suggestedSubs.splice(index, 1)
       } else {
         suggestedSubs[index] = sub
       }
     }
-    this.setState({subs: suggestedSubs, selectedSubs: selectedSubs})
+    setSubs(suggestedSubs)
+    setSelectedSubs(_selectedSubs)
   }
 
-  searchSubs(q) {
-    this.setState({searchingSubs: true})
-    get('/api/kosubs', {q: this.state.searchsubs})
-    .then(results => this.setState({subs: (results || []).map(r => ({...r, selected: false, key: getKey("subs")}))}))
-    .finally(() => this.setState({searchingSubs: false}))
-  }
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    const prevNoteUri = (prevProps.note || {}).uri;
-    const currentNoteUri = (this.props.note || {}).uri;
-    if(currentNoteUri !== prevNoteUri) {
-      const note = (this.props.note || {tags: [], source: {}})
-      this.setState({
-        noteUri: currentNoteUri,
-        valeur: note.valeur,
-        source: note.source,
-        tags: note.tags,
-        hasFile: note.hasFile,
-        version: this.state.version + 1,
-        selectedSubs: (note.subs || []).map(s => {
-          return {... s, selected: true, key: getKey("subs") }
-        })
-      })
-    }
-  }
-  setParsing(parsing) {
-    this.setState({
-      parsing
-    })
+  function doSearchSubs(q) {
+    setSearchingSubs(true)
+    get('/api/kosubs', {q: q})
+    .then(results => setSubs((results || []).map(r => ({...r, selected: false, key: getKey("subs")}))))
+    .finally(() => setSearchingSubs(false))
   }
 
-  hasImageChanges(){
-    return Object.keys(this.state.filesChanges).length > 0
+  function hasImageChanges(){
+    return Object.keys(filesChanges).length > 0
   }
 
-  getUploadFilesRequest(savedNote) {
-    const fileChangesIndices = Object.keys(this.state.filesChanges).map(k => parseInt(k) + 1)
+  function getUploadFilesRequest(savedNote) {
+    const fileChangesIndices = Object.keys(filesChanges).map(k => parseInt(k) + 1)
     const lengthArray = Math.max(savedNote.files.length, Math.max(...fileChangesIndices));
     const request = new Array(lengthArray);
     const files = new Array(lengthArray);
     for(let i = 0; i < lengthArray; i++) {
       let action;
       files[i] = null
-      if(i in this.state.filesChanges) {
-        if(this.state.filesChanges[i]) {
+      if(i in filesChanges) {
+        if(filesChanges[i]) {
           action = "UPSERT"
-          files[i] = this.state.filesChanges[i]
+          files[i] = filesChanges[i]
         } else {
           action = "DELETE"
         }
@@ -153,90 +119,91 @@ class NoteCreation extends React.Component {
     return {request, files};
   }
 
-  handleSubmit(closeAfterSaving) {
-    if(!this.state.saving) {
-      this.setState({saving: true, error: null});
+  function handleSubmit(closeAfterSaving) {
+    if(!saving) {
+      setSaving(true)
+      setError(null)
       const request = {
-        uri: (this.props.note || {}).uri,
-        valeur: this.state.valeur,
-        tags: lodash.map(this.state.tags, t => t.uri),
-        source: this.state.source ? this.state.source.uri : null,
-        subs: (this.state.selectedSubs || []).map(s => ({name: s.name, from: s.from, to: s.to}))
+        uri: noteUri,
+        valeur: valeur,
+        tags: lodash.map(tags, t => t.uri),
+        source: source ? source.uri : null,
+        subs: (selectedSubs || []).map(s => ({name: s.name, from: s.from, to: s.to}))
       };
       post('/api/notes', request).then(saved => {
-        if(this.hasImageChanges()) {
-          const metadata = this.getUploadFilesRequest(saved)
+        if(hasImageChanges()) {
+          const metadata = getUploadFilesRequest(saved)
           uploadFilesWithRequest('/api/notes/'+saved.uri+'/files', metadata.request, metadata.files, false)
           .then(response => {
-            this.handleClose({...saved, files: response.files}, closeAfterSaving);
+            handleClose({...saved, files: response.files}, closeAfterSaving);
           })
-          .catch(err => this.setState({error: "Impossible d'enregistrer le fichier : " + err}))
-          .finally(() => this.setState({saving: false}))
+          .catch(err => setError("Impossible d'enregistrer le fichier : " + err))
+          .finally(() => setSaving(false))
         } else {
-          this.setState({saving: false})
-          this.handleClose(saved, closeAfterSaving);
+          setSaving(false)
+          handleClose(saved, closeAfterSaving);
         }
-      }).catch(err => this.setState({saving: false, error: "Impossible de sauvegarder : " + err}))
+      }).catch(err => {
+        setSaving(false)
+        setError("Impossible de sauvegarder : " + err)
+      })
     }
   }
 
-  onFilterChanged(event) {
-    this.setState({source: event.source, tags: event.tags});
+  function onFilterChanged(event) {
+    setSource(event.source)
+    setTags(event.tags)
   }
 
-  valueChanged(event) {
-    this.setState({valeur: event.target.value});
+  function valueChanged(event) {
+    setValeur(event.target.value)
   }
 
-  searchChanged(event) {
-    this.setState({searchsubs: event.target.value});
+  function searchChanged(event) {
+    setSearchSubs(event.target.value)
   }
 
-  parsedResultChanged(event) {
-    this.setState({parsedResult: event.target.value})
+  function parsedResultChanged(event) {
+    setParsedResult(event.target.value)
   }
 
-  addParsedResult() {
-    this.setState({
-      valeur: (this.state.valeur || '') + '\n' + this.state.parsedResult,
-      parsedResult: null
-    })
+  function addParsedResult() {
+    setValeur((valeur || '') + '\n' + parsedResult)
+    setParsedResult(null)
   }
 
-  handleClose(response, closeAfterSaving) {
+  function handleClose(response, closeAfterSaving) {
     if(closeAfterSaving) {
-      this.setState(lodash.cloneDeep(this.defaultState));
+      onDone(response)
     } else {
-      this.setState({filesChanges: {}})
+      setFilesChanges({})
     }
-    this.props.onDone(response, closeAfterSaving);
   }
 
-  fileChanged(idxOfChangedFile, imageFile) {
-    const copy = {...this.state.filesChanges}
+  function fileChanged(idxOfChangedFile, imageFile) {
+    const copy = {...filesChanges}
     copy[idxOfChangedFile] = imageFile
-    this.setState({filesChanges: copy})
+    setFilesChanges(copy)
   }
 
-  parsePictureChanged() {
+  function parsePictureChanged() {
     const file = document.getElementById('picture');
     if (file) {
-      this.setState({parsing: true, error: null});
+      setParsing(true)
+      setError(null)
       const imageFile = file.files[0]
       upload(`/api/notes:parse`, imageFile, false)
-      .then(response => {
-        this.setState({parsedResult: response.lines.join('\n')});
-      })
+      .then(response => setParsedResult(response.lines.join('\n')))
       .catch(err => {
         console.error(err)
-        this.setState({error: "Erreur lors de l'analyse de la photo"})
-      }).finally(() => this.setState({parsing: false}))
+        setError("Erreur lors de l'analyse de la photo")
+      }).finally(() => setParsing(false))
     } else {
       console.error("Sélectionnez un fichier");
     }
   }
 
-  getCurrentSelection(){
+  function getCurrentSelection() {
     const element = document.getElementById("valeur-ne")
     const start = element.selectionStart || 0
     const end = element.selectionEnd || 0
@@ -247,33 +214,35 @@ class NoteCreation extends React.Component {
     }
   }
 
-  addColorTag(color) {
-    this.addMD(`<span style="color:${color}">`, "</span>")
+  function addColorTag(color) {
+    addMD(`<span style="color:${color}">`, "</span>")
   }
 
-  addSingle(entry) {
-    const valeur = (this.state.valeur || '')
-    const selection = this.getCurrentSelection()
-    const newValeur = valeur.substr(0, selection.start) +
+  function addSingle(entry) {
+    const _valeur = (valeur || '')
+    const selection = getCurrentSelection()
+    const newValeur = _valeur.substr(0, selection.start) +
       entry
-      + valeur.substr(selection.start)
+      + _valeur.substr(selection.start)
 
-    this.setState({valeur: newValeur}, () => this.focusAt(selection, entry))
+    setValeur(newValeur)
+    setTimeout(() => focusAt(selection, entry), 1000)
   }
 
-  addMD(md, mdEnd) {
+  function addMD(md, mdEnd) {
     const _mdEnd = mdEnd || ''
-    const valeur = (this.state.valeur || '')
-    const selection = this.getCurrentSelection()
+    const _valeur = (valeur || '')
+    const selection = getCurrentSelection()
     const interText = selection.selecting ? valeur.substr(selection.start, selection.end - selection.start) : 'ici'
-    const newValeur = valeur.substr(0, selection.start) + md
+    const newValeur = _valeur.substr(0, selection.start) + md
      + interText
-    + _mdEnd + valeur.substr(selection.end, valeur.length - selection.end)
+    + _mdEnd + _valeur.substr(selection.end, _valeur.length - selection.end)
 
-    this.setState({valeur: newValeur}, () => this.focusAfterFormatting(selection, md))
+    setValeur(newValeur)
+    setTimeout(() => focusAfterFormatting(selection, md), 1000)
   }
 
-  focusAfterFormatting(initialSelection, md) {
+  function focusAfterFormatting(initialSelection, md) {
     const element = document.getElementById("valeur-ne")
     element.focus()
     element.selectionStart = initialSelection.start + md.length
@@ -282,26 +251,26 @@ class NoteCreation extends React.Component {
       initialSelection.end + md.length + 3
   }
 
-  focusAt(initialSelection, md) {
+  function focusAt(initialSelection, md) {
     const element = document.getElementById("valeur-ne")
     element.focus()
     element.selectionStart = initialSelection.start + md.length
     element.selectionEnd = element.selectionStart
   }
 
-  setToolbar(tb) {
-    if (this.state.toolbar === tb) {
-      this.setState({toolbar: ''})
+  function doSetToolbar(tb) {
+    if (toolbar === tb) {
+      setToolbar('')
     } else {
-      this.setState({toolbar: tb})
+      setToolbar(tb)
     }
   }
 
-  renderColours() {
+  function renderColours() {
     return (
       <ButtonGroup className="button-group centered with-margin-top">
-        {this.colors.map(color =>
-          <IconButton style={{color}} aria-label={color} key={color} component="span" onClick={() => this.addColorTag(color)}>
+        {colors.map(color =>
+          <IconButton style={{color}} aria-label={color} key={color} component="span" onClick={() => addColorTag(color)}>
             <FiberManualRecordRoundedIcon />
           </IconButton>
         )}
@@ -309,72 +278,72 @@ class NoteCreation extends React.Component {
     )
   }
 
-  renderTitles() {
+  function renderTitles() {
     return (
       <ButtonGroup className="button-group centered">
-        <Button className="block" onClick={() => this.addMD('# ', ' #')}>Titre1</Button>
-        <Button className="block" onClick={() => this.addMD('## ', ' ##')}>Titre2</Button>
-        <Button className="block" onClick={() => this.addMD('### ', ' ###')}>Titre3</Button>
-        <Button className="block" onClick={() => this.addMD('#### ', ' ####')}>Titre4</Button>
+        <Button className="block" onClick={() => addMD('# ', ' #')}>Titre1</Button>
+        <Button className="block" onClick={() => addMD('## ', ' ##')}>Titre2</Button>
+        <Button className="block" onClick={() => addMD('### ', ' ###')}>Titre3</Button>
+        <Button className="block" onClick={() => addMD('#### ', ' ####')}>Titre4</Button>
       </ButtonGroup>
     )
   }
 
-  renderText() {
+  function renderText() {
     return (
       <ButtonGroup className="button-group centered">
-        <Button className="block" onClick={() => this.addMD('<span style="font-size:2em">','</span>')}>Important</Button>
-        <Button className="block" onClick={() => this.addMD('**','**')}>Gras</Button>
-        <Button className="block" onClick={() => this.addMD('*', '*')}><i>Italique</i></Button>
-        <Button className="block" onClick={() => this.addMD('<strike>', '</strike>')}><strike>Barré</strike></Button>
-        <Button className="block" onClick={() => this.addMD('<ins>', '</ins>')}><ins>Souligné</ins></Button>
+        <Button className="block" onClick={() => addMD('<span style="font-size:2em">','</span>')}>Important</Button>
+        <Button className="block" onClick={() => addMD('**','**')}>Gras</Button>
+        <Button className="block" onClick={() => addMD('*', '*')}><i>Italique</i></Button>
+        <Button className="block" onClick={() => addMD('<del>', '</del>')}><del>Barré</del></Button>
+        <Button className="block" onClick={() => addMD('<ins>', '</ins>')}><ins>Souligné</ins></Button>
       </ButtonGroup>
     )
   }
 
-  renderMaths() {
+  function renderMaths() {
     return (
       <ButtonGroup className="button-group centered">
-        <Button className="block" onClick={() => this.addMD('<sub>','</sub>')}>I&nbsp;<sub>bas</sub></Button>
-        <Button className="block" onClick={() => this.addMD('<sup>','</sup>')}>Is&nbsp;<sup>haut</sup></Button>
-        <Button className="block" onClick={() => this.addSingle('∂')}>∂</Button>
-        <Button className="block" onClick={() => this.addSingle('&nabla;')}>&nabla;</Button>
-        <Button className="block" onClick={() => this.addSingle('&forall;')}>&forall;</Button>
-        <Button className="block" onClick={() => this.addSingle('&isin;')}>&isin;</Button>
-        <Button className="block" onClick={() => this.addSingle('&sube;')}>&sube;</Button>
-        <Button className="block" onClick={() => this.addSingle('∃')}>∃</Button>
-        <Button className="block" onClick={() => this.addSingle('⇒')}>⇒</Button>
-        <Button className="block" onClick={() => this.addSingle('&int;')}>&int;</Button>
-        <Button className="block" onClick={() => this.addSingle('⋂')}>⋂</Button>
-        <Button className="block" onClick={() => this.addSingle('⋃')}>⋃</Button>
-        <Button className="block" onClick={() => this.addSingle('&xrarr;')}>&rarr;</Button>
-        <Button className="block" onClick={() => this.addSingle('⇔')}>⇔</Button>
-        <Button className="block" onClick={() => this.addSingle('⇒')}>⇒</Button>
-        <Button className="block" onClick={() => this.addSingle('⟼')}>⟼</Button>
-        <Button className="block" onClick={() => this.addSingle('ℝ')}>ℝ</Button>
-        <Button className="block" onClick={() => this.addSingle('<span style="font-size: 2em">∘</span>')}><span style={{fontSize: "2em"}}>∘</span></Button>
-        <Button className="block scientific-notation" onClick={() => this.addMD('<fraction><numer>','</numer><denom></denom></fraction>')}><fraction><numer>a</numer>b</fraction></Button>
-        <Button className="block scientific-notation" onClick={() => this.addMD('<superposed><up>','</up><down></down></superposed>')}><superposed><up>a</up><down>b</down></superposed></Button>
-        <Button className="block scientific-notation" onClick={() => this.addMD('<upperposed><up>','</up><down></down></upperposed>')}><upperposed><up>a</up><down>b</down></upperposed></Button>
+        <Button className="block" onClick={() => addMD('<sub>','</sub>')}>I&nbsp;<sub>bas</sub></Button>
+        <Button className="block" onClick={() => addMD('<sup>','</sup>')}>Is&nbsp;<sup>haut</sup></Button>
+        <Button className="block" onClick={() => addSingle('∂')}>∂</Button>
+        <Button className="block" onClick={() => addSingle('&nabla;')}>&nabla;</Button>
+        <Button className="block" onClick={() => addSingle('&forall;')}>&forall;</Button>
+        <Button className="block" onClick={() => addSingle('&isin;')}>&isin;</Button>
+        <Button className="block" onClick={() => addSingle('&sube;')}>&sube;</Button>
+        <Button className="block" onClick={() => addSingle('∃')}>∃</Button>
+        <Button className="block" onClick={() => addSingle('⇒')}>⇒</Button>
+        <Button className="block" onClick={() => addSingle('&int;')}>&int;</Button>
+        <Button className="block" onClick={() => addSingle('⋂')}>⋂</Button>
+        <Button className="block" onClick={() => addSingle('⋃')}>⋃</Button>
+        <Button className="block" onClick={() => addSingle('&xrarr;')}>&rarr;</Button>
+        <Button className="block" onClick={() => addSingle('⇔')}>⇔</Button>
+        <Button className="block" onClick={() => addSingle('⇒')}>⇒</Button>
+        <Button className="block" onClick={() => addSingle('⟼')}>⟼</Button>
+        <Button className="block" onClick={() => addSingle('ℝ')}>ℝ</Button>
+        <Button className="block" onClick={() => addSingle('<span style="font-size: 2em">∘</span>')}><span style={{fontSize: "2em"}}>∘</span></Button>
+        <Button className="block scientific-notation" onClick={() => addMD('<fraction><numer>','</numer><denom></denom></fraction>')}><fraction><numer>a</numer>b</fraction></Button>
+        <Button className="block scientific-notation" onClick={() => addMD('<superposed><up>','</up><down></down></superposed>')}><superposed><up>a</up><down>b</down></superposed></Button>
+        <Button className="block scientific-notation" onClick={() => addMD('<upperposed><up>','</up><down></down></upperposed>')}><upperposed><up>a</up><down>b</down></upperposed></Button>
       </ButtonGroup>
     )
   }
 
-  renderGreek() {
+  function renderGreek() {
     const lower = ['α', 'β', 'γ', 'δ', 'ε', 'ζ','η','θ','λ','μ','ξ','π','ρ','σ','φ','ϕ','ψ','ω']
     const upper = ['Γ','Δ','Θ','Λ','Ξ','Π','Σ','Φ','Ψ','Ω']
     return (
       <div>
         <ButtonGroup className="button-group centered" key="lowercase">
           {lower.map(letter =>
-            <IconButton key={"greek-" + letter} component="span" onClick={() => this.addSingle(letter)}>
+            <IconButton key={"greek-" + letter} component="span" onClick={() => addSingle(letter)}>
               <span>{letter}</span>
             </IconButton>
           )}
         </ButtonGroup>
         <ButtonGroup className="button-group centered" key="uppercase">
           {upper.map(letter =>
-            <IconButton key={"greek-" + letter} component="span" onClick={() => this.addSingle(letter)}>
+            <IconButton key={"greek-" + letter} component="span" onClick={() => addSingle(letter)}>
               <span>{letter}</span>
             </IconButton>
           )}
@@ -383,125 +352,124 @@ class NoteCreation extends React.Component {
     )
   }
 
-  render() {
-    const filter = {
-      source : this.state.source,
-      tags: this.state.tags || []
-    };
-    return (
-      <>
-        <Dialog open={this.props.creating || !!this.props.note} key="main-dialog"
-                onClose={() => this.handleClose(null, true)}
-                fullScreen={true}
-                aria-labelledby="creation-dialog-title">
-          <DialogTitle id="creation-dialog-title">{this.state.noteUri ? 'Nouvelle note' : 'Modification'}</DialogTitle>
-          <DialogContent>
-            <form onSubmit={() => this.handleSubmit(false)} className="form">
-              <NoteFilesEdit note={this.props.note} onChange={this.fileChanged}/>
-              <FormControl>
-                <InputLabel htmlFor="valeur-ne">Note</InputLabel>
-                <Input
-                  id="valeur-ne"
-                  required autoFocus={true}
-                  value={this.state.valeur}
-                  ref={this.refValeur}
-                  multiline rows={3} rowsMax={25} variant="outlined"
-                  onChange={this.valueChanged}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="analyse image"
-                        onClick={() => this.refInputFile.current.click()}
-                      >
-                        {this.state.parsing ? <CircularProgress /> : <Camera />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-                <ButtonGroup className="button-group centered with-margin-top">
-                  <Button className="block" onClick={() => this.setToolbar("titles")}>Titres</Button>
-                  <Button className="block" onClick={() => this.setToolbar('colours')}>Couleurs</Button>
-                  <Button className="block" onClick={() => this.setToolbar('text')}>Texte</Button>
-                  <Button className="block" onClick={() => this.setToolbar('maths')}>Maths</Button>
-                  <Button className="block" onClick={() => this.setToolbar('greek')}>Grec</Button>
-                </ButtonGroup>
-                <div className="with-margin-top with-margin-bottom">
-                  {this.state.toolbar === 'colours' ? this.renderColours(): <></>}
-                  {this.state.toolbar === 'titles'  ? this.renderTitles(): <></>}
-                  {this.state.toolbar === 'text'    ? this.renderText() : <></>}
-                  {this.state.toolbar === 'maths'   ? this.renderMaths() : <></>}
-                  {this.state.toolbar === 'greek'   ? this.renderGreek(): <></>}
-                </div>
-                <input type="file" id="picture" accept="image/*" onChange={this.parsePictureChanged} hidden={true} ref={this.refInputFile}/>
+  const filter = {
+    source : source,
+    tags: tags || []
+  };
+  return (
+    <>
+      <Dialog open={creating || !!note} key="main-dialog"
+              onClose={() => handleClose(null, true)}
+              fullScreen={true}
+              aria-labelledby="creation-dialog-title">
+        <DialogTitle id="creation-dialog-title">{noteUri ? 'Nouvelle note' : 'Modification'}</DialogTitle>
+        <DialogContent>
+          <form onSubmit={() => handleSubmit(false)} className="form no-padding">
+            <NoteFilesEdit note={note} onChange={fileChanged}/>
+            <FormControl>
+              <InputLabel htmlFor="valeur-ne">Note</InputLabel>
+              <Input
+                id="valeur-ne"
+                required autoFocus={true}
+                value={valeur}
+                ref={refValeur}
+                multiline rows={3} rowsMax={25} variant="outlined"
+                onChange={valueChanged}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="analyse image"
+                      onClick={() => refInputFile.current.click()}
+                    >
+                      {parsing ? <CircularProgress /> : <Camera />}
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+              <ButtonGroup className="button-group centered with-margin-top">
+                <Button className="block" onClick={() => doSetToolbar("titles")}>Titres</Button>
+                <Button className="block" onClick={() => doSetToolbar('colours')}>Couleurs</Button>
+                <Button className="block" onClick={() => doSetToolbar('text')}>Texte</Button>
+                <Button className="block" onClick={() => doSetToolbar('maths')}>Maths</Button>
+                <Button className="block" onClick={() => doSetToolbar('greek')}>Grec</Button>
+              </ButtonGroup>
+              <div className="with-margin-top with-margin-bottom">
+                {toolbar === 'colours' ? renderColours(): <></>}
+                {toolbar === 'titles'  ? renderTitles(): <></>}
+                {toolbar === 'text'    ? renderText() : <></>}
+                {toolbar === 'maths'   ? renderMaths() : <></>}
+                {toolbar === 'greek'   ? renderGreek(): <></>}
+              </div>
+              <input type="file" id="picture" accept="image/*" onChange={parsePictureChanged} hidden={true} ref={refInputFile}/>
 
-              </FormControl>
-              <NoteFilter filter={filter} version={0}
-                          onFilterChanged={this.onFilterChanged}
-                          allowCreation={true} />
+            </FormControl>
+            <NoteFilter filter={filter} version={0}
+                        onFilterChanged={onFilterChanged}
+                        allowCreation={true} />
 
-              <VideoList key={"selected-subs"} title={"Sous-titres"} videos={this.state.selectedSubs} editable={true} onChange={(sub) => this.setSubsChanged(sub, true)}/>
-              <FormControl>
-                <InputLabel htmlFor="valeur-ne">Sous-titres</InputLabel>
-                <Input id="search-subs" value={this.state.searchsubs} onChange={this.searchChanged}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton aria-label="analyse image" onClick={() => this.searchSubs(this.state.searchsubs)}>
-                        {this.state.searchingSubs ? <CircularProgress /> : <Search />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              </FormControl>
-              <VideoList key={"suggested-subs"} title={"Sous-titres trouvées"} videos={this.state.subs} editable={true} onChange={(sub) => this.setSubsChanged(sub, false)}/>
-            </form>
-            {this.state.valeur ? <Paper elevation={3} className="with-padding with-margin-top">
-              <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={this.state.valeur}/>
-            </Paper> : <></>}
-            <Toaster error={this.state.error}/>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => this.handleClose(null,true)} color="primary">
-              Fermer
-            </Button>
-            <Button onClick={_ => this.handleSubmit(false)} color="primary">
-              Sauvegarder {this.state.saving ? <CircularProgress /> : ''}
-            </Button>
-            <Button onClick={_ => this.handleSubmit(true)} color="primary">
-              Sauvegarder et fermer{this.state.saving ? <CircularProgress /> : ''}
-            </Button>
-          </DialogActions>
-        </Dialog>
-        <Dialog open={this.state.parsedResult} key="parsed-result"
-                onClose={() => this.setState({parsedResult: null})}
-                fullScreen={true}
-                aria-labelledby="parsed-result-dialog-title">
-          <DialogTitle id="parsed-result-dialog-title">Résultat de l'analyse</DialogTitle>
-          <DialogContent>
-            <form onSubmit={this.addParsedResult} className="form">
-              <FormControl>
-                <InputLabel htmlFor="parsed-value">Texte analysé</InputLabel>
-                <Input
-                  id="parsed-value"
-                  required autoFocus={true}
-                  value={this.state.parsedResult}
-                  multiline rows={3} rowsMax={25} variant="outlined"
-                  onChange={this.parsedResultChanged}
-                />
-              </FormControl>
-            </form>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => this.setState({parsedResult: null})} color="primary">
-              Fermer
-            </Button>
-            <Button onClick={this.addParsedResult} color="primary">
-              Ajouter
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </>
-    )
-  }
+            <VideoList key={"selected-subs"} title={"Sous-titres"} videos={selectedSubs} editable={true} onChange={(sub) => setSubsChanged(sub, true)}/>
+            <FormControl>
+              <InputLabel htmlFor="valeur-ne">Sous-titres</InputLabel>
+              <Input id="search-subs" value={searchSubs} onChange={searchChanged}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton aria-label="analyse image" onClick={() => doSearchSubs(searchSubs)}>
+                      {searchingSubs ? <CircularProgress /> : <Search />}
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+            </FormControl>
+            <VideoList key={"suggested-subs"} title={"Sous-titres trouvées"} videos={subs} editable={true} onChange={(sub) => setSubsChanged(sub, false)}/>
+          </form>
+          {valeur ? <Paper elevation={3} className="with-padding with-margin-top">
+            <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={valeur}/>
+          </Paper> : <></>}
+          <Toaster error={error} severity={errorSev}/>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleClose(null,true)} color="primary">
+            Fermer
+          </Button>
+          <Button onClick={_ => handleSubmit(false)} color="primary">
+            Sauvegarder {saving ? <CircularProgress /> : ''}
+          </Button>
+          <Button onClick={_ => handleSubmit(true)} color="primary">
+            Sauvegarder et fermer{saving ? <CircularProgress /> : ''}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={parsedResult} key="parsed-result"
+              onClose={() => setParsedResult(null)}
+              fullScreen={true}
+              aria-labelledby="parsed-result-dialog-title">
+        <DialogTitle id="parsed-result-dialog-title">Résultat de l'analyse</DialogTitle>
+        <DialogContent>
+          <form onSubmit={addParsedResult} className="form">
+            <FormControl>
+              <InputLabel htmlFor="parsed-value">Texte analysé</InputLabel>
+              <Input
+                id="parsed-value"
+                required autoFocus={true}
+                value={parsedResult}
+                multiline rows={3} rowsMax={25} variant="outlined"
+                onChange={parsedResultChanged}
+              />
+            </FormControl>
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setParsedResult(null)} color="primary">
+            Fermer
+          </Button>
+          <Button onClick={addParsedResult} color="primary">
+            Ajouter
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <LoadingMask loading={loading || saving}/>
+    </>
+  )
 }
 
 export default withRouter(NoteCreation);
