@@ -1,5 +1,6 @@
 import * as React from "react";
-import {post, get, upload, uploadFilesWithRequest} from "../../utils/http";
+import {useEffect, useState} from "react";
+import {get, post, upload, uploadFilesWithRequest} from "../../utils/http";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
 import Button from "@material-ui/core/Button";
@@ -24,7 +25,6 @@ import {NoteFilesEdit} from "../note/note-files/note-files-edit";
 import "../../styles/science.scss";
 import VideoList from "../medias/video-list";
 import {getKey} from "../../utils/keys";
-import {useEffect, useState} from "react";
 import LoadingMask from "../loading-mask/loading-mask";
 
 const NoteCreation = ({note, creating, onDone}) => {

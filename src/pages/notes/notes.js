@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link, withRouter} from "react-router-dom";
+import {withRouter} from "react-router-dom";
 import {get} from "../../utils/http";
 import "./notes.scss";
 import "../../styles/layout.scss";
@@ -9,7 +9,6 @@ import List from '@material-ui/core/List';
 import ListItem from "@material-ui/core/ListItem";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Chip from "@material-ui/core/Chip";
@@ -41,8 +40,6 @@ class Notes extends React.Component {
       filter: {count: 20, offset: 0, initialized: false},
       creating: false,
       notification: null,
-      deletingNote: null,
-      deleting: false,
       loading: false,
       hasMoreNotes: true
     };
@@ -142,10 +139,6 @@ class Notes extends React.Component {
             </ListItem>)}
           </List>
         </CardContent>
-        <CardActions>
-          <Button size="small" color="primary" onClick={() => this.askDeleteNote(note)}>Supprimer</Button>
-          <Link to={"/notes/" + note.uri}><Button size="small" color="primary">Ouvrir</Button></Link>
-        </CardActions>
       </Card>
     </li>
   }

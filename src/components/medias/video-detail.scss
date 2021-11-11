@@ -1,3 +1,15 @@
-.video-detail {
-  width: 100%;
+.video-detail-container {
+  > video {
+    width: 100%;
+  }
+  > .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+  .navigation {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
 }

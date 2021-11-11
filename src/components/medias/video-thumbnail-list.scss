@@ -11,11 +11,17 @@
     flex-wrap: nowrap;
     cursor: pointer;
     > img {
-      @media (max-width: 500px) {
-        width: 90%;
+      &.alone {
+        width: 100%;
       }
-      @media (min-width: 501px) {
-        width: 50%;
+      &:not(.alone) {
+        @media (max-width: 500px) {
+          width: 90%;
+        }
+        @media (min-width: 501px) {
+          width: 50%;
+        }
+        margin-right: $gutter-size;
       }
       margin-right: $gutter-size;
       display: inline-block;

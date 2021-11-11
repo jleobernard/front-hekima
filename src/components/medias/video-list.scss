@@ -10,10 +10,24 @@
     display: flex;
     flex-wrap: nowrap;
     > .video {
-      width: 50%;
-      margin-right: $gutter-size;
+      &.alone {
+        width: 100%;
+      }
+      &:not(.alone) {
+        @media (max-width: 500px) {
+          width: 90%;
+        }
+        @media (min-width: 501px) {
+          width: 50%;
+        }
+        margin-right: $gutter-size;
+      }
       display: inline-block;
       flex-shrink: 0;
+      .video-controls {
+        display: flex;
+        flex-wrap: wrap;
+      }
       > video {
         width: 100%;
       }

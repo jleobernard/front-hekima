@@ -1,7 +1,7 @@
 import "./video-list.scss"
 import * as React from "react";
-import {Checkbox, Input} from "@material-ui/core";
 import {useState} from "react";
+import {Checkbox, Input} from "@material-ui/core";
 
 export default function VideoList({title, videos, editable, onChange}) {
 
@@ -9,6 +9,7 @@ export default function VideoList({title, videos, editable, onChange}) {
 
   function valueChanged(md, fieldName, value) {
     md[fieldName] = value
+    document.getElementById("video-" + md.key).load()
     if(onChange) {
       onChange(md)
     }
@@ -37,8 +38,12 @@ export default function VideoList({title, videos, editable, onChange}) {
     }
   }
   function renderVideo(videoMetadata, index) {
-    let from = videoMetadata.from
-    let to = videoMetadata.to
+    let from = Math.floor(videoMetadata.from)
+    let to = Math.ceil(videoMetadata.to)
+    if(to - from < 2) {
+      from = from -1
+      to = to + 1
+    }
     let src;
     if(editable) {
       src = "/kosubs/" + videoMetadata.name + ".mp4#t=" + from +"," + to
@@ -46,19 +51,19 @@ export default function VideoList({title, videos, editable, onChange}) {
       src ="/kosubs/loop/" + videoMetadata.name + "/" + from + "/" + to + ".mp4"
     }
     return (
-      <div className="video" key={videoMetadata.key || index}>
-        <video controls loop={!editable} onError={err => handleVideoError(err)}>
+      <div className={"video " + (videos && videos.length === 1 ? 'alone' : '')} key={videoMetadata.key || index}>
+        <video controls loop onError={err => handleVideoError(err)} id={"video-" + videoMetadata.key}>
           <source src={src} type="video/mp4" />
         </video>
         {editable ?
-          <div>
+          <div className={"video-controls"}>
             <Input
-              value={videoMetadata.from} variant="outlined"
+              value={from} variant="outlined"
               onChange={e => valueChanged(videoMetadata, 'from', e.target.valueAsNumber)} type="number"
             />
             <Checkbox checked={videoMetadata.selected} onChange={e => valueChanged(videoMetadata, 'selected', e.target.checked)} />
             <Input
-              value={videoMetadata.to} variant="outlined"
+              value={to} variant="outlined"
               onChange={e => valueChanged(videoMetadata, 'to', e.target.valueAsNumber)} type="number"
             />
           </div>

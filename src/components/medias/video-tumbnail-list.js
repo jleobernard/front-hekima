@@ -10,7 +10,7 @@ import VideoDetail from "./video-detail";
 
 export default function VideoThumbnailList({title, videos}) {
 
-  const [detail, setDetail] = useState({})
+  const [detailIndex, setDetailIndex] = useState(-1)
   const [errorsCount, setErrorsCount] = useState({});
 
   function handleImageError(err) {
@@ -36,18 +36,24 @@ export default function VideoThumbnailList({title, videos}) {
       }, 1000)
     }
   }
-  function showVideo(videoMetadata) {
-    setDetail(videoMetadata)
-  }
   function renderThumbnail(videoMetadata, index) {
     let from = videoMetadata.from
     let to = videoMetadata.to
     return (
-      <img className="thumbnail" key={"thumbnail-" + index} alt={"Thumbnail of video " + videoMetadata.name +" from " + from + " to " + to +" seconds"}
+      <img className={"thumbnail" + (videos && videos.length === 1 ? ' alone' : '')} key={"thumbnail-" + index} alt={"Thumbnail of video " + videoMetadata.name +" from " + from + " to " + to +" seconds"}
         onError={err => handleImageError(err)}
-        onClick={() => showVideo(videoMetadata)}
+        onClick={() => setDetailIndex(index)}
         src={"/kosubs/thumbnail/" + videoMetadata.name + "/" + from + "/" + to + ".jpg"} />
     )
+  }
+  function onChangeVideo(delta) {
+    let newIndex = (detailIndex + delta)
+    if(newIndex < 0) {
+      newIndex = videos.length - 1
+    } else if (newIndex >= videos.length) {
+      newIndex = 0
+    }
+    setDetailIndex(newIndex)
   }
 
   return (
@@ -59,16 +65,18 @@ export default function VideoThumbnailList({title, videos}) {
             {(videos || []).map((v, i) => renderThumbnail(v, i))}
           </div>
         </div>
-        <Dialog open={detail && detail.name}
-                onClose={() => setDetail({})}
+        <Dialog open={detailIndex >= 0}
+                onClose={() => setDetailIndex(-1)}
                 fullScreen={true}
                 aria-labelledby="video-detail-title">
           <DialogTitle id="video-detail-tiel">Vidéo</DialogTitle>
           <DialogContent>
-            <VideoDetail video={detail} />
+            <VideoDetail video={videos[detailIndex]}
+                         changeVideo={delta => onChangeVideo(delta)}
+                         hasMoreVideos={videos.length > 1} />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDetail({})} color="primary">
+            <Button onClick={() => setDetailIndex(-1)} color="primary">
               Fermer
             </Button>
           </DialogActions>
