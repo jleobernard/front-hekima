@@ -2,16 +2,17 @@ import "./video-list.scss"
 import * as React from "react";
 import {useState} from "react";
 import {Checkbox, Input} from "@material-ui/core";
+import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/const";
 
-export default function VideoList({title, videos, editable, onChange}) {
+export default function VideoList({title, videos, editable, onChange, className}) {
 
   const [errorsCount, setErrorsCount] = useState({});
 
-  function valueChanged(md, fieldName, value) {
+  function valueChanged(md, fieldName, value, index) {
     md[fieldName] = value
     document.getElementById("video-" + md.key).load()
     if(onChange) {
-      onChange(md)
+      onChange(md, index)
     }
   }
   function handleVideoError(err) {
@@ -21,7 +22,7 @@ export default function VideoList({title, videos, editable, onChange}) {
     let keepTrying = false;
     let newCounts = {...errorsCount}
     if(src in errorsCount) {
-      if(errorsCount[src] < 10) {
+      if(errorsCount[src] < RELOAD_RESOURCE_MAX_RETRIES) {
         newCounts[src] = newCounts[src] + 1
         keepTrying = true
       }
@@ -34,7 +35,7 @@ export default function VideoList({title, videos, editable, onChange}) {
       setTimeout(() => {
         console.log("Tentative de recharger ", src, " pour la ", newCounts[src], " fois")
         video.load()
-      }, 1000)
+      }, RELOAD_RESOURCE_DELAY)
     }
   }
   function renderVideo(videoMetadata, index) {
@@ -59,12 +60,12 @@ export default function VideoList({title, videos, editable, onChange}) {
           <div className={"video-controls"}>
             <Input
               value={from} variant="outlined"
-              onChange={e => valueChanged(videoMetadata, 'from', e.target.valueAsNumber)} type="number"
+              onChange={e => valueChanged(videoMetadata, 'from', e.target.valueAsNumber, index)} type="number"
             />
-            <Checkbox checked={videoMetadata.selected} onChange={e => valueChanged(videoMetadata, 'selected', e.target.checked)} />
+            <Checkbox checked={videoMetadata.selected} onChange={e => valueChanged(videoMetadata, 'selected', e.target.checked, index)} />
             <Input
               value={to} variant="outlined"
-              onChange={e => valueChanged(videoMetadata, 'to', e.target.valueAsNumber)} type="number"
+              onChange={e => valueChanged(videoMetadata, 'to', e.target.valueAsNumber, index)} type="number"
             />
           </div>
           :
@@ -75,7 +76,7 @@ export default function VideoList({title, videos, editable, onChange}) {
 
   return (
     videos  && videos.length > 0 ?
-      <div className="videos-container">
+      <div className={(className || '') + " videos-container"}>
         <div className="title">{title}</div>
         <div className="videos">
           {(videos || []).map((v, i) => renderVideo(v, i))}

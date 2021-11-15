@@ -153,13 +153,14 @@ class NoteFilter extends React.Component {
 
 
   render() {
-    const sources = this.state.sources || [];
+    const sources = this.state.sources || [];
     const tags = this.state.tagsSuggestions || [];
     const allowCreations = this.props.allowCreation;
     const types = [
       {type: 'Livre'},
       {type: 'MOOC'},
-      {type: 'Journal'}
+      {type: 'Journal'},
+      {type: 'Cours'}
     ]
     return (
       <div className="flex-column">

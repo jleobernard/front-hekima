@@ -7,6 +7,7 @@ import DialogActions from "@material-ui/core/DialogActions/DialogActions";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog/Dialog";
 import VideoDetail from "./video-detail";
+import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/const";
 
 export default function VideoThumbnailList({title, videos}) {
 
@@ -20,7 +21,7 @@ export default function VideoThumbnailList({title, videos}) {
     let keepTrying = false;
     let newCounts = {...errorsCount}
     if(src in errorsCount) {
-      if(errorsCount[src] < 10) {
+      if(errorsCount[src] < RELOAD_RESOURCE_MAX_RETRIES) {
         newCounts[src] = newCounts[src] + 1
         keepTrying = true
       }
@@ -31,9 +32,9 @@ export default function VideoThumbnailList({title, videos}) {
     if(keepTrying) {
       setErrorsCount(newCounts)
       setTimeout(() => {
-        console.log("Tentative de recharger ", src, " pour la ", newCounts[src], " fois")
+        console.log("Tentative de recharger ", src, " pour la ", newCounts[src], "ème fois")
         image.src = src + "?k=" + Date.now()
-      }, 1000)
+      }, RELOAD_RESOURCE_DELAY)
     }
   }
   function renderThumbnail(videoMetadata, index) {

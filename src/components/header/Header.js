@@ -1,6 +1,4 @@
 import * as React from "react";
-import Toolbar from "@material-ui/core/Toolbar";
-import AppBar from '@material-ui/core/AppBar';
 import Typography from "@material-ui/core/Typography";
 import {getLanguages, logout} from "../../utils/storage";
 import {withRouter} from "react-router-dom";
@@ -8,6 +6,17 @@ import SearchIcon from '@material-ui/icons/Search';
 import "./header.scss";
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import SearchFilter from "../search-filter/search-filter";
+import MenuIcon from "@material-ui/icons/Menu";
+import {Link} from "react-router-dom";
+import {
+  AppBar,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  SwipeableDrawer,
+  Toolbar
+} from "@material-ui/core";
 
 class Header extends React.Component {
   constructor(props) {
@@ -77,6 +86,15 @@ class Header extends React.Component {
     return (
       <AppBar position="fixed">
         <Toolbar className="toolbar">
+          <IconButton
+            edge="start"
+            className="with-margin-right"
+            color="inherit"
+            aria-label="open drawer"
+            onClick={() => this.toggleDrawer(true)}
+          >
+            <MenuIcon />
+          </IconButton>
           <Typography variant="h5" className={"title " + (!this.props.title ? 'website-title-header' : '')} noWrap
             onClick={() => this.goHome()}>
             {this.props.title || 'Notes'}
@@ -84,6 +102,20 @@ class Header extends React.Component {
           {this.props.withSearch ? <SearchIcon onClick={this.startSearch}/>: ''}
           {this.props.goBack ? <div className="back-icon" onClick={this.goBack}><ArrowBackIcon /></div> : ''}
         </Toolbar>
+        <SwipeableDrawer
+          anchor='left'
+          open={this.state.menuOpened}
+          onClose={() => this.toggleDrawer(false)}
+          onOpen={() => this.toggleDrawer(true)}
+        >
+          <List>
+            <ListItem button key='quizz'>
+              <Link to={"/quizz/init"}>
+                <ListItemText primary={'Quizz'} />
+              </Link>
+            </ListItem>
+          </List>
+        </SwipeableDrawer>
         <SearchFilter open={this.state.openFilter}
     filter={this.state.filter}
     onDone={this.updateFilter}/>

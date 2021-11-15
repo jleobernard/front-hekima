@@ -1,6 +1,6 @@
 import * as React from "react";
 import {useEffect, useState} from "react";
-import {get, post, upload, uploadFilesWithRequest} from "../../utils/http";
+import {post, upload, uploadFilesWithRequest} from "../../utils/http";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
 import Button from "@material-ui/core/Button";
@@ -16,7 +16,7 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import Toaster from "../Toaster";
 import NoteFilter from "../filter/filter";
 import {ButtonGroup, Input, InputAdornment, InputLabel, Paper} from "@material-ui/core";
-import {Camera, Search} from "@material-ui/icons";
+import {Camera} from "@material-ui/icons";
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
 import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -26,25 +26,23 @@ import "../../styles/science.scss";
 import VideoList from "../medias/video-list";
 import {getKey} from "../../utils/keys";
 import LoadingMask from "../loading-mask/loading-mask";
+import SubsSearcher from "../subs/subs-searcher";
 
 const NoteCreation = ({note, creating, onDone}) => {
 
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [parsing, setParsing] = useState(false)
-  const [searchingSubs, setSearchingSubs] = useState(false)
   const [error, setError] = useState("");
   const [errorSev, setErrorSev] = useState("error");
   const [noteUri, setNoteUri] = useState(note && note.uri ? note.uri : null)
   const [selectedSubs, setSelectedSubs] = useState([])
-  const [subs, setSubs] = useState([])
   const [valeur, setValeur] = useState("")
   const [source, setSource] = useState({})
   const [tags, setTags] = useState([])
   const [filesChanges, setFilesChanges] = useState(false)
   const [toolbar, setToolbar] = useState('')
   const [parsedResult, setParsedResult] = useState(null)
-  const [searchSubs, setSearchSubs] = useState('')
   const colors = ['red', 'green', 'purple', 'gray'];
   const refInputFile = React.createRef()
   const refValeur = React.createRef()
@@ -63,33 +61,19 @@ const NoteCreation = ({note, creating, onDone}) => {
 
   function setSubsChanged(sub, fromSelectedList) {
     const _selectedSubs = [...selectedSubs]
-    const suggestedSubs = [...subs]
     if(fromSelectedList) {
       let index = lodash.findIndex(_selectedSubs, {key: sub.key})
       if (sub.selected) {
         _selectedSubs[index] = sub
       } else {
-        suggestedSubs.unshift(sub)
         _selectedSubs.splice(index, 1)
       }
     } else {
-      let index = lodash.findIndex(suggestedSubs, {key: sub.key})
       if (sub.selected) {
         _selectedSubs.unshift(sub)
-        suggestedSubs.splice(index, 1)
-      } else {
-        suggestedSubs[index] = sub
       }
     }
-    setSubs(suggestedSubs)
     setSelectedSubs(_selectedSubs)
-  }
-
-  function doSearchSubs(q) {
-    setSearchingSubs(true)
-    get('/api/kosubs', {q: q})
-    .then(results => setSubs((results || []).map(r => ({...r, selected: false, key: getKey("subs")}))))
-    .finally(() => setSearchingSubs(false))
   }
 
   function hasImageChanges(){
@@ -158,11 +142,6 @@ const NoteCreation = ({note, creating, onDone}) => {
   function valueChanged(event) {
     setValeur(event.target.value)
   }
-
-  function searchChanged(event) {
-    setSearchSubs(event.target.value)
-  }
-
   function parsedResultChanged(event) {
     setParsedResult(event.target.value)
   }
@@ -407,20 +386,8 @@ const NoteCreation = ({note, creating, onDone}) => {
                         onFilterChanged={onFilterChanged}
                         allowCreation={true} />
 
-            <VideoList key={"selected-subs"} title={"Sous-titres"} videos={selectedSubs} editable={true} onChange={(sub) => setSubsChanged(sub, true)}/>
-            <FormControl>
-              <InputLabel htmlFor="valeur-ne">Sous-titres</InputLabel>
-              <Input id="search-subs" value={searchSubs} onChange={searchChanged}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton aria-label="analyse image" onClick={() => doSearchSubs(searchSubs)}>
-                      {searchingSubs ? <CircularProgress /> : <Search />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-            </FormControl>
-            <VideoList key={"suggested-subs"} title={"Sous-titres trouvées"} videos={subs} editable={true} onChange={(sub) => setSubsChanged(sub, false)}/>
+            <VideoList className="with-margin-top" key={"selected-subs"} title={"Sous-titres"} videos={selectedSubs} editable={true} onChange={(sub) => setSubsChanged(sub, true)}/>
+            <SubsSearcher className={"with-margin-top with-margin-bottom"} onVideoSelected={sub => setSubsChanged(sub, false)}/>
           </form>
           {valeur ? <Paper elevation={3} className="with-padding with-margin-top">
             <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={valeur}/>

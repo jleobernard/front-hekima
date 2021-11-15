@@ -5,6 +5,8 @@ import './App.css';
 import Login from "./pages/login/login";
 import NoteView from "./pages/note-view/note-view";
 import {get} from "./utils/http";
+import QuizzInit from "./pages/quizz/quizz-init";
+import QuizzRun from "./pages/quizz/quizz-run";
 
 function App() {
   useEffect(() => {
@@ -20,6 +22,12 @@ function App() {
             </Route>
             <Route exact path="/notes">
               <Notes />
+            </Route>
+            <Route exact path="/quizz/init">
+              <QuizzInit />
+            </Route>
+            <Route exact path="/quizz/run">
+              <QuizzRun />
             </Route>
             <Route exact path="/">
               <Redirect to="/notes" />
