@@ -5,17 +5,8 @@ import "./note-view.scss";
 import "../../styles/layout.scss";
 import Header from "../../components/header/Header";
 import {useHistory} from "react-router-dom/cjs/react-router-dom";
-import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
-import Typography from "@material-ui/core/Typography";
-import ReactMarkdown from "react-markdown";
-import gfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import Chip from "@material-ui/core/Chip";
 import Toaster from "../../components/Toaster";
 import EditIcon from "@material-ui/icons/Edit";
-import {NoteFilesDisplay} from "../../components/note/note-files/note-files-display";
 import LoadingMask from "../../components/loading-mask/loading-mask";
 import {ButtonGroup} from "@material-ui/core";
 import IconButton from "@material-ui/core/IconButton";
@@ -29,6 +20,7 @@ import CircularProgress from "@material-ui/core/CircularProgress/CircularProgres
 import Dialog from "@material-ui/core/Dialog/Dialog";
 import NoteCreation from "../../components/note-creation/note-creation";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
+import {NoteDetail} from "../../components/note/note-detail";
 
 
 const NoteView = ({match}) => {
@@ -91,21 +83,7 @@ const NoteView = ({match}) => {
     function renderDisplay() {
         return (
             <div>
-                <NoteFilesDisplay note={note}/>
-                {note.subs && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs}/> : <></>}
-                <Typography component="p" className={"note-text"} gutterBottom={true}>
-                    <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={note.valeur}/>
-                </Typography>
-                {note.source ? <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
-                    in {note.source.titre} de {note.source.auteur}
-                </Typography> : <></>}
-                <List className="list-horizontal-display">
-                    {(note.tags || []).map(t => <ListItem key={t.uri}>
-                        <Chip
-                            label={t.valeur}
-                        />
-                    </ListItem>)}
-                </List>
+                <NoteDetail note={note} />
                 <ButtonGroup className="button-group centered with-margin-top spread bottom coloured">
                     <IconButton type='submit' color="primary"
                                 onClick={() => goBack()}>

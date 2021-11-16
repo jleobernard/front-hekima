@@ -7,15 +7,29 @@ import {TagsSelector} from "../../components/filter/tags-selector";
 import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import {SourcesSelector} from "../../components/filter/sources-selector";
+import {get} from "../../utils/http";
+import {useHistory} from "react-router-dom/cjs/react-router-dom";
+
 
 const QuizzInit = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState({msg:"", sev: "info"})
   const [tags, setTags] = useState([])
   const [sources, setSources] = useState([])
+  const history = useHistory()
 
   function startQuizz() {
-    console.log(tags, sources)
+    if(!loading) {
+      setLoading(true)
+      setError({msg:"", sev: "info"})
+      get("/api/quizz:generate", {tags: (tags || []).map(t => t.uri), sources: (sources || []).map(s => s.uri)})
+      .then(notes => {
+        localStorage.setItem("quizz", JSON.stringify(notes))
+        history.push("/quizz/run")
+      })
+      .catch(err => setError({msg: "Erreur lors de la génération du quizz", sev: "error"}))
+      .finally(() => setLoading(false))
+    }
   }
 
   return (

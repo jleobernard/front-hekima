@@ -1,6 +1,6 @@
 import React from 'react';
 import {withRouter} from "react-router-dom";
-import {get, post} from "../../utils/http";
+import {get} from "../../utils/http";
 import "./notes.scss";
 import "../../styles/layout.scss";
 import Header from "../../components/header/Header";

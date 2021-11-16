@@ -1,22 +1,13 @@
 import * as React from "react";
 import Typography from "@material-ui/core/Typography";
 import {getLanguages, logout} from "../../utils/storage";
-import {withRouter} from "react-router-dom";
+import {Link, withRouter} from "react-router-dom";
 import SearchIcon from '@material-ui/icons/Search';
 import "./header.scss";
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import SearchFilter from "../search-filter/search-filter";
 import MenuIcon from "@material-ui/icons/Menu";
-import {Link} from "react-router-dom";
-import {
-  AppBar,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  SwipeableDrawer,
-  Toolbar
-} from "@material-ui/core";
+import {AppBar, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar} from "@material-ui/core";
 
 class Header extends React.Component {
   constructor(props) {
@@ -109,6 +100,11 @@ class Header extends React.Component {
           onOpen={() => this.toggleDrawer(true)}
         >
           <List>
+            <ListItem button key='notes'>
+              <Link to={"/"}>
+                <ListItemText primary={'Notes'} />
+              </Link>
+            </ListItem>
             <ListItem button key='quizz'>
               <Link to={"/quizz/init"}>
                 <ListItemText primary={'Quizz'} />
