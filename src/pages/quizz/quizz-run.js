@@ -7,9 +7,12 @@ import LoadingMask from "../../components/loading-mask/loading-mask";
 import Toaster from "../../components/Toaster";
 import {NoteDetail} from "../../components/note/note-detail";
 import {Rating} from "@material-ui/lab";
-import {CircularProgress} from "@material-ui/core";
+import {CircularProgress, IconButton, LinearProgress} from "@material-ui/core";
 import './quizz-run.scss'
 import {MAX_GRADE_QUIZZ} from "../../utils/const";
+import {ArrowForward} from "@material-ui/icons";
+import {Visibility} from "@material-ui/icons";
+import {getNumberOfTitles} from "../../services/note-services";
 
 const QuizzRun = () => {
   const [loading, setLoading] = useState(false)
@@ -19,6 +22,8 @@ const QuizzRun = () => {
   const [note, setNote] = useState(null)
   const [position, setPosition] = useState(-1)
   const [rating, setRating] = useState(0)
+  const [questionType, setQuestionType] = useState("")
+  const [noteState, setNoteState] = useState("")
   const history = useHistory()
 
   useEffect(() => {
@@ -43,6 +48,13 @@ const QuizzRun = () => {
       .then(note => {
         setNote(note)
         setRating(0)
+        const nbTitles = getNumberOfTitles(note)
+        if(nbTitles > 0) {
+          setQuestionType(Math.random() >= 0.5 ? "ask-title" : "ask-value")
+          setNoteState("question")
+        } else {
+          setQuestionType("")
+        }
       })
       .catch(() => setError({msg: "Erreur lors du chargement de la note " + position, sev: "error"}))
       .finally(() => setLoading(false))
@@ -65,21 +77,51 @@ const QuizzRun = () => {
     }
   }
 
+  function getProgress() {
+    return (position + 1) * 100 / (((notes|| []).length) || 1)
+  }
+
   return (
-    <div className="app">
+    <div className="app quizz">
       <Header title="Quizz" goBack={true} withSearch={false}/>
-      {note && note.uri ? <NoteDetail note={note} /> : <></>}
+      <LinearProgress variant="determinate" value={getProgress()} />
+      <div className={"quizz-note " + questionType + " " + noteState}>
+        {note && note.uri ? <NoteDetail note={note} /> : <></>}
+      </div>
       <div className="quizz-rating">
-        <Rating
-          name="simple-controlled"
-          value={rating}
-          onChange={(_, newValue) => {
-            rate(newValue);
-          }}
-          size="large"
-          max={MAX_GRADE_QUIZZ}
-        />
-        {saving ? <CircularProgress className="saving" /> : <></>}
+        {noteState === "question" ?
+          <IconButton
+            edge="end"
+            color="inherit"
+            aria-label="reveal note"
+            onClick={() => setNoteState("")}
+          >
+            <Visibility />
+          </IconButton>
+          :
+        <>
+          <Rating
+            name="simple-controlled"
+            value={rating}
+            onChange={(_, newValue) => {
+              rate(newValue);
+            }}
+            size="large"
+            max={MAX_GRADE_QUIZZ}
+          />
+          <IconButton
+            edge="end"
+            className="pass-button"
+            color="inherit"
+            aria-label="pass note"
+            onClick={() => setPosition(position + 1)}
+          >
+            <ArrowForward />
+          </IconButton>
+          {saving ? <CircularProgress className="saving" /> : <></>}
+          </>
+        }
+
       </div>
       <LoadingMask loading={loading}/>
       <Toaster error={error.msg} severity={error.sev}/>

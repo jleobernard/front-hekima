@@ -49,10 +49,6 @@ class Notes extends React.Component {
     this.filterChanged = this.filterChanged.bind(this);
   }
 
-  goToNote() {
-
-  }
-
   componentDidMount() {
     this.setState({loading: true})
     //this.refreshNotes(true)
