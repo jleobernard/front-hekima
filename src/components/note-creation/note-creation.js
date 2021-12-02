@@ -16,7 +16,7 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import Toaster from "../Toaster";
 import NoteFilter from "../filter/filter";
 import {ButtonGroup, Input, InputAdornment, InputLabel, Paper} from "@material-ui/core";
-import {Camera} from "@material-ui/icons";
+import {Camera, Visibility, VisibilityOff} from "@material-ui/icons";
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
 import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -46,6 +46,7 @@ const NoteCreation = ({note, creating, onDone}) => {
   const colors = ['red', 'green', 'purple', 'gray'];
   const refInputFile = React.createRef()
   const refValeur = React.createRef()
+  const [displayMode, setDisplayMode] = useState(false);
 
   const _noteUri = (note || {}).uri
   useEffect(() => {
@@ -347,63 +348,83 @@ const NoteCreation = ({note, creating, onDone}) => {
             <NoteFilesEdit note={note} onChange={fileChanged}/>
             <FormControl>
               <InputLabel htmlFor="valeur-ne">Note</InputLabel>
-              <Input
-                id="valeur-ne"
-                required autoFocus={true}
-                value={valeur}
-                ref={refValeur}
-                multiline rows={3} rowsMax={25} variant="outlined"
-                onChange={valueChanged}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="analyse image"
-                      onClick={() => refInputFile.current.click()}
-                    >
-                      {parsing ? <CircularProgress /> : <Camera />}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-              <ButtonGroup className="button-group centered with-margin-top">
-                <Button className="block" onClick={() => doSetToolbar("titles")}>Titres</Button>
-                <Button className="block" onClick={() => doSetToolbar('colours')}>Couleurs</Button>
-                <Button className="block" onClick={() => doSetToolbar('text')}>Texte</Button>
-                <Button className="block" onClick={() => doSetToolbar('maths')}>Maths</Button>
-                <Button className="block" onClick={() => doSetToolbar('greek')}>Grec</Button>
-              </ButtonGroup>
+              {displayMode ?
+                <Paper elevation={3} className="with-padding with-margin-top">
+                  <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={valeur}/>
+                </Paper> :
+                <Input
+                  id="valeur-ne"
+                  required autoFocus={true}
+                  value={valeur}
+                  ref={refValeur}
+                  multiline rows={3} rowsMax={25} variant="outlined"
+                  onChange={valueChanged}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="analyse image"
+                        onClick={() => refInputFile.current.click()}
+                      >
+                        {parsing ? <CircularProgress/> : <Camera/>}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+              }
+
+              {displayMode ?
+                <ButtonGroup className="button-group centered with-margin-top">
+                  <IconButton className="block" onClick={() => setDisplayMode(false)} aria-label="Édition" component="span">
+                    <VisibilityOff />
+                  </IconButton>
+                </ButtonGroup>
+                :
+                <ButtonGroup className="button-group centered with-margin-top">
+                  <IconButton className="block" onClick={() => setDisplayMode(true)} aria-label="Aperçu" component="span">
+                    <Visibility />
+                  </IconButton>
+                  <Button className="block" onClick={() => doSetToolbar("titles")}>Titres</Button>
+                  <Button className="block" onClick={() => doSetToolbar('colours')}>Couleurs</Button>
+                  <Button className="block" onClick={() => doSetToolbar('text')}>Texte</Button>
+                  <Button className="block" onClick={() => doSetToolbar('maths')}>Maths</Button>
+                  <Button className="block" onClick={() => doSetToolbar('greek')}>Grec</Button>
+                </ButtonGroup>
+              }
+
               <div className="with-margin-top with-margin-bottom">
-                {toolbar === 'colours' ? renderColours(): <></>}
-                {toolbar === 'titles'  ? renderTitles(): <></>}
-                {toolbar === 'text'    ? renderText() : <></>}
-                {toolbar === 'maths'   ? renderMaths() : <></>}
-                {toolbar === 'greek'   ? renderGreek(): <></>}
+                {toolbar === 'colours' ? renderColours() : <></>}
+                {toolbar === 'titles' ? renderTitles() : <></>}
+                {toolbar === 'text' ? renderText() : <></>}
+                {toolbar === 'maths' ? renderMaths() : <></>}
+                {toolbar === 'greek' ? renderGreek() : <></>}
               </div>
-              <input type="file" id="picture" accept="image/*" onChange={parsePictureChanged} hidden={true} ref={refInputFile}/>
+              <input type="file" id="picture" accept="image/*" onChange={parsePictureChanged} hidden={true}
+                     ref={refInputFile}/>
 
             </FormControl>
             <NoteFilter filter={filter} version={0}
                         onFilterChanged={onFilterChanged}
-                        allowCreation={true} />
+                        allowCreation={true}/>
 
-            <VideoList className="with-margin-top" key={"selected-subs"} title={"Sous-titres"} videos={selectedSubs} editable={true} onChange={(sub) => setSubsChanged(sub, true)}/>
-            <SubsSearcher className={"with-margin-top with-margin-bottom"} onVideoSelected={sub => setSubsChanged(sub, false)}/>
+            <VideoList className="with-margin-top" key={"selected-subs"} title={"Sous-titres"} videos={selectedSubs}
+                       editable={true} onChange={(sub) => setSubsChanged(sub, true)}/>
+            <SubsSearcher className={"with-margin-top with-margin-bottom"}
+                          onVideoSelected={sub => setSubsChanged(sub, false)}/>
           </form>
-          {valeur ? <Paper elevation={3} className="with-padding with-margin-top">
-            <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={valeur}/>
-          </Paper> : <></>}
           <Toaster error={error} severity={errorSev}/>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => handleClose(null,true)} color="primary">
-            Fermer
-          </Button>
-          <Button onClick={_ => handleSubmit(false)} color="primary">
-            Sauvegarder {saving ? <CircularProgress /> : ''}
-          </Button>
-          <Button onClick={_ => handleSubmit(true)} color="primary">
-            Sauvegarder et fermer{saving ? <CircularProgress /> : ''}
-          </Button>
+          <ButtonGroup className="button-group centered">
+            <Button onClick={() => handleClose(null,true)} color="primary">
+              Fermer
+            </Button>
+            <Button onClick={_ => handleSubmit(false)} color="primary">
+              Sauvegarder {saving ? <CircularProgress /> : ''}
+            </Button>
+            <Button onClick={_ => handleSubmit(true)} color="primary">
+              Sauvegarder et fermer{saving ? <CircularProgress /> : ''}
+            </Button>
+          </ButtonGroup>
         </DialogActions>
       </Dialog>
       <Dialog open={parsedResult} key="parsed-result"
