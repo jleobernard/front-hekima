@@ -1,18 +1,18 @@
 import "./video-detail.scss"
 import * as React from "react";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {FormControl, InputLabel, MenuItem, Select} from "@material-ui/core";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import {ArrowForward} from "@material-ui/icons";
 
 export default function VideoDetail({video, hasMoreVideos, changeVideo}) {
-  const [playback, setPlayback] = useState(1)
 
-  function changePlayback(newPbr) {
-    setPlayback(newPbr)
-    document.getElementById('video-detail').playbackRate = newPbr
-    setPlayback(newPbr)
-  }
+  function setPlayback(playback) {
+      if(video) {
+        document.getElementById('video-detail').playbackRate = playback
+      }
+    }
+
   if(!video) {
     return <></>
   }
@@ -29,14 +29,13 @@ export default function VideoDetail({video, hasMoreVideos, changeVideo}) {
           <Select
             labelId="playback-rate-label"
             id="video-detail-playback-rate"
-            value={playback}
             label="Vitesse"
             autoWidth={true}
             className="centered"
-            onChange={e => changePlayback(e.target.value)}>
+            onChange={e => setPlayback(e.target.value)}>
             <MenuItem value={0.25}><sup>1</sup>/<sub>4</sub></MenuItem>
             <MenuItem value={0.5}><sup>1</sup>/<sub>2</sub></MenuItem>
-            <MenuItem value={1}>1</MenuItem>
+            <MenuItem value={1} selected>1</MenuItem>
           </Select>
         </FormControl>
       </div>

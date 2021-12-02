@@ -30,6 +30,12 @@
         color: $unimportant-text-color;
         border-radius: 10px;
         position: relative;
+        > span {
+          color: transparent !important;
+          > span {
+            color: transparent !important;
+          }
+        }
         &:after{
           display: flex;
           width: 100%;
