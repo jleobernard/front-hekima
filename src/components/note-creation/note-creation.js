@@ -406,7 +406,7 @@ const NoteCreation = ({note, creating, onDone}) => {
                         onFilterChanged={onFilterChanged}
                         allowCreation={true}/>
 
-            <VideoList className="with-margin-top" key={"selected-subs"} title={"Sous-titres"} videos={selectedSubs}
+            <VideoList className="with-margin-top" key={"selected-subs"} title={""} videos={selectedSubs}
                        editable={true} onChange={(sub) => setSubsChanged(sub, true)}/>
             <SubsSearcher className={"with-margin-top with-margin-bottom"}
                           onVideoSelected={sub => setSubsChanged(sub, false)}/>

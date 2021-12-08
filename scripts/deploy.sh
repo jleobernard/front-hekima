@@ -4,8 +4,8 @@ cd $DIR/../
 set PUBLIC_URL=https://notes.jleo.tech && set REACT_APP_API_ROOT_URL=https://notes.jleo.tech && npm run build
 find build -name '.DS_Store' -exec rm -f {} \;
 echo "Cleaning previous version"
-ssh ks-leo-noport "rm -Rf /opt/containers/nginx/data/nginx/html/notes/*"
+ssh mandela "rm -Rf /opt/containers/nginx/data/nginx/html/notes/*"
 echo "Copying new version"
-scp -r build/* ks-leo-noport:/opt/containers/nginx/data/nginx/html/notes/
+scp -r build/* mandela:/opt/containers/nginx/data/nginx/html/notes/
 echo "Reloading nginx"
-ssh ks-leo-noport "cd /opt/containers/nginx && ./reload.sh"
+ssh mandela "cd /opt/containers/nginx && ./reload.sh"
