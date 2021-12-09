@@ -8,8 +8,8 @@ import {ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@material-ui/icons";
 export default function VideoList({title, videos, editable, onChange, className}) {
 
   const [errorsCount, setErrorsCount] = useState({});
-
   const [index, setIndex] = useState(0);
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     if(videos && videos.length > 0) {
@@ -21,13 +21,16 @@ export default function VideoList({title, videos, editable, onChange, className}
         }
       }, 200)
     }
-  }, [index, videos])
+  }, [index, videos, version])
 
   function valueChanged(md, fieldName, value) {
     md[fieldName] = value
     document.getElementById("video-" + md.key).load()
     if(onChange) {
       onChange(md, index)
+    }
+    if(fieldName === "to" || fieldName === "from") {
+      setVersion(version + 1)
     }
   }
   function handleVideoError(err) {
@@ -78,6 +81,7 @@ export default function VideoList({title, videos, editable, onChange, className}
     }
     const realIndex = getRealIndex()
     const videoMetadata = (videos[realIndex])
+    console.log(videoMetadata)
     let from = Math.floor(videoMetadata.from)
     let to = Math.ceil(videoMetadata.to)
     if(to - from < 2) {
