@@ -1,14 +1,29 @@
 import "./video-list.scss"
 import * as React from "react";
-import {useState} from "react";
-import {Checkbox, Input} from "@material-ui/core";
+import {useEffect, useState} from "react";
+import {Chip, IconButton, Input} from "@material-ui/core";
 import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/const";
+import {ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@material-ui/icons";
 
 export default function VideoList({title, videos, editable, onChange, className}) {
 
   const [errorsCount, setErrorsCount] = useState({});
 
-  function valueChanged(md, fieldName, value, index) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if(videos && videos.length > 0) {
+      const md = videos[getRealIndex()]
+      setTimeout(() => {
+        const video = document.getElementById("video-" + md.key)
+        if (video) {
+          video.load()
+        }
+      }, 200)
+    }
+  }, [index, videos])
+
+  function valueChanged(md, fieldName, value) {
     md[fieldName] = value
     document.getElementById("video-" + md.key).load()
     if(onChange) {
@@ -33,12 +48,36 @@ export default function VideoList({title, videos, editable, onChange, className}
     if(keepTrying) {
       setErrorsCount(newCounts)
       setTimeout(() => {
-        console.log("Tentative de recharger ", src, " pour la ", newCounts[src], " fois")
+        //console.log("Tentative de recharger ", src, " pour la ", newCounts[src], " fois")
         video.load()
       }, RELOAD_RESOURCE_DELAY)
     }
   }
-  function renderVideo(videoMetadata, index) {
+  function getRealIndex() {
+    if(index >= videos.length) {
+      return  videos.length - 1
+    } else if(index < 0) {
+      return 0;
+    }
+    return index
+  }
+
+  function changeVideo(delta) {
+    let newIndex = index + delta
+    if(newIndex >= videos.length) {
+      newIndex = 0
+    } else if(index < 0) {
+      newIndex = videos.length - 1;
+    }
+    setIndex(newIndex)
+  }
+
+  function renderVideo() {
+    if(!videos) {
+      return (<></>)
+    }
+    const realIndex = getRealIndex()
+    const videoMetadata = (videos[realIndex])
     let from = Math.floor(videoMetadata.from)
     let to = Math.ceil(videoMetadata.to)
     if(to - from < 2) {
@@ -52,21 +91,44 @@ export default function VideoList({title, videos, editable, onChange, className}
       src ="/kosubs/loop/" + videoMetadata.name + "/" + from + "/" + to + ".mp4"
     }
     return (
-      <div className={"video " + (videos && videos.length === 1 ? 'alone' : '')} key={videoMetadata.key || index}>
+      <div className={"video " + (videos && videos.length === 1 ? 'alone' : '')}>
         <video controls loop onError={err => handleVideoError(err)} id={"video-" + videoMetadata.key}>
           <source src={src} type="video/mp4" />
         </video>
         {editable ?
           <div className={"video-controls"}>
-            <Input
-              value={from} variant="outlined"
-              onChange={e => valueChanged(videoMetadata, 'from', e.target.valueAsNumber, index)} type="number"
-            />
-            <Checkbox checked={videoMetadata.selected} onChange={e => valueChanged(videoMetadata, 'selected', e.target.checked, index)} />
-            <Input
-              value={to} variant="outlined"
-              onChange={e => valueChanged(videoMetadata, 'to', e.target.valueAsNumber, index)} type="number"
-            />
+            <div className={"video-controls-line"}>
+              <Input
+                value={from} variant="outlined"
+                onChange={e => valueChanged(videoMetadata, 'from', e.target.valueAsNumber)} type="number"
+              />
+              {videoMetadata.selected ?
+                <IconButton aria-label="remove" onClick={() => valueChanged(videoMetadata, 'selected', false)} className="icon">
+                  <Remove />
+                </IconButton>
+                :
+                <IconButton aria-label="add" onClick={() => valueChanged(videoMetadata, 'selected', true)} className="icon">
+                  <PlaylistAdd />
+                </IconButton>
+              }
+              <Input
+                value={to} variant="outlined"
+                onChange={e => valueChanged(videoMetadata, 'to', e.target.valueAsNumber)} type="number"
+              />
+            </div>
+            <div className={"video-controls-line"}>
+              <IconButton aria-label="previous"
+                          onClick={() => changeVideo(-1)}
+                          className="icon">
+                <ArrowBack />
+              </IconButton>
+              <Chip label={(index + 1) + ' / ' + videos.length} />
+              <IconButton aria-label="previous"
+                          onClick={() => changeVideo(+1)}
+                          className="icon">
+                <ArrowForward />
+              </IconButton>
+            </div>
           </div>
           :
         <></>}
@@ -78,9 +140,7 @@ export default function VideoList({title, videos, editable, onChange, className}
     videos  && videos.length > 0 ?
       <div className={(className || '') + " videos-container"}>
         <div className="title">{title}</div>
-        <div className="videos">
-          {(videos || []).map((v, i) => renderVideo(v, i))}
-        </div>
+        { renderVideo() }
       </div> :
       <></>
   )
