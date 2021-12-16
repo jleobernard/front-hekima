@@ -6,7 +6,6 @@ import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog/Dialog";
 import NoteFilter from "../filter/filter";
 import * as lodash from 'lodash';
-import SubsSearcher from "../subs/subs-searcher";
 
 class SearchFilter extends React.Component {
   constructor(props) {
@@ -18,11 +17,10 @@ class SearchFilter extends React.Component {
     this.closeFilter = this.closeFilter.bind(this);
     this.onFilterChanged = this.onFilterChanged.bind(this);
     this.reinit = this.reinit.bind(this);
-    this.onVideoSelected = this.onVideoSelected.bind(this);
   }
 
   reinit() {
-    this.setState({filter: {source:null, tags: []}});
+    this.setState({filter: {source:null, tags: [], q: ""}});
     this.props.onDone({});
   }
   onFilterChanged(event) {
@@ -47,10 +45,6 @@ class SearchFilter extends React.Component {
     }
   }
 
-  onVideoSelected(sub) {
-    console.log(sub)
-  }
-
   render() {
     return (
       <Dialog open={this.props.open}
@@ -63,8 +57,9 @@ class SearchFilter extends React.Component {
             <NoteFilter filter={this.state.filter}
                         version={this.state.version}
                         onFilterChanged={this.onFilterChanged}
-                        allowCreation={false}/>
-            <SubsSearcher onVideoSelected={this.onVideoSelected} />
+                        allowCreation={false}
+                        withFTS={true}
+            />
           </form>
         </DialogContent>
         <DialogActions>

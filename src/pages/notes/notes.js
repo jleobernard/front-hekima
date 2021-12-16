@@ -30,6 +30,12 @@ function orDefault(count, defaultValue) {
   }
   return defaultValue
 }
+function orDefaultString(str, defaultValue) {
+  if(str) {
+    return decodeURIComponent(str);
+  }
+  return defaultValue
+}
 
 class Notes extends React.Component {
 
@@ -70,7 +76,8 @@ class Notes extends React.Component {
     const _filter = newFilter || this.state.filter
     const src = _filter.source ? _filter.source.uri : ''
     const tags = (_filter.tags || []).map(t => t.uri).join(',')
-    this.props.history.push(`/notes?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}`)
+    const q = (_filter.q || '').trim()
+    this.props.history.push(`/notes?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}&q=${encodeURIComponent(q)}`)
   }
 
   refreshNotes(override = false, filter = null) {
@@ -101,6 +108,9 @@ class Notes extends React.Component {
     }
     if(filter.tags) {
       _filter.tags = lodash.map(filter.tags, t => t.uri);
+    }
+    if(filter.q) {
+      _filter.q = filter.q
     }
     return _filter;
   }
@@ -153,6 +163,7 @@ class Notes extends React.Component {
       const _filter = {
         ...filter,
         initialized: true,
+        q: orDefaultString(params.get('q'), ''),
         count: orDefault(params.get('count'), 20),
         offset: orDefault(params.get('offset'), 0)
       }
@@ -213,7 +224,8 @@ class Notes extends React.Component {
     return filter.offset !== prevFilter.offset ||
         filter.count !== prevFilter.count ||
         filter.source  !== prevFilter.source ||
-        filter.tags  !== prevFilter.tags
+        filter.tags  !== prevFilter.tags ||
+        filter.q !== prevFilter.q
   }
 
   seekNote(noteUri) {

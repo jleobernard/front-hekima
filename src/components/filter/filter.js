@@ -22,12 +22,16 @@ class NoteFilter extends React.Component {
   defaultState = {
     sources: [],
     tags: [],
+    q: "",
+    qSuggestions: [],
     tagsSuggestions: [],
     loadingSources: false,
+    loadingQ: false,
     loadingTags: false,
     creatingSource: false,
     debouncedSource: null,
     debouncedTags: null,
+    debouncedQ: null,
     newSource: {creating: false},
     createSourceError: null,
     version: 0
@@ -40,7 +44,10 @@ class NoteFilter extends React.Component {
       ...this.state,
       source: props.filter.source,
       tags: props.filter.tags,
+      q: props.filter.q || ''
     }
+    this.selectQ = this.selectQ.bind(this);
+    this.refreshQ = this.refreshQ.bind(this);
     this.refreshSources = this.refreshSources.bind(this);
     this.selectSource = this.selectSource.bind(this);
     this.selectTags = this.selectTags.bind(this);
@@ -55,11 +62,28 @@ class NoteFilter extends React.Component {
     if (prevProps.version !== this.props.version) {
       this.setState({
         source: this.props.filter.source,
-        tags: this.props.filter.tags || []
+        tags: this.props.filter.tags || [],
+        q: this.props.filter.q
       });
     }
   }
 
+  refreshQ(q) {
+    const realQ = this.getLastWord(q);
+    if(realQ) {
+      this.setState({loadingQ: true});
+      if (this.state.debouncedQ) {
+        this.state.debouncedQ.cancel();
+      }
+      let debounced = debounce(() => {
+        get('/api/notes:autocomplete-index', {q: realQ}, false)
+        .then(words => this.setState({qSuggestions: words}))
+        .finally(() => this.setState({loadingQ: false, debouncedQ: null}))
+      }, 500);
+      debounced();
+      this.setState({debouncedQ: debounced});
+    }
+  }
 
   refreshSources(q) {
     this.setState({loadingSources: true});
@@ -90,6 +114,20 @@ class NoteFilter extends React.Component {
 
   }
 
+  selectQ(event, newValue) {
+    event.preventDefault()
+    event.stopPropagation()
+    if(this.state.debouncedQ) {
+      this.state.debouncedQ.cancel();
+    }
+    if(newValue) {
+      /*const alreadySet = this.getAllButLastWord(this.state.q)
+      alreadySet.push(newValue)*/
+      const newQ = `${this.state.q ? this.state.q + ' ' : ''}${newValue} `
+      this.setState({debouncedQ: null, q: newQ})
+      this.props.onFilterChanged({source: this.state.source, tags: this.state.tags, q: newQ})
+    }
+  }
   selectSource(event, source) {
     if(this.state.debouncedSource) {
       this.state.debouncedSource.cancel();
@@ -103,7 +141,7 @@ class NoteFilter extends React.Component {
       this.setState({newSource})
     } else {
       this.setState({debouncedSource: null, source});
-      this.props.onFilterChanged({source: source, tags: this.state.tags});
+      this.props.onFilterChanged({source: source, tags: this.state.tags, q: this.state.q});
     }
   }
 
@@ -116,7 +154,7 @@ class NoteFilter extends React.Component {
           newSource: {creating: false},
           source: insertedSource
         })
-        this.props.onFilterChanged({source: insertedSource, tags: this.state.tags});
+        this.props.onFilterChanged({source: insertedSource, tags: this.state.tags, q: this.state.q});
       })
       .finally(() => this.setState({creatingSource: false}))
     } else {
@@ -142,17 +180,18 @@ class NoteFilter extends React.Component {
       .then(insertedTag => {
         realTags[realTags.length - 1] = insertedTag;
         this.setState({tags: realTags});
-        this.props.onFilterChanged({source: this.state.source, tags: realTags});
+        this.props.onFilterChanged({source: this.state.source, tags: realTags, q: this.state.q});
       })
       .finally(() => this.setState({loadingTags: false}))
     } else {
       this.setState({debouncedTags: null, tags});
-      this.props.onFilterChanged({source: this.state.source, tags: tags});
+      this.props.onFilterChanged({source: this.state.source, tags: tags, q: this.state.q});
     }
   }
 
 
   render() {
+    const qs = this.state.qSuggestions || [];
     const sources = this.state.sources || [];
     const tags = this.state.tagsSuggestions || [];
     const allowCreations = this.props.allowCreation;
@@ -164,6 +203,29 @@ class NoteFilter extends React.Component {
     ]
     return (
       <div className="flex-column">
+        {this.props.withFTS ? <FormControl margin="normal">
+          <Autocomplete
+            id="q"
+            loading={this.state.loadingQ}
+            value={this.state.q}
+            onChange={this.selectQ}
+            onInputChange={(event) => event ? this.refreshQ(event.target.value) : null}
+            options={qs}
+            getOptionLabel={q => q}
+            renderTags={(tagValue, getTagProps) =>
+              tagValue.map((option, index) => (
+                <Chip
+                  label={option}
+                  {...getTagProps({ index })}
+                />
+              ))
+            }
+            filterOptions={(options, params) => options }
+            renderInput={(params) => (
+              <TextField {...params} label="Mot-clef" variant="outlined" placeholder="Mot-clef" />
+            )}
+          />
+        </FormControl> : <></>}
         <FormControl margin="normal">
           <Autocomplete
             id="source"
@@ -276,6 +338,25 @@ class NoteFilter extends React.Component {
         <Toaster error={this.state.error}/>
       </div>
     )
+  }
+
+  getAllButLastWord(q) {
+    let all = []
+    if(q) {
+      const words = q.trim().split(/\s+/).pop()
+      if(words.length > 0) {
+        all = words.subarray(0, words.length - 1)
+      }
+    }
+    return all;
+  }
+
+  getLastWord(q) {
+    let lastWord = ''
+    if(q) {
+      lastWord = lodash.last(q.trim().split(/\s+/))
+    }
+    return lastWord;
   }
 }
 
