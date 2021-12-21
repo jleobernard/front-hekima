@@ -206,7 +206,7 @@ const NoteCreation = ({note, creating, onDone}) => {
       + _valeur.substr(selection.start)
 
     setValeur(newValeur)
-    setTimeout(() => focusAt(selection, entry), 1000)
+    setTimeout(() => focusAt(selection, entry), 500)
   }
 
   function addMD(md, mdEnd) {
@@ -219,7 +219,7 @@ const NoteCreation = ({note, creating, onDone}) => {
     + _mdEnd + _valeur.substr(selection.end, _valeur.length - selection.end)
 
     setValeur(newValeur)
-    setTimeout(() => focusAfterFormatting(selection, md), 1000)
+    setTimeout(() => focusAfterFormatting(selection, md), 500)
   }
 
   function focusAfterFormatting(initialSelection, md) {

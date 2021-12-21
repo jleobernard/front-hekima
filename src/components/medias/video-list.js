@@ -3,7 +3,7 @@ import * as React from "react";
 import {useEffect, useState} from "react";
 import {Chip, IconButton, Input} from "@material-ui/core";
 import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/const";
-import {ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@material-ui/icons";
+import {Add, ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@material-ui/icons";
 
 export default function VideoList({title, videos, editable, onChange, className}) {
 
@@ -102,10 +102,15 @@ export default function VideoList({title, videos, editable, onChange, className}
         {editable ?
           <div className={"video-controls"}>
             <div className={"video-controls-line"}>
-              <Input
-                value={from} variant="outlined"
-                onChange={e => valueChanged(videoMetadata, 'from', e.target.valueAsNumber)} type="number"
-              />
+              <div className={"video-bound"}>
+                <IconButton onClick={() => valueChanged(videoMetadata, 'from', from - 1)} className="icon">
+                  <Remove />
+                </IconButton>
+                <div className={"video-bound-value"}>{from}</div>
+                <IconButton onClick={() => valueChanged(videoMetadata, 'from', from + 1)} className="icon">
+                  <Add />
+                </IconButton>
+              </div>
               {videoMetadata.selected ?
                 <IconButton aria-label="remove" onClick={() => valueChanged(videoMetadata, 'selected', false)} className="icon">
                   <Remove />
@@ -115,10 +120,15 @@ export default function VideoList({title, videos, editable, onChange, className}
                   <PlaylistAdd />
                 </IconButton>
               }
-              <Input
-                value={to} variant="outlined"
-                onChange={e => valueChanged(videoMetadata, 'to', e.target.valueAsNumber)} type="number"
-              />
+              <div className={"video-bound"}>
+                <IconButton onClick={() => valueChanged(videoMetadata, 'to', to - 1)} className="icon">
+                  <Remove />
+                </IconButton>
+                <div className={"video-bound-value"}>{to}</div>
+                <IconButton onClick={() => valueChanged(videoMetadata, 'to', to + 1)} className="icon">
+                  <Add />
+                </IconButton>
+              </div>
             </div>
             <div className={"video-controls-line"}>
               <IconButton aria-label="previous"

@@ -15,5 +15,10 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
+    > .video-bound {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
   }
 }
