@@ -52,11 +52,12 @@ const NoteView = ({match}) => {
 
     function doDelete() {
         setDeleting(true)
+        setAskDelete(false)
         httpDelete('/api/notes/' + note.uri)
             .then(() => {
                 setError("La note a bien été supprimée");
                 setErrorSev("info")
-                setTimeout(() => history.push('/notes'), 3000)
+                setTimeout(() => history.push('/notes'), 1000)
             }).catch(err => {
                 setError('Erreur lors de la suppression de la note : ' + err)
                 setErrorSev("error")

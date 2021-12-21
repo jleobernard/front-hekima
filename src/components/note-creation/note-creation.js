@@ -153,6 +153,9 @@ const NoteCreation = ({note, creating, onDone}) => {
   }
 
   function handleClose(response, closeAfterSaving) {
+    if(response.uri && !noteUri) {
+      setNoteUri(response.uri)
+    }
     if(closeAfterSaving) {
       onDone(response)
     } else {
