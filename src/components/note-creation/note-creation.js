@@ -153,7 +153,7 @@ const NoteCreation = ({note, creating, onDone}) => {
   }
 
   function handleClose(response, closeAfterSaving) {
-    if(response.uri && !noteUri) {
+    if(response && response.uri && !noteUri) {
       setNoteUri(response.uri)
     }
     if(closeAfterSaving) {
@@ -295,7 +295,6 @@ const NoteCreation = ({note, creating, onDone}) => {
         <Button className="block" onClick={() => addSingle('&isin;')}>&isin;</Button>
         <Button className="block" onClick={() => addSingle('&sube;')}>&sube;</Button>
         <Button className="block" onClick={() => addSingle('∃')}>∃</Button>
-        <Button className="block" onClick={() => addSingle('⇒')}>⇒</Button>
         <Button className="block" onClick={() => addSingle('&int;')}>&int;</Button>
         <Button className="block" onClick={() => addSingle('⋂')}>⋂</Button>
         <Button className="block" onClick={() => addSingle('⋃')}>⋃</Button>
