@@ -21,4 +21,17 @@
       align-items: center;
     }
   }
+  .video-name {
+    text-align: center;
+  }
+  .video-groups {
+    display: flex;
+    overflow-x: auto;
+    > .video-group {
+      margin-right: 1em;
+      &.selected {
+        border: 2px solid $my-primary-color;
+      }
+    }
+  }
 }

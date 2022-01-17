@@ -172,7 +172,7 @@ class NoteFilter extends React.Component {
       this.state.debouncedTags.cancel();
     }
     const lastElement = lodash.last(tags);
-    if(lastElement.inputValue) {
+    if(lastElement && lastElement.inputValue) {
       const realTags = [...tags];
       lastElement.valeur = lastElement.inputValue;
       this.setState({loadingTags: true});
@@ -220,7 +220,7 @@ class NoteFilter extends React.Component {
                 />
               ))
             }
-            filterOptions={(options, params) => options }
+            filterOptions={(options) => options }
             renderInput={(params) => (
               <TextField {...params} label="Mot-clef" variant="outlined" placeholder="Mot-clef" />
             )}

@@ -5,9 +5,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  Input,
   InputAdornment,
-  InputLabel,
   TextField
 } from "@material-ui/core";
 import * as React from "react";

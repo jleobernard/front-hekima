@@ -22,6 +22,7 @@ import rehypeRaw from 'rehype-raw'
 import gfm from 'remark-gfm'
 import {NoteFilesDisplay} from "../../components/note/note-files/note-files-display";
 import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
+import AddToHomeScreen from '@ideasio/add-to-homescreen-react';
 
 
 function orDefault(count, defaultValue) {
@@ -182,7 +183,7 @@ class Notes extends React.Component {
               _filter.tags = responses.subarray(beginTags)
             }
             resolve()
-          }).catch(err => resolve())
+          }).catch(() => resolve())
         })
       } else {
         promiseLoadAll = new Promise((resolve) => resolve())
@@ -210,7 +211,7 @@ class Notes extends React.Component {
             loading: false
           })
         }
-      }).catch(err => this.setState({loading: false}))
+      }).catch(() => this.setState({loading: false}))
     } else if(prevFilter && filter && prevFilter.initialized && this.hasChanged(filter, prevFilter)) {
       if(filter.offset > prevFilter.offset) {
         this.refreshNotes(false);
@@ -241,7 +242,7 @@ class Notes extends React.Component {
     }
   }
 
-  onDone(note, closeAfterSaving) {
+  onDone(note) {
     if(note) {
       const newNotes = [...this.state.notes];
       const index = lodash.findIndex(newNotes, n => n.uri === note.uri);
@@ -269,6 +270,7 @@ class Notes extends React.Component {
     const notes = this.state.notes;
     return (
       <div className="app">
+        <AddToHomeScreen appId="com.leo.notes" />
         <Header title="Notes" goBack={false} withSearch={true} filterChanged={this.filterChanged}/>
         <List className="notes-list">
           <ListItem key="spinner-loading-first" className="centered-item">
