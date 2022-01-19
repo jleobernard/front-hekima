@@ -5,8 +5,9 @@ import {useEffect, useState} from "react";
 import {Chip, IconButton} from "@material-ui/core";
 import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/const";
 import {Add, ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@material-ui/icons";
+import SubsText from "./subs-text";
 
-export default function VideoList({title, videos, editable, onChange, className}) {
+export default function VideoList({title, videos, editable, onChange, className, withTexts}) {
 
   const [errorsCount, setErrorsCount] = useState({});
   const [index, setIndex] = useState(0);
@@ -93,7 +94,10 @@ export default function VideoList({title, videos, editable, onChange, className}
 
   function valueChanged(md, fieldName, value) {
     md[fieldName] = value
-    document.getElementById("video-" + md.key).load()
+    const element = document.getElementById("video-" + md.key)
+    if(element) {
+      element.load()
+    }
     if(onChange) {
       onChange(md, getRealIndex())
     }
@@ -163,11 +167,20 @@ export default function VideoList({title, videos, editable, onChange, className}
     }
     const realIndex = getRealIndex()
     const videoMetadata = (videos[realIndex])
+    if(!videoMetadata) {
+      return (<></>)
+    }
     let from = Math.floor(videoMetadata.from)
     let to = Math.ceil(videoMetadata.to)
     if(to - from < 2) {
       from = from -1
       to = to + 1
+    }
+    if(videoMetadata.from !== from ||
+      videoMetadata.to !== to) {
+      valueChanged(videoMetadata, 'from', from)
+      valueChanged(videoMetadata, 'to', to)
+      return (<></>)
     }
     let src;
     if(editable) {
@@ -236,6 +249,7 @@ export default function VideoList({title, videos, editable, onChange, className}
           </div>
           :
         <></>}
+        {withTexts ? <SubsText video={videoMetadata}/> : <></>}
       </div>
     )
   }

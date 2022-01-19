@@ -1,0 +1,13 @@
+@import "../../styles/dimensions";
+@import "../../styles/colors";
+
+.video-subs-texts {
+  border: 1px solid $border-color;
+  border-radius: 5px;
+  margin-top: $gutter-size;
+  max-height: 6em;
+  overflow-y: auto;
+  > .video-subs-text {
+    padding: $gutter-size;
+  }
+}

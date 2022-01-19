@@ -1,9 +1,9 @@
 import "./video-detail.scss"
 import * as React from "react";
-import {useEffect, useState} from "react";
 import {FormControl, InputLabel, MenuItem, Select} from "@material-ui/core";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import {ArrowForward} from "@material-ui/icons";
+import SubsText from "./subs-text";
 
 export default function VideoDetail({video, hasMoreVideos, changeVideo}) {
 
@@ -43,6 +43,7 @@ export default function VideoDetail({video, hasMoreVideos, changeVideo}) {
         <ArrowBackIcon className={hasMoreVideos ? '' : 'invisible'} onClick={() => changeVideo(-1)}/>
         <ArrowForward className={hasMoreVideos ? '' : 'invisible'} onClick={() => changeVideo(1)} />
       </div>: <></>}
+      <SubsText video={video} />
     </div>
   )
 }

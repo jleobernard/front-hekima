@@ -9,5 +9,10 @@ $bg-color : lighten($my-primary-color, 0.75);
     flex-grow: 1;
   }
 }
-
-;
+.side-menu {
+  width: 250px;
+  & a {
+    text-decoration: none !important;
+    color: black;
+  }
+}

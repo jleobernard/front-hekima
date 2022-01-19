@@ -409,7 +409,7 @@ const NoteCreation = ({note, creating, onDone}) => {
                         allowCreation={true}/>
 
             <VideoList className="with-margin-top" key={"selected-subs"} title={""} videos={selectedSubs}
-                       editable={true} onChange={(sub) => setSubsChanged(sub, true)}/>
+                       editable={true} onChange={(sub) => setSubsChanged(sub, true)} withTexts={false}/>
             <SubsSearcher className={"with-margin-top with-margin-bottom"}
                           onVideoSelected={sub => setSubsChanged(sub, false)}/>
           </form>

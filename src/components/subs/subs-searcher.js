@@ -120,7 +120,8 @@ export default function SubsSearcher({onVideoSelected, className}) {
             />
             {canSeeDowngraded ? <Button className="with-margin-top with-margin-bottom downgraded-button" onClick={() => downgradeQuality()}>Voir des résultats moins bons</Button> : <></>}
           </FormControl>
-          <VideoList key={"suggested-subs"} title={""} videos={subs} editable={true} onChange={(sub, idx) => onSubChanged(sub, idx)}/>
+          <VideoList key={"suggested-subs"} title={""} videos={subs} editable={true}
+                     onChange={(sub, idx) => onSubChanged(sub, idx)} withTexts={true}/>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSearchMode(false)} color="primary">

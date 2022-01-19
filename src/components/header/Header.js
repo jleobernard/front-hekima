@@ -7,7 +7,7 @@ import "./header.scss";
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import SearchFilter from "../search-filter/search-filter";
 import MenuIcon from "@material-ui/icons/Menu";
-import {AppBar, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar} from "@material-ui/core";
+import {AppBar, Box, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar} from "@material-ui/core";
 
 class Header extends React.Component {
   constructor(props) {
@@ -99,18 +99,20 @@ class Header extends React.Component {
           onClose={() => this.toggleDrawer(false)}
           onOpen={() => this.toggleDrawer(true)}
         >
-          <List>
-            <ListItem button key='notes'>
-              <Link to={"/"}>
-                <ListItemText primary={'Notes'} />
-              </Link>
-            </ListItem>
-            <ListItem button key='quizz'>
-              <Link to={"/quizz/init"}>
-                <ListItemText primary={'Quizz'} />
-              </Link>
-            </ListItem>
-          </List>
+          <Box role="presentation" className="side-menu">
+            <List>
+              <ListItem button key='notes'>
+                <Link to={"/"}>
+                  <ListItemText primary={'Notes'} />
+                </Link>
+              </ListItem>
+              <ListItem button key='quizz' className="side-menu-item">
+                <Link to={"/quizz/init"}>
+                  <ListItemText primary={'Quizz'} />
+                </Link>
+              </ListItem>
+            </List>
+          </Box>
         </SwipeableDrawer>
         <SearchFilter open={this.state.openFilter}
     filter={this.state.filter}
