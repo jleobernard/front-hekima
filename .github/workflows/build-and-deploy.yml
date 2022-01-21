@@ -36,6 +36,7 @@ jobs:
         SSH_USER: ${{ secrets.PRODUCTION_SSH_USER }}
         SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
         SSH_HOST: ${{ secrets.PRODUCTION_SSH_HOST }}
+    - run: npm ci
     - run: set PUBLIC_URL=https://notes.jleo.tech && set REACT_APP_API_ROOT_URL=https://notes.jleo.tech && npm run build --if-present
     - name: Clean previous version
       run: ssh production "rm -Rf /opt/containers/nginx/data/nginx/html/notes/*"
