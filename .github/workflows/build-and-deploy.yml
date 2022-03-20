@@ -29,6 +29,7 @@ jobs:
         Host production
           HostName $SSH_HOST
           User $SSH_USER
+          Port 2220
           IdentityFile ~/.ssh/production.key
           StrictHostKeyChecking no
         END
