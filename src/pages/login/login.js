@@ -29,7 +29,7 @@ const Login = () => {
 
   useEffect(() => {
     setLoading(true)
-    get('/api/authentication:status', {}, false)
+    get('/api/authentication:status', {}, true)
     .then(response => {
       if(response.authenticated) {
         doRedirect(response)

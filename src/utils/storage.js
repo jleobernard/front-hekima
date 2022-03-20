@@ -7,12 +7,12 @@ function initializeUser() {
 }
 export const setSession = (session) => {
   if(typeof(localStorage) !== 'undefined') {
-    const jwt = session.tokens || session;
-    if(jwt.access) {
-      localStorage.setItem('access', jwt.access);
+    const jwt = session.accessToken || session;
+    if(jwt) {
+      localStorage.setItem('access', jwt);
     }
-    if(jwt.refresh) {
-      localStorage.setItem('refresh', jwt.refresh);
+    if(session.refresh) {
+      localStorage.setItem('refresh', session.refresh);
     }
     if(session.user) {
       user = session.user;

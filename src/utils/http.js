@@ -27,18 +27,23 @@ export const refreshToken = (force = false) => {
         }
       }
     } catch(e) {
-      reject(e);
+      console.error(e)
+      if(window.location.pathname === '/login') {
+        reject()
+      } else {
+        window.location.href = process.env.PUBLIC_URL + '/login';
+      }
     }
   });
 };
-export const httpDelete = (url, body, protectedCall = false) => {
+export const httpDelete = (url, body, protectedCall = true) => {
   if(protectedCall) {
     return refreshToken().then(session => exchange(url, body, session.access, 'DELETE'))
   } else {
     return exchange(url, body, null, 'DELETE');
   }
 };
-export const post = (url, body, protectedCall = false) => {
+export const post = (url, body, protectedCall = true) => {
   if(protectedCall) {
     return refreshToken().then(session => exchange(url, body, session.access))
   } else {
@@ -58,7 +63,7 @@ function constructUrl(url, params) {
   }
   return target
 }
-export const get = (url, params, protectedCall = false) => {
+export const get = (url, params, protectedCall = true) => {
   const realUrl = constructUrl(url, params)
   if(protectedCall) {
     return refreshToken().then(session => exchange(realUrl, null, session.access, 'GET'))
@@ -67,8 +72,12 @@ export const get = (url, params, protectedCall = false) => {
   }
 };
 
-export const patch = (url, body) => {
-  return refreshToken().then(session => exchange(url, body, session.access, 'PATCH'))
+export const patch = (url, body, protectedCall = true) => {
+  if(protectedCall) {
+    return refreshToken().then(session => exchange(url, body, session.access, 'PATCH'))
+  } else {
+    return refreshToken().then(session => exchange(url, body, null, 'PATCH'))
+  }
 };
 
 export const upload = (url, file, protectedCall = false) => {
@@ -90,15 +99,6 @@ const exchange = (url, body, accessToken, method = 'POST') => {
   const headers = {}
   const loggingIn = url === '/api/login'
   if(loggingIn) {
-    headers['Content-Type'] = 'application/x-www-form-urlencoded'
-    const formBody = [];
-    for (const property in body) {
-      const encodedKey = encodeURIComponent(property);
-      const encodedValue = encodeURIComponent(body[property]);
-      formBody.push(encodedKey + "=" + encodedValue);
-    }
-    body = formBody.join("&");
-  } else {
     headers['Content-Type'] = 'application/json'
     body = body ? JSON.stringify(body) : null
   }
@@ -113,15 +113,20 @@ const exchange = (url, body, accessToken, method = 'POST') => {
       body
     }).then(response => {
       if(response.ok) {
-        if(!loggingIn && methodWithBodies.indexOf(method) >= 0) {
+        if(loggingIn) {
+          response.json().then(authResponse => {
+            setSession(authResponse)
+            resolve()
+          }).catch(reject)
+        } else if(methodWithBodies.indexOf(method) >= 0) {
           return response.json().then(resolve).catch(reject);
         } else {
           resolve();
         }
       } else {
-        if(response.type === 'opaqueredirect') {
-          if(loggingIn) {
-            return resolve();
+        if(response.status === 401) {
+          if(loggingIn || window.location.pathname === '/login') {
+            reject(response)
           } else {
             window.location.href = '/login?redirect=' + encodeURIComponent(document.location.pathname+document.location.search);
           }
