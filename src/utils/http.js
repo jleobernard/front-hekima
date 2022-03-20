@@ -15,7 +15,7 @@ export const refreshToken = (force = false) => {
   return new Promise((resolve, reject) => {
     try {
       const session = getSession();
-      if(!(session && session.refresh)) {
+      if(!(session && session.access)) {
         goToLoginOrRejectIfAlreadyOnLogin(reject);
       } else {
         const decoded = jwt_decode(session.access);
@@ -130,11 +130,9 @@ const exchange = (url, body, accessToken, method = 'POST') => {
       } else {
         if(response.status === 401) {
           goToLoginOrRejectIfAlreadyOnLogin(reject);
-          debugger;
           if(loggingIn || window.location.pathname === '/login') {
             reject(response)
           } else {
-            debugger;
             window.location.href = '/login?redirect=' + encodeURIComponent(document.location.pathname+document.location.search);
           }
         } else {
