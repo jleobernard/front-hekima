@@ -3,12 +3,20 @@ import jwt_decode from "jwt-decode";
 
 const deltaForExpiration = 0;
 const rootUrl = process.env.REACT_APP_API_ROOT_URL ? process.env.REACT_APP_API_ROOT_URL : '';
+
+function goToLoginOrRejectIfAlreadyOnLogin(reject) {
+  if(window.location.pathname === '/login') {
+    reject()
+  } else {
+    window.location.href = process.env.PUBLIC_URL + '/login';
+  }
+}
 export const refreshToken = (force = false) => {
   return new Promise((resolve, reject) => {
     try {
       const session = getSession();
       if(!(session && session.refresh)) {
-        window.location.href = process.env.PUBLIC_URL+'/login';
+        goToLoginOrRejectIfAlreadyOnLogin(reject);
       } else {
         const decoded = jwt_decode(session.access);
         if (force || ((decoded.exp * 1000) < (Date.now() - deltaForExpiration))) {
@@ -28,11 +36,7 @@ export const refreshToken = (force = false) => {
       }
     } catch(e) {
       console.error(e)
-      if(window.location.pathname === '/login') {
-        reject()
-      } else {
-        window.location.href = process.env.PUBLIC_URL + '/login';
-      }
+      goToLoginOrRejectIfAlreadyOnLogin(reject);
     }
   });
 };
@@ -125,9 +129,12 @@ const exchange = (url, body, accessToken, method = 'POST') => {
         }
       } else {
         if(response.status === 401) {
+          goToLoginOrRejectIfAlreadyOnLogin(reject);
+          debugger;
           if(loggingIn || window.location.pathname === '/login') {
             reject(response)
           } else {
+            debugger;
             window.location.href = '/login?redirect=' + encodeURIComponent(document.location.pathname+document.location.search);
           }
         } else {
