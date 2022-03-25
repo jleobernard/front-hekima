@@ -9,10 +9,10 @@ export const setSession = (session) => {
   if(typeof(localStorage) !== 'undefined') {
     const jwt = session.accessToken || session;
     if(jwt) {
-      localStorage.setItem('access', jwt);
+      localStorage.setItem('accessToken', jwt);
     }
-    if(session.refresh) {
-      localStorage.setItem('refresh', session.refresh);
+    if(session.refreshToken) {
+      localStorage.setItem('refreshToken', session.refreshToken);
     }
     if(session.user) {
       user = session.user;
@@ -23,15 +23,15 @@ export const setSession = (session) => {
 export const getSession = () => {
   if(typeof(localStorage) !== 'undefined') {
     return {
-      access: localStorage.getItem('access'),
-      refresh: localStorage.getItem('refresh')
+      accessToken: localStorage.getItem('accessToken'),
+      refreshToken: localStorage.getItem('refreshToken')
     };
   }
 };
 export const logout = () => {
   if(typeof(localStorage) !== 'undefined') {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
   }
 }

@@ -15,20 +15,23 @@ export const refreshToken = (force = false) => {
   return new Promise((resolve, reject) => {
     try {
       const session = getSession();
-      if(!(session && session.access)) {
+      if(!session || (!session.accessToken && !session.refreshToken)) {
         goToLoginOrRejectIfAlreadyOnLogin(reject);
       } else {
-        const decoded = jwt_decode(session.access);
-        if (force || ((decoded.exp * 1000) < (Date.now() - deltaForExpiration))) {
-            exchange("/api/token:refresh", {refresh: session.refresh})
+        let needRefresh;
+        if(session.accessToken) {
+          const decoded = jwt_decode(session.accessToken);
+          needRefresh = force || ((decoded.exp * 1000) < (Date.now() - deltaForExpiration))
+        } else {
+          needRefresh = true;
+        }
+        if (needRefresh) {
+            exchange("/api/token:refresh", JSON.stringify({refreshToken: session.refreshToken}))
             .then(response => {
               setSession(response);
               resolve(response);
             }).catch(err => {
-              if (err && err.code === 'token_not_valid') {
-                window.location.href = process.env.PUBLIC_URL+'/login';
-              }
-              reject();
+              goToLoginOrRejectIfAlreadyOnLogin(reject);
             });
         } else {
           resolve(session);
@@ -42,14 +45,14 @@ export const refreshToken = (force = false) => {
 };
 export const httpDelete = (url, body, protectedCall = true) => {
   if(protectedCall) {
-    return refreshToken().then(session => exchange(url, body, session.access, 'DELETE'))
+    return refreshToken().then(session => exchange(url, body, session.accessToken, 'DELETE'))
   } else {
     return exchange(url, body, null, 'DELETE');
   }
 };
 export const post = (url, body, protectedCall = true) => {
   if(protectedCall) {
-    return refreshToken().then(session => exchange(url, body, session.access))
+    return refreshToken().then(session => exchange(url, body, session.accessToken))
   } else {
     return exchange(url, body);
   }
@@ -70,7 +73,7 @@ function constructUrl(url, params) {
 export const get = (url, params, protectedCall = true) => {
   const realUrl = constructUrl(url, params)
   if(protectedCall) {
-    return refreshToken().then(session => exchange(realUrl, null, session.access, 'GET'))
+    return refreshToken().then(session => exchange(realUrl, null, session.accessToken, 'GET'))
   } else {
     return exchange(realUrl, null, null, 'GET');
   }
@@ -78,7 +81,7 @@ export const get = (url, params, protectedCall = true) => {
 
 export const patch = (url, body, protectedCall = true) => {
   if(protectedCall) {
-    return refreshToken().then(session => exchange(url, body, session.access, 'PATCH'))
+    return refreshToken().then(session => exchange(url, body, session.accessToken, 'PATCH'))
   } else {
     return refreshToken().then(session => exchange(url, body, null, 'PATCH'))
   }
@@ -86,24 +89,23 @@ export const patch = (url, body, protectedCall = true) => {
 
 export const upload = (url, file, protectedCall = false) => {
   if(protectedCall) {
-    return refreshToken().then(session => doUpload(url, file, session.access))
+    return refreshToken().then(session => doUpload(url, file, session.accessToken))
   } else {
     return doUpload(url, file);
   }
 }
 export const uploadFilesWithRequest = (url, request, files, protectedCall = false) => {
   if(protectedCall) {
-    return refreshToken().then(session => doUploadFilesWithRequest(url, request, files, session.access))
+    return refreshToken().then(session => doUploadFilesWithRequest(url, request, files, session.accessToken))
   } else {
     return doUploadFilesWithRequest(url, request, files);
   }
 }
 const methodWithBodies = ['POST', 'GET', 'PATCH', 'PUT'];
 const exchange = (url, body, accessToken, method = 'POST') => {
-  const headers = {}
+  const headers = {'Content-Type': 'application/json'}
   const loggingIn = url === '/api/login'
   if(loggingIn) {
-    headers['Content-Type'] = 'application/json'
     body = body ? JSON.stringify(body) : null
   }
   if(accessToken) {

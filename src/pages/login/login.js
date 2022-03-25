@@ -34,7 +34,13 @@ const Login = () => {
       if(response.authenticated) {
         doRedirect(response)
       }
-    }).finally(() => setLoading(false))
+    })
+    .catch(err => {
+      console.error(err)
+    })
+    .finally(() => {
+      setLoading(false)
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
