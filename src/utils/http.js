@@ -26,7 +26,7 @@ export const refreshToken = (force = false) => {
           needRefresh = true;
         }
         if (needRefresh) {
-            exchange("/api/token:refresh", JSON.stringify({refreshToken: session.refreshToken}))
+            exchange("/api/token:refresh", {refreshToken: session.refreshToken})
             .then(response => {
               setSession(response);
               resolve(response);
