@@ -76,7 +76,7 @@ class NoteFilter extends React.Component {
         this.state.debouncedQ.cancel();
       }
       let debounced = debounce(() => {
-        get('/api/notes:autocomplete-index', {q: realQ}, false)
+        get('/api/notes:autocomplete-index', {q: realQ})
         .then(words => this.setState({qSuggestions: words}))
         .finally(() => this.setState({loadingQ: false, debouncedQ: null}))
       }, 500);
@@ -91,7 +91,7 @@ class NoteFilter extends React.Component {
       this.state.debouncedSource.cancel();
     }
     let debounced = debounce(() => {
-      get('/api/sources', {q}, false)
+      get('/api/sources', {q})
       .then(sources => this.setState({sources}))
       .finally(() => this.setState({loadingSources: false, debouncedSource: null}))
     }, 1000);
@@ -105,7 +105,7 @@ class NoteFilter extends React.Component {
       this.state.debouncedTags.cancel();
     }
     let debounced = debounce(() => {
-      get('/api/tags', {q}, false)
+      get('/api/tags', {q})
       .then(tags => this.setState({tagsSuggestions: tags}))
       .finally(() => this.setState({loadingTags: false, debouncedTags: null}))
     }, 1000);
@@ -148,7 +148,7 @@ class NoteFilter extends React.Component {
   closeSourceCreation(save) {
     if(save) {
       this.setState({creatingSource: true})
-      post('/api/sources', this.state.newSource, false)
+      post('/api/sources', this.state.newSource)
       .then(insertedSource => {
         this.setState({
           newSource: {creating: false},
@@ -176,7 +176,7 @@ class NoteFilter extends React.Component {
       const realTags = [...tags];
       lastElement.valeur = lastElement.inputValue;
       this.setState({loadingTags: true});
-      post('/api/tags', {valeur: lastElement.valeur}, false)
+      post('/api/tags', {valeur: lastElement.valeur})
       .then(insertedTag => {
         realTags[realTags.length - 1] = insertedTag;
         this.setState({tags: realTags});

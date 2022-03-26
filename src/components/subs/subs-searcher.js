@@ -33,7 +33,7 @@ export default function SubsSearcher({onVideoSelected, className}) {
 
   const debouncedAutocomplete = useMemo(() => debounce((q)  => {
     setAutocompleting(true)
-    get('/api/kosubs:autocomplete', {q: q, seed: String(seed)}, false)
+    get('/api/kosubs:autocomplete', {q: q, seed: String(seed)})
     .then(hints => {
       setSubsOptions(hints)
     }).finally(() => setAutocompleting(false))

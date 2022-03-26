@@ -87,14 +87,14 @@ export const patch = (url, body, protectedCall = true) => {
   }
 };
 
-export const upload = (url, file, protectedCall = false) => {
+export const upload = (url, file, protectedCall = true) => {
   if(protectedCall) {
     return refreshToken().then(session => doUpload(url, file, session.accessToken))
   } else {
     return doUpload(url, file);
   }
 }
-export const uploadFilesWithRequest = (url, request, files, protectedCall = false) => {
+export const uploadFilesWithRequest = (url, request, files, protectedCall = true) => {
   if(protectedCall) {
     return refreshToken().then(session => doUploadFilesWithRequest(url, request, files, session.accessToken))
   } else {

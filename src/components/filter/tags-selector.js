@@ -18,7 +18,7 @@ export function TagsSelector({className, onChange, allowCreation}) {
 
   const debounceSearch = useMemo(() => debounce((q)  => {
     setLoading(true)
-    get('/api/tags', {q}, false)
+    get('/api/tags', {q})
     .then(tags => setTagsSuggestions(tags))
     .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -34,7 +34,7 @@ export function TagsSelector({className, onChange, allowCreation}) {
       const realTags = [...tags];
       lastElement.valeur = lastElement.inputValue;
       setLoading(true);
-      post('/api/tags', {valeur: lastElement.valeur}, false)
+      post('/api/tags', {valeur: lastElement.valeur})
       .then(insertedTag => {
         realTags[realTags.length - 1] = insertedTag;
         setTags(realTags);

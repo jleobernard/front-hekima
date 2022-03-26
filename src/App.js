@@ -10,7 +10,7 @@ import QuizzRun from "./pages/quizz/quizz-run";
 
 function App() {
   useEffect(() => {
-    setInterval(() => get("/api/user", false).catch(err => console.error(err)), 60 * 1000)
+    setInterval(() => get("/api/user").catch(err => console.error(err)), 60 * 1000)
   }, [])
   return (
     <div className="root">

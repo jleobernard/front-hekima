@@ -31,7 +31,7 @@ export function SourcesSelector({className, onChange, allowCreation}) {
 
   const debounceSearch = useMemo(() => debounce((q)  => {
     setLoading(true)
-    get('/api/sources', {q}, false)
+    get('/api/sources', {q})
     .then(sources => setSourcesSuggestions(sources))
     .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +64,7 @@ export function SourcesSelector({className, onChange, allowCreation}) {
   function doCreateNewSource() {
     if(!creatingSource) {
       setCreatingSource(true)
-      post('/api/sources', newSource, false)
+      post('/api/sources', newSource)
       .then(insertedSource => {
         closeSourceCreation()
         const newSources = [...sources]

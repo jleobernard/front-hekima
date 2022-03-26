@@ -118,7 +118,7 @@ const NoteCreation = ({note, creating, onDone}) => {
       post('/api/notes', request).then(saved => {
         if(hasImageChanges()) {
           const metadata = getUploadFilesRequest(saved)
-          uploadFilesWithRequest('/api/notes/'+saved.uri+'/files', metadata.request, metadata.files, false)
+          uploadFilesWithRequest('/api/notes/'+saved.uri+'/files', metadata.request, metadata.files)
           .then(response => {
             handleClose({...saved, files: response.files}, closeAfterSaving);
           })
