@@ -105,9 +105,7 @@ const methodWithBodies = ['POST', 'GET', 'PATCH', 'PUT'];
 const exchange = (url, body, accessToken, method = 'POST') => {
   const headers = {'Content-Type': 'application/json'}
   const loggingIn = url === '/api/login'
-  if(loggingIn) {
-    body = body ? JSON.stringify(body) : null
-  }
+  body = body ? JSON.stringify(body) : null
   if(accessToken) {
     headers['Authorization'] =  'Bearer ' + accessToken;
   }
