@@ -9,7 +9,7 @@ import TextField from "@material-ui/core/TextField";
 import FormHelperText from "@material-ui/core/FormHelperText";
 import FormControl from "@material-ui/core/FormControl";
 
-export function TagsSelector({className, onChange, allowCreation}) {
+export function TagsSelector({className, onChange, allowCreation, title}) {
   const [loading, setLoading] = useState(false)
   const [q, setQ] = useState("")
   const [tags, setTags] = useState([])
@@ -30,7 +30,7 @@ export function TagsSelector({className, onChange, allowCreation}) {
 
   function selectTags(event, tags) {
     const lastElement = lodash.last(tags);
-    if(lastElement.inputValue) {
+    if(lastElement && lastElement.inputValue) {
       const realTags = [...tags];
       lastElement.valeur = lastElement.inputValue;
       setLoading(true);
@@ -74,7 +74,7 @@ export function TagsSelector({className, onChange, allowCreation}) {
             options;
         }}
         renderInput={(params) => (
-          <TextField {...params} label="Tag" variant="outlined" placeholder="Tags" />
+          <TextField {...params} label={title || "Tags"} variant="outlined" placeholder={title || "Tags"} />
         )}
       />
       {tags && tags.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez un ou plusieurs tags</FormHelperText>}

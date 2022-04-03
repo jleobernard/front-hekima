@@ -22,6 +22,7 @@ class NoteFilter extends React.Component {
   defaultState = {
     sources: [],
     tags: [],
+    notTags: [],
     q: "",
     qSuggestions: [],
     tagsSuggestions: [],
@@ -44,6 +45,7 @@ class NoteFilter extends React.Component {
       ...this.state,
       source: props.filter.source,
       tags: props.filter.tags,
+      notTags: props.filter.notTags,
       q: props.filter.q || ''
     }
     this.selectQ = this.selectQ.bind(this);
@@ -51,6 +53,7 @@ class NoteFilter extends React.Component {
     this.refreshSources = this.refreshSources.bind(this);
     this.selectSource = this.selectSource.bind(this);
     this.selectTags = this.selectTags.bind(this);
+    this.selectNotTags = this.selectNotTags.bind(this);
     this.refreshTags = this.refreshTags.bind(this);
     this.closeSourceCreation = this.closeSourceCreation.bind(this);
     this.newSourceFieldChanged = this.newSourceFieldChanged.bind(this);
@@ -125,7 +128,7 @@ class NoteFilter extends React.Component {
       alreadySet.push(newValue)*/
       const newQ = `${this.state.q ? this.state.q + ' ' : ''}${newValue} `
       this.setState({debouncedQ: null, q: newQ})
-      this.props.onFilterChanged({source: this.state.source, tags: this.state.tags, q: newQ})
+      this.props.onFilterChanged({source: this.state.source, tags: this.state.tags, notTags: this.state.notTags, q: newQ})
     }
   }
   selectSource(event, source) {
@@ -141,7 +144,7 @@ class NoteFilter extends React.Component {
       this.setState({newSource})
     } else {
       this.setState({debouncedSource: null, source});
-      this.props.onFilterChanged({source: source, tags: this.state.tags, q: this.state.q});
+      this.props.onFilterChanged({source: source, tags: this.state.tags, notTags: this.state.notTags, q: this.state.q});
     }
   }
 
@@ -154,7 +157,7 @@ class NoteFilter extends React.Component {
           newSource: {creating: false},
           source: insertedSource
         })
-        this.props.onFilterChanged({source: insertedSource, tags: this.state.tags, q: this.state.q});
+        this.props.onFilterChanged({source: insertedSource, tags: this.state.tags, notTags: this.state.notTags, q: this.state.q});
       })
       .finally(() => this.setState({creatingSource: false}))
     } else {
@@ -180,13 +183,21 @@ class NoteFilter extends React.Component {
       .then(insertedTag => {
         realTags[realTags.length - 1] = insertedTag;
         this.setState({tags: realTags});
-        this.props.onFilterChanged({source: this.state.source, tags: realTags, q: this.state.q});
+        this.props.onFilterChanged({source: this.state.source, tags: realTags, notTags: this.state.notTags, q: this.state.q});
       })
       .finally(() => this.setState({loadingTags: false}))
     } else {
       this.setState({debouncedTags: null, tags});
-      this.props.onFilterChanged({source: this.state.source, tags: tags, q: this.state.q});
+      this.props.onFilterChanged({source: this.state.source, tags: tags, q: this.state.q, notTags: this.state.notTags});
     }
+  }
+
+  selectNotTags(event, tags) {
+    if(this.state.debouncedTags) {
+      this.state.debouncedTags.cancel();
+    }
+    this.setState({debouncedTags: null, notTags: tags});
+    this.props.onFilterChanged({source: this.state.source, tags: this.state.tags, q: this.state.q, notTags: tags});
   }
 
 
@@ -284,6 +295,32 @@ class NoteFilter extends React.Component {
             )}
           />
           {this.state.tags && this.state.tags.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez un ou plusieurs tags</FormHelperText>}
+        </FormControl>
+        <FormControl margin="normal">
+          <Autocomplete
+            id="notTags"
+            multiple
+            loading={this.state.loadingTags}
+            value={this.state.notTags}
+            onChange={this.selectNotTags}
+            onInputChange={(event) => event ? this.refreshTags(event.target.value) : null}
+            options={tags}
+            getOptionLabel={tag => {
+              return tag.valeur || "";
+            }}
+            renderTags={(tagValue, getTagProps) =>
+              tagValue.map((option, index) => (
+                <Chip
+                  label={option.valeur}
+                  {...getTagProps({ index })}
+                />
+              ))
+            }
+            filterOptions={(options, params) => options}
+            renderInput={(params) => (
+              <TextField {...params} label="Tag exclu" variant="outlined" placeholder="Tags exclus" />
+            )}
+          />
         </FormControl>
         <Dialog open={this.state.newSource.creating}
                 onClose={() => this.closeSourceCreation(false)}
