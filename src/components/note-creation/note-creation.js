@@ -6,7 +6,6 @@ import DialogContent from "@material-ui/core/DialogContent/DialogContent";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
-import {withRouter} from "react-router-dom";
 import FormControl from "@material-ui/core/FormControl";
 import "../../styles/forms.scss";
 import * as lodash from 'lodash';
@@ -462,4 +461,4 @@ const NoteCreation = ({note, creating, onDone}) => {
   )
 }
 
-export default withRouter(NoteCreation);
+export default NoteCreation;

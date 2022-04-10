@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {BrowserRouter as Router, Redirect, Route, Switch} from "react-router-dom";
+import {BrowserRouter as Router, Navigate, Route, Routes} from "react-router-dom";
 import Notes from './pages/notes/notes';
 import './App.css';
 import Login from "./pages/login/login";
@@ -14,30 +14,24 @@ function App() {
   }, [])
   return (
     <div className="root">
+      <div className="app-wrapper">
       <Router>
-        <div className="app-wrapper">
-          <Switch>
-            <Route path="/notes/:uri">
-              <NoteView />
+          <Routes>
+            <Route path="/notes/:uri" element={<NoteView />}>
             </Route>
-            <Route exact path="/notes">
-              <Notes />
+            <Route exact path="/notes" element={<Notes />}>
             </Route>
-            <Route exact path="/quizz/init">
-              <QuizzInit />
+            <Route exact path="/quizz/init" element={<QuizzInit />}>
             </Route>
-            <Route exact path="/quizz/run">
-              <QuizzRun />
+            <Route exact path="/quizz/run" element={<QuizzRun />}>
             </Route>
-            <Route exact path="/">
-              <Redirect to="/notes" />
+            <Route exact path="/" element={<Navigate to="/notes" />}>
             </Route>
-            <Route path="/login">
-              <Login />
+            <Route path="/login" element={<Login />}>
             </Route>
-          </Switch>
-        </div>
+          </Routes>
       </Router>
+      </div>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
       <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     </div>

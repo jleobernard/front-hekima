@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {useHistory, withRouter} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {get} from "../../utils/http";
 import "./notes.scss";
 import "../../styles/layout.scss";
@@ -40,7 +40,8 @@ function orDefaultString(str, defaultValue) {
 
 const Notes = () =>  {
 
-  const history = useHistory();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [notes, setNotes] = useState([])
   const [filter, setFilter] = useState({count: 20, offset: 0})
   const [needsSearch, setNeedSearch] = useState(false)
@@ -60,7 +61,7 @@ const Notes = () =>  {
 
   useEffect(() => {
     if(needsSearch) {
-      const params = new URLSearchParams(history.location.search)
+      const params = new URLSearchParams(location.search)
       const _filterForSearch = getFilter(filter)
       get("/api/notes", _filterForSearch).then(_notes => {
         setNotes(raz ? _notes : [...notes, ..._notes])
@@ -92,7 +93,7 @@ const Notes = () =>  {
 
   function loadFilterFromURL() {
     const promises = []
-    const params = new URLSearchParams(history.location.search)
+    const params = new URLSearchParams(location.search)
     const src = params.get('src')
     if(src) {
       promises.push(get(`/api/sources/${src}`))
@@ -137,7 +138,7 @@ const Notes = () =>  {
     const tags = (_filter.tags || []).map(t => t.uri).join(',')
     const notTags = (_filter.notTags || []).map(t => t.uri).join(',')
     const q = (_filter.q || '').trim()
-    history.push(`/notes?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}&notTags=${notTags}&q=${encodeURIComponent(q)}`)
+    navigate(`/notes?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}&notTags=${notTags}&q=${encodeURIComponent(q)}`)
   }
 
   function getFilter(__filter) {
@@ -231,7 +232,7 @@ const Notes = () =>  {
     const src = _filter.source ? _filter.source.uri : ''
     const tags = (_filter.tags || []).map(t => t.uri).join(',')
     const notTags = (_filter.notTags || []).map(t => t.uri).join(',')
-    history.push(`/notes/${note.uri}?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}&notTags=${notTags}`)
+    navigate(`/notes/${note.uri}?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}&notTags=${notTags}`)
     return undefined;
   }
   return (
@@ -260,4 +261,4 @@ const Notes = () =>  {
   );
 }
 
-export default withRouter(Notes);
+export default Notes;

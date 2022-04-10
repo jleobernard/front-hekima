@@ -1,10 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import {withRouter} from "react-router-dom";
 import {get, httpDelete} from "../../utils/http";
 import "./note-view.scss";
 import "../../styles/layout.scss";
 import Header from "../../components/header/Header";
-import {useHistory} from "react-router-dom/cjs/react-router-dom";
 import Toaster from "../../components/Toaster";
 import EditIcon from "@material-ui/icons/Edit";
 import LoadingMask from "../../components/loading-mask/loading-mask";
@@ -21,10 +19,13 @@ import Dialog from "@material-ui/core/Dialog/Dialog";
 import NoteCreation from "../../components/note-creation/note-creation";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import {NoteDetail} from "../../components/note/note-detail";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 
 
-const NoteView = ({match}) => {
-    const history = useHistory()
+const NoteView = () => {
+    const params = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
     const [loading, setLoading] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [editing, setEditing] = useState(false)
@@ -33,13 +34,13 @@ const NoteView = ({match}) => {
     const [errorSev, setErrorSev] = useState("error");
     const [askDelete, setAskDelete] = useState(false);
     useEffect(() => {
-        if (match.params.uri && note.uri !== match.params.uri) {
+        if (params.uri && note.uri !== params.uri) {
             load()
         }
     }, [note.uri]);
 
     function load() {
-        const uri = match.params.uri
+        const uri = params.uri
         setLoading(true)
         return get('/api/notes/' + uri)
             .then(note => {
@@ -57,7 +58,7 @@ const NoteView = ({match}) => {
             .then(() => {
                 setError("La note a bien été supprimée");
                 setErrorSev("info")
-                setTimeout(() => history.push('/notes'), 1000)
+                setTimeout(() => navigate('/notes'), 1000)
             }).catch(err => {
                 setError('Erreur lors de la suppression de la note : ' + err)
                 setErrorSev("error")
@@ -71,14 +72,14 @@ const NoteView = ({match}) => {
 
     function goBack() {
         const fields = ['src', 'tags', 'offset', 'count']
-        const urlParams = new URLSearchParams(history.location.search)
-        const params = fields.filter(f => urlParams.get(f))
+        const urlParams = new URLSearchParams(location.search)
+        const _params = fields.filter(f => urlParams.get(f))
             .map(f => `${f}=${urlParams.get(f)}`);
         if(note && note.uri) {
-            params.push(`note=${note.uri}`)
+            _params.push(`note=${note.uri}`)
         }
-        const getParams = params.length > 0 ? '?' + params.join('&') : '';
-        history.push('/notes'+getParams)
+        const getParams = _params.length > 0 ? '?' + _params.join('&') : '';
+        navigate('/notes'+getParams)
     }
 
     function renderDisplay() {
@@ -134,4 +135,4 @@ const NoteView = ({match}) => {
     )
 }
 
-export default withRouter(NoteView);
+export default NoteView;

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {useHistory, useLocation, withRouter} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {get, post} from "../../utils/http";
 import "../../styles/layout.scss";
 import FormControl from "@material-ui/core/FormControl";
@@ -11,7 +11,7 @@ import LoadingMask from "../../components/loading-mask/loading-mask";
 
 const Login = () => {
 
-  const history = useHistory();
+  const history = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -79,4 +79,4 @@ const Login = () => {
   );
 }
 
-export default withRouter(Login);
+export default Login;

@@ -1,6 +1,4 @@
-import {withRouter} from "react-router-dom";
 import React, {useEffect, useState} from "react";
-import {useHistory} from "react-router-dom/cjs/react-router-dom";
 import {get, post} from "../../utils/http";
 import Header from "../../components/header/Header";
 import LoadingMask from "../../components/loading-mask/loading-mask";
@@ -13,6 +11,7 @@ import {MAX_GRADE_QUIZZ} from "../../utils/const";
 import {ArrowForward} from "@material-ui/icons";
 import {Visibility} from "@material-ui/icons";
 import {getNumberOfTitles} from "../../services/note-services";
+import {useNavigate} from "react-router-dom";
 
 const QuizzRun = () => {
   const [loading, setLoading] = useState(false)
@@ -24,7 +23,7 @@ const QuizzRun = () => {
   const [rating, setRating] = useState(0)
   const [questionType, setQuestionType] = useState("")
   const [noteState, setNoteState] = useState("")
-  const history = useHistory()
+  const history = useNavigate()
 
   useEffect(() => {
     const rawQuizzQuery = localStorage.getItem("quizz")
@@ -34,10 +33,10 @@ const QuizzRun = () => {
         setNotes(notes)
         setPosition(0)
       } else {
-        history.push('/quizz/init')
+        history('/quizz/init')
       }
     } else {
-      history.push('/quizz/init')
+      history('/quizz/init')
     }
   }, [])
 
@@ -68,7 +67,7 @@ const QuizzRun = () => {
       .then(() => {
         if(position >= notes.length - 1) {
           setError({msg: "Quizz terminé", sev: "info"})
-          setTimeout(() => history.push('/quizz/init'), 3000)
+          setTimeout(() => history('/quizz/init'), 3000)
         } else {
           setPosition(position + 1)
         }
@@ -128,4 +127,4 @@ const QuizzRun = () => {
     </div>
   )
 }
-export default withRouter(QuizzRun);
+export default QuizzRun;

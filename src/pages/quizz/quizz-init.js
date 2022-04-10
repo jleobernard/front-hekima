@@ -1,4 +1,3 @@
-import {withRouter} from "react-router-dom";
 import Header from "../../components/header/Header";
 import LoadingMask from "../../components/loading-mask/loading-mask";
 import Toaster from "../../components/Toaster";
@@ -8,8 +7,8 @@ import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import {SourcesSelector} from "../../components/filter/sources-selector";
 import {get} from "../../utils/http";
-import {useHistory} from "react-router-dom/cjs/react-router-dom";
 import {FormControl, TextField} from "@material-ui/core";
+import {useNavigate} from "react-router-dom";
 
 
 const QuizzInit = () => {
@@ -20,7 +19,7 @@ const QuizzInit = () => {
   const [sources, setSources] = useState([])
   const [maxCards, setMaxCards] = useState(10)
   const [count, setCount] = useState(-1)
-  const history = useHistory()
+  const history = useNavigate()
 
   useEffect(() => {
     get("/api/notes:count", {
@@ -42,7 +41,7 @@ const QuizzInit = () => {
         count: maxCards})
       .then(notes => {
         localStorage.setItem("quizz", JSON.stringify(notes))
-        history.push("/quizz/run")
+        history("/quizz/run")
       })
       .catch(err => {
         console.error(err)
@@ -73,4 +72,4 @@ const QuizzInit = () => {
   )
 }
 
-export default withRouter(QuizzInit);
+export default QuizzInit;

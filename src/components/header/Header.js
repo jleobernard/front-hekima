@@ -1,7 +1,7 @@
 import * as React from "react";
 import Typography from "@material-ui/core/Typography";
 import {getLanguages, logout} from "../../utils/storage";
-import {Link, withRouter} from "react-router-dom";
+import {Link} from "react-router-dom";
 import SearchIcon from '@material-ui/icons/Search';
 import "./header.scss";
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
@@ -122,4 +122,4 @@ class Header extends React.Component {
   }
 }
 
-export default withRouter(Header);
+export default Header;
