@@ -1,0 +1,10 @@
+.idea
+.kubernetes
+.github
+node_modules
+public
+scripts
+.gitignore
+.DS_Store
+.git
+Dockerfile
