@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 NOTES_FRONT_VERSION=1.0.0
 cd $DIR/../
