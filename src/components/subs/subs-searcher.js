@@ -29,6 +29,7 @@ export default function SubsSearcher({onVideoSelected, className}) {
   const [maxSim, setMaxSim] = useState(1.)
   const [canSeeDowngraded, setCanSeeDowngraded] = useState(false)
   const [searchMode, setSearchMode] = useState(false)
+  const [exact, setExact] = useState(false)
   const seed = Date.now()
 
   const debouncedAutocomplete = useMemo(() => debounce((q)  => {
@@ -47,12 +48,12 @@ export default function SubsSearcher({onVideoSelected, className}) {
     if(searchSubs) {
       doSearchSubs(searchSubs)
     }
-  }, [minSim, maxSim])
+  }, [minSim, maxSim, exact])
 
   function doSearchSubs(q) {
     setOpen(false)
     setSearchingSubs(true)
-    get('/api/kosubs', {q, minSim, maxSim, exclMax: maxSim < 1})
+    get('/api/kosubs', {q, exact, minSim, maxSim, exclMax: maxSim < 1})
     .then(results => {
       setSubs((results || []).map(r => ({...r, selected: false, key: getKey("subs")})))
       setCanSeeDowngraded((minSim - SUBS_SIM_STEP) >= SUBS_MIN_DOWNGRADABLE)
@@ -119,6 +120,8 @@ export default function SubsSearcher({onVideoSelected, className}) {
                           onInputChange={e => e ? inputSearchChanged(e.target.value) : null}
             />
             {canSeeDowngraded ? <Button className="with-margin-top with-margin-bottom downgraded-button" onClick={() => downgradeQuality()}>Voir des résultats moins bons</Button> : <></>}
+            <Button className="with-margin-top with-margin-bottom exact-search-button" onClick={() => setExact(!exact)}>Recherche
+              {exact ? ' floue' : ' exacte'}</Button>
           </FormControl>
           <VideoList key={"suggested-subs"} title={""} videos={subs} editable={true}
                      onChange={(sub, idx) => onSubChanged(sub, idx)} withTexts={true}/>
