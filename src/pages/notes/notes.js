@@ -13,7 +13,6 @@ import {selectNotes,
 import "./notes.scss";
 import "../../styles/layout.scss";
 import Header from "../../components/header/Header";
-import Toaster from "../../components/Toaster";
 import List from '@material-ui/core/List';
 import ListItem from "@material-ui/core/ListItem";
 import Card from "@material-ui/core/Card";
@@ -32,6 +31,7 @@ import gfm from 'remark-gfm'
 import {NoteFilesDisplay} from "../../components/note/note-files/note-files-display";
 import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
 import AddToHomeScreen from '@ideasio/add-to-homescreen-react';
+import { notifyInfo } from '../../store/features/notificationsSlice';
 
 
 function orDefault(count, defaultValue) {
@@ -52,8 +52,6 @@ const Notes = () =>  {
   const navigate = useNavigate();
   const location = useLocation()
   const [creating, setCreating] = useState(false)
-  const [notification, setNotification] = useState(null)
-  const [error, setError] = useState("")
   const notes = useSelector(selectNotes);
   const notesLoading = useSelector(selectNotesLoading)
   const hasMoreNotes = useSelector(selectHasMoreNotes)
@@ -192,7 +190,7 @@ const Notes = () =>  {
   function onDone(note) {
     if(note) {
       dispatch(saveNote(note))
-      setNotification('Note sauvegardée')
+      dispatch(notifyInfo('Note sauvegardée'))
     } else {
       dispatch(cancelNoteCreation())
     }
@@ -232,8 +230,6 @@ const Notes = () =>  {
         </ListItem>
       </List>
       {creating ? <NoteCreation creating={creating} onDone={onDone}/> : <></>}
-      <Toaster error={error}/>
-      <Toaster error={notification} severity="info"/>
       <Fab color="primary" aria-label="add" className="fab" onClick={() => startCreation()}>
         <AddIcon />
       </Fab>

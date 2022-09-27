@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import {get} from "../../utils/http";
 import * as lodash from 'lodash';
+import { notifyError } from './notificationsSlice';
 
 export const notesSlice = createSlice({
   name: 'notes',
@@ -60,9 +61,8 @@ export const launchSearch = (filter, raz) => {
       const notes = await get("/api/notes", filter)
       dispatch(searchDone({notes, raz}))
     } catch(err) {
-      console.error(err)
-      //setError("Erreur lors de la recherche de notes")
       dispatch(searchError())
+      dispatch(notifyError(err))
     }
   }
 }

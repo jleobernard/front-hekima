@@ -4,12 +4,18 @@ import IconButton from "@material-ui/core/IconButton";
 import CloseIcon from '@material-ui/icons/Close';
 import {getNls} from "../utils/nls";
 import Alert from "@material-ui/lab/Alert";
+import { useSelector, useDispatch } from 'react-redux';
+import { selectLevel, selectMessage } from "../store/features/notificationsSlice";
 
 function Toaster(props) {
   const [open, setOpen] = React.useState(false);
+  const level = useSelector(selectLevel)
+  const message = useSelector(selectMessage)
+
   React.useEffect(() => {
     setOpen(true)
   }, [props.error]);
+
   function getError(error) {
     let nlsError = error && error.code ? getNls(error.code, error.params) : getNls(error);
     const nlsed = nlsError || error;
@@ -23,17 +29,17 @@ function Toaster(props) {
     setOpen(false)
   }
   return (
-    props.error ?
+    message ?
     <Snackbar
       anchorOrigin={{
         vertical: 'bottom',
         horizontal: 'right',
       }}
-      open={open && props.error}
+      open={open && message}
       autoHideDuration={4000}
       onClose={handleClose}>
-        <Alert severity={props.severity || "error"}>
-          {getError(props.error)}
+        <Alert severity={level || "error"}>
+          {getError(message)}
           <IconButton size="small" aria-label="close" color="inherit" onClick={handleClose}>
             <CloseIcon fontSize="small" />
           </IconButton>
