@@ -43,7 +43,7 @@ export function SourcesSelector({className, onChange, allowCreation}) {
 
   function selectSources(event, sources) {
     const source = lodash.last(sources);
-    if(source.inputValue) {
+    if(source && source.inputValue) {
       const realSource = {...source}
       realSource.titre = source.inputValue
       source.titre = source.inputValue

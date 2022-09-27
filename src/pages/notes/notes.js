@@ -57,7 +57,7 @@ const Notes = () =>  {
   const hasMoreNotes = useSelector(selectHasMoreNotes)
   const filter = useSelector(selectFilter)
   const raz = useSelector(selectRaz)
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {

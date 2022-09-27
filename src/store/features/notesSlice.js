@@ -7,7 +7,6 @@ export const notesSlice = createSlice({
   name: 'notes',
   initialState: {
     notes: [],
-    selected: undefined,
     filter: {count: 20, offset: 0},
     loading: false,
     creating: false,
