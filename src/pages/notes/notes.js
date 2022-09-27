@@ -1,6 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import {useLocation, useNavigate} from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux';
 import {get} from "../../utils/http";
+import {selectNotes,
+   selectNotesLoading,
+   saveNote,
+   cancelNoteCreation,
+   selectHasMoreNotes,
+   selectFilter,
+   selectRaz,
+   launchSearch} from '../../store/features/notesSlice';
 import "./notes.scss";
 import "../../styles/layout.scss";
 import Header from "../../components/header/Header";
@@ -41,54 +50,32 @@ function orDefaultString(str, defaultValue) {
 const Notes = () =>  {
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const [notes, setNotes] = useState([])
-  const [filter, setFilter] = useState({count: 20, offset: 0})
-  const [needsSearch, setNeedSearch] = useState(false)
+  const location = useLocation()
   const [creating, setCreating] = useState(false)
   const [notification, setNotification] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [hasMoreNotes, setHasMoreNotes] = useState(true)
   const [error, setError] = useState("")
-  const [raz, setRaz] = useState(true)
+  const notes = useSelector(selectNotes);
+  const notesLoading = useSelector(selectNotesLoading)
+  const hasMoreNotes = useSelector(selectHasMoreNotes)
+  const filter = useSelector(selectFilter)
+  const raz = useSelector(selectRaz)
+  const dispatch = useDispatch();
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {
-      setFilter(_filter)
-      setNeedSearch(true)
+      const _filterForSearch = getFilter(filter)
+      dispatch(launchSearch(_filterForSearch, false))
     })
   }, [])
 
-  useEffect(() => {
-    if(needsSearch) {
-      const params = new URLSearchParams(location.search)
-      const _filterForSearch = getFilter(filter)
-      get("/api/notes", _filterForSearch).then(_notes => {
-        setNotes(raz ? _notes : [...notes, ..._notes])
-        setHasMoreNotes(_notes && _notes.length > 0)
-        setFilter(filter)
-        setLoading(false)
-        setNeedSearch(false)
-        seekNote(params.get('note'))
-        setRaz(false)
-      }).catch(err => {
-        console.error(err)
-        setError("Erreur lors de la recherche de notes")
-        setNeedSearch(false)
-      })
-    }
-  }, [needsSearch]);
-
   function filterChanged(newFilter) {
-    const updated = {
+    const updatedFilter = {
       count: 20,
       offset: 0,
       ...newFilter
     }
-    updateRouteParams(updated)
-    setRaz(true)
-    setFilter(updated);
-    setNeedSearch(true)
+    dispatch(launchSearch(updatedFilter, true))
+    updateRouteParams(updatedFilter)
   }
 
   function loadFilterFromURL() {
@@ -204,17 +191,11 @@ const Notes = () =>  {
 
   function onDone(note) {
     if(note) {
-      const newNotes = [...notes];
-      const index = lodash.findIndex(newNotes, n => n.uri === note.uri);
-      if(index >=0) {
-        newNotes[index] = note;
-      } else {
-        newNotes.unshift(note);
-      }
+      dispatch(saveNote(note))
       setNotification('Note sauvegardée')
-      setNotes(newNotes)
+    } else {
+      dispatch(cancelNoteCreation())
     }
-    setCreating(false)
   }
 
   function loadMore() {
@@ -222,9 +203,8 @@ const Notes = () =>  {
       ...filter,
       offset: filter.offset+20
     }
-    setFilter(newFilter)
+    dispatch(launchSearch(newFilter, false))
     updateRouteParams(newFilter)
-    setNeedSearch(true)
   }
 
   function navigateToNote(note) {
@@ -241,14 +221,14 @@ const Notes = () =>  {
       <Header title="Notes" goBack={false} withSearch={true} filterChanged={filterChanged}/>
       <List className="notes-list">
         <ListItem key="spinner-loading-first" className="centered-item">
-          {loading? <CircularProgress /> : ''}
+          {notesLoading? <CircularProgress /> : ''}
         </ListItem>
         {notes.map(elt => <ListItem key={elt.uri} id={elt.uri}>{getListItem(elt)}</ListItem>)}
-        {hasMoreNotes && !loading ? <ListItem className="centered-item" key="load-more">
+        {hasMoreNotes && !notesLoading ? <ListItem className="centered-item" key="load-more">
           <Button size="small" color="primary" onClick={() => loadMore()}>Voir plus</Button>
         </ListItem> : <></>}
         <ListItem key="spinner-loading" className="centered-item">
-          {loading? <CircularProgress /> : ''}
+          {notesLoading? <CircularProgress /> : ''}
         </ListItem>
       </List>
       {creating ? <NoteCreation creating={creating} onDone={onDone}/> : <></>}
