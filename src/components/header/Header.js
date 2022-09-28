@@ -25,23 +25,9 @@ export const Header = ({onSearch, filterChanged, title, withSearch, goBack }) =>
   function goHome() {
     navigate("/notes")
   }
-  function handleKeyDown(event ) {
-    if(event.key === 'Enter') {
-      if(!(event.shiftKey || event.altKey)) {
-        if(onSearch) {
-          onSearch(searchInput);
-        }
-      }
-    }
-  }
   function toggleDrawer(newState) {
     setMenuOpened(newState);
   }
-  function logout() {
-    logout();
-    navigate('/login');
-  }
-
   function startSearch() {
     setOpenFilter(true)
   }
@@ -91,9 +77,7 @@ export const Header = ({onSearch, filterChanged, title, withSearch, goBack }) =>
           </List>
         </Box>
       </SwipeableDrawer>
-      <SearchFilter open={openFilter}
-  filter={filter}
-  onDone={updateFilter}/>
+      <SearchFilter open={openFilter} onDone={updateFilter}/>
     </AppBar>
   )
 }

@@ -88,14 +88,6 @@ export function SourcesSelector({className, onChange, allowCreation}) {
         getOptionLabel={source => {
           return source.titre || "";
         }}
-        renderSources={(sourceValue, getSourceProps) =>
-          sourceValue.map((option, index) => (
-            <Chip
-              label={option.titre}
-              {...getSourceProps({ index })}
-            />
-          ))
-        }
         filterOptions={(options, params) => {
           return allowCreation ?
             [...options, {titre: 'Ajouter ' + params.inputValue, inputValue: params.inputValue}] :
@@ -106,7 +98,7 @@ export function SourcesSelector({className, onChange, allowCreation}) {
         )}
       />
       {sources && sources.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez une ou plusieurs sources</FormHelperText>}
-      <Dialog open={newSource && newSource.creating}
+      <Dialog open={newSource && creatingSource}
               onClose={closeSourceCreation}
               fullScreen={true}
               aria-labelledby="creation-source-dialog-title">

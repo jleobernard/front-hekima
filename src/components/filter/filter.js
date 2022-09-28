@@ -1,28 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import "../../styles/forms.scss";
-import { useSelector, useDispatch } from 'react-redux';
-import {
-  selectFilter} from '../../store/features/notesSlice';
 import { SourcesSelector } from './sources-selector';
 import { TagsSelector } from './tags-selector';
 import { KeywordSelector } from './keyword-selector';
 
 
-const NoteFilter = ({allowCreation, withFTS, onFilterChanged}) => {
-
-  const [sources, setSources] = useState([])
-  const [tags, setTags] = useState([])
-  const [notTags, setNotTags] = useState([])
-  const [q, setQ] = useState('')
-
-  const filter = useSelector(selectFilter)
-
-  useEffect(() => {
-    setSources(filter.sources)
-    setTags(filter.tags)
-    setNotTags(filter.notTags)
-    setQ(filter.q)
-  }, [filter])
+const NoteFilter = ({allowCreation, withFTS, onFilterChanged, filter}) => {
+  const [sources, setSources] = useState([...(filter.sources || [])])
+  const [tags, setTags] = useState([...(filter.tags || [])])
+  const [notTags, setNotTags] = useState([...(filter.notTags || [])])
+  const [q, setQ] = useState(filter.q)
 
   useEffect(() => {
     onFilterChanged({sources, tags, notTags, q})

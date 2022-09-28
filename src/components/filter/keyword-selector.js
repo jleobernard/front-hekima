@@ -9,7 +9,7 @@ import TextField from "@material-ui/core/TextField";
 import FormControl from "@material-ui/core/FormControl";
 
 
-export function KeywordSelector({className, onChange}) {
+export function KeywordSelector({onChange}) {
   const [loading, setLoading] = useState(false)
   const [q, setQ] = useState('')
   const [keyword, setKeyword] = useState('')
