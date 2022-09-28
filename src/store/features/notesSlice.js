@@ -29,9 +29,6 @@ export const notesSlice = createSlice({
     searchError: (state) => {
       state.loading = false
     },
-    selectNote: (state, action) => {
-      state.selected = action.payload
-    },
     saveNote: (state, action) => {
       const newNote = action.payload
       const index = lodash.findIndex(state.notes, n => n.uri === newNote.uri);
@@ -48,7 +45,7 @@ export const notesSlice = createSlice({
   }
 })
 
-export const { searchStarted, saveNote, cancelNoteCreation, searchDone, searchError, selectNote } = notesSlice.actions
+export const { searchStarted, saveNote, cancelNoteCreation, searchDone, searchError } = notesSlice.actions
 
 export default notesSlice.reducer
 
