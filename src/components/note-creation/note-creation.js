@@ -1,5 +1,6 @@
 import * as React from "react";
 import {useEffect, useState} from "react";
+import { useDispatch } from 'react-redux';
 import {post, upload, uploadFilesWithRequest} from "../../utils/http";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
@@ -12,7 +13,6 @@ import * as lodash from 'lodash';
 import IconButton from "@material-ui/core/IconButton";
 import "./note-creation.scss"
 import CircularProgress from "@material-ui/core/CircularProgress";
-import Toaster from "../Toaster";
 import NoteFilter from "../filter/filter";
 import {ButtonGroup, Input, InputAdornment, InputLabel, Paper} from "@material-ui/core";
 import {Camera, Visibility, VisibilityOff} from "@material-ui/icons";
@@ -26,14 +26,13 @@ import VideoList from "../medias/video-list";
 import {getKey} from "../../utils/keys";
 import LoadingMask from "../loading-mask/loading-mask";
 import SubsSearcher from "../subs/subs-searcher";
+import { notifyError, notifyWarn } from '../../store/features/notificationsSlice';
 
 const NoteCreation = ({note, creating, onDone}) => {
 
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [parsing, setParsing] = useState(false)
-  const [error, setError] = useState("");
-  const [errorSev, setErrorSev] = useState("error");
   const [noteUri, setNoteUri] = useState(note && note.uri ? note.uri : null)
   const [selectedSubs, setSelectedSubs] = useState([])
   const [valeur, setValeur] = useState("")
@@ -46,6 +45,7 @@ const NoteCreation = ({note, creating, onDone}) => {
   const refInputFile = React.createRef()
   const refValeur = React.createRef()
   const [displayMode, setDisplayMode] = useState(false);
+  const dispatch = useDispatch()
 
   const _noteUri = (note || {}).uri
   useEffect(() => {
@@ -106,7 +106,6 @@ const NoteCreation = ({note, creating, onDone}) => {
   function handleSubmit(closeAfterSaving) {
     if(!saving) {
       setSaving(true)
-      setError(null)
       const request = {
         uri: noteUri,
         valeur: valeur,
@@ -121,7 +120,7 @@ const NoteCreation = ({note, creating, onDone}) => {
           .then(response => {
             handleClose({...saved, files: response.files}, closeAfterSaving);
           })
-          .catch(err => setError("Impossible d'enregistrer le fichier : " + err))
+          .catch(err => dispatch(notifyError("Impossible d'enregistrer le fichier : " + err)))
           .finally(() => setSaving(false))
         } else {
           setSaving(false)
@@ -129,7 +128,7 @@ const NoteCreation = ({note, creating, onDone}) => {
         }
       }).catch(err => {
         setSaving(false)
-        setError("Impossible de sauvegarder : " + err)
+        dispatch(notifyError("Impossible de sauvegarder : " + err))
       })
     }
   }
@@ -172,16 +171,14 @@ const NoteCreation = ({note, creating, onDone}) => {
     const file = document.getElementById('picture');
     if (file) {
       setParsing(true)
-      setError(null)
       const imageFile = file.files[0]
       upload(`/api/notes:parse`, imageFile, false)
       .then(response => setParsedResult(response.lines.join('\n')))
       .catch(err => {
-        console.error(err)
-        setError("Erreur lors de l'analyse de la photo")
+        notifyError("Erreur lors de l'analyse de la photo", err)
       }).finally(() => setParsing(false))
     } else {
-      console.error("Sélectionnez un fichier");
+      notifyWarn("Sélectionnez un fichier");
     }
   }
 
@@ -403,16 +400,17 @@ const NoteCreation = ({note, creating, onDone}) => {
                      ref={refInputFile}/>
 
             </FormControl>
-            <NoteFilter filter={filter} version={0}
+            <NoteFilter filter={filter}
                         onFilterChanged={onFilterChanged}
-                        allowCreation={true}/>
+                        allowCreation={true}
+                        withKeyword={false}
+                        withExcludedTags={false}/>
 
             <VideoList className="with-margin-top" key={"selected-subs"} title={""} videos={selectedSubs}
                        editable={true} onChange={(sub) => setSubsChanged(sub, true)} withTexts={false}/>
             <SubsSearcher className={"with-margin-top with-margin-bottom"}
                           onVideoSelected={sub => setSubsChanged(sub, false)}/>
           </form>
-          <Toaster error={error} severity={errorSev}/>
         </DialogContent>
         <DialogActions>
           <ButtonGroup className="button-group centered">

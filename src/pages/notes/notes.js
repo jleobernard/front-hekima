@@ -9,7 +9,9 @@ import {selectNotes,
    selectHasMoreNotes,
    selectFilter,
    selectRaz,
-   launchSearch} from '../../store/features/notesSlice';
+   launchSearch,
+   startNoteCreation,
+   selectCreatingNote} from '../../store/features/notesSlice';
 import "./notes.scss";
 import "../../styles/layout.scss";
 import Header from "../../components/header/Header";
@@ -51,12 +53,12 @@ const Notes = () =>  {
 
   const navigate = useNavigate();
   const location = useLocation()
-  const [creating, setCreating] = useState(false)
   const notes = useSelector(selectNotes);
   const notesLoading = useSelector(selectNotesLoading)
   const hasMoreNotes = useSelector(selectHasMoreNotes)
   const filter = useSelector(selectFilter)
   const raz = useSelector(selectRaz)
+  const creating = useSelector(selectCreatingNote)
   const dispatch = useDispatch()
 
   useEffect(() => {
@@ -147,7 +149,7 @@ const Notes = () =>  {
   }
 
   function startCreation() {
-    setCreating(true)
+    dispatch(startNoteCreation())
   }
 
   function getListItem(note) {

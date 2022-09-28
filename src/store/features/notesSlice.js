@@ -39,13 +39,16 @@ export const notesSlice = createSlice({
       }
       state.creating = false
     },
+    startNoteCreation: state => {
+      state.creating = true
+    },
     cancelNoteCreation: state => {
       state.creating = false
     }
   }
 })
 
-export const { searchStarted, saveNote, cancelNoteCreation, searchDone, searchError } = notesSlice.actions
+export const { searchStarted, saveNote, startNoteCreation, cancelNoteCreation, searchDone, searchError } = notesSlice.actions
 
 export default notesSlice.reducer
 
@@ -68,3 +71,4 @@ export const selectNotesLoading = (state) => state.notes.loading
 export const selectHasMoreNotes = (state) => state.notes.hasMoreNotes
 export const selectFilter = (state) => state.notes.filter
 export const selectRaz = (state) => state.notes.raz
+export const selectCreatingNote = (state) => state.notes.creating

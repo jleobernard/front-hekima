@@ -5,7 +5,7 @@ import { TagsSelector } from './tags-selector';
 import { KeywordSelector } from './keyword-selector';
 
 
-const NoteFilter = ({allowCreation, withFTS, onFilterChanged, filter}) => {
+const NoteFilter = ({allowCreation, withKeyword, withExcludedTags, onFilterChanged, filter}) => {
   const [sources, setSources] = useState([...(filter.sources || [])])
   const [tags, setTags] = useState([...(filter.tags || [])])
   const [notTags, setNotTags] = useState([...(filter.notTags || [])])
@@ -24,10 +24,10 @@ const NoteFilter = ({allowCreation, withFTS, onFilterChanged, filter}) => {
   ]
   return (
     <div className="flex-column">
-      {withFTS ? <KeywordSelector onChange={q => setQ(q)} /> : <></>}
+      {withKeyword ? <KeywordSelector onChange={q => setQ(q)} /> : <></>}
       <SourcesSelector allowCreation={allowCreation} onChange={sources => setSources(sources)} />
       <TagsSelector allowCreation={allowCreation} onChange={tags => setTags(tags)}/>
-      <TagsSelector allowCreation={allowCreation} onChange={notTags => setNotTags(notTags)} title="Tags exclus"/>
+      {withExcludedTags ? <TagsSelector allowCreation={allowCreation} onChange={notTags => setNotTags(notTags)} title="Tags exclus"/> : <></>}
     </div>
   )
 

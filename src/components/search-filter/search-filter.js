@@ -10,7 +10,7 @@ import Dialog from "@material-ui/core/Dialog/Dialog";
 import NoteFilter from "../filter/filter";
 
 export const SearchFilter = ({onDone, open}) => {
-  
+
   const globalFilter = useSelector(selectFilter)
   const [myFilter, setMyFilter] = useState({})
 
@@ -47,7 +47,8 @@ export const SearchFilter = ({onDone, open}) => {
           <NoteFilter filter={myFilter}
                       onFilterChanged={onFilterChanged}
                       allowCreation={false}
-                      withFTS={true}
+                      withKeyword={true}
+                      withExcludedTags={true}
           />
         </form>
       </DialogContent>
