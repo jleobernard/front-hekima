@@ -1,28 +1,33 @@
-import React, {useEffect, useState} from 'react';
-import {useLocation, useNavigate} from "react-router-dom";
-import {get} from "../../utils/http";
-import "./notes.scss";
-import "../../styles/layout.scss";
-import Header from "../../components/header/Header";
-import Toaster from "../../components/Toaster";
-import List from '@material-ui/core/List';
-import ListItem from "@material-ui/core/ListItem";
+import AddToHomeScreen from '@ideasio/add-to-homescreen-react';
+import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import Button from "@material-ui/core/Button";
-import Typography from "@material-ui/core/Typography";
 import Chip from "@material-ui/core/Chip";
-import Fab from "@material-ui/core/Fab";
-import AddIcon from '@material-ui/icons/Add';
-import NoteCreation from '../../components/note-creation/note-creation';
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
+import Fab from "@material-ui/core/Fab";
+import List from '@material-ui/core/List';
+import ListItem from "@material-ui/core/ListItem";
+import Typography from "@material-ui/core/Typography";
+import AddIcon from '@material-ui/icons/Add';
 import * as lodash from 'lodash';
-import ReactMarkdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
-import gfm from 'remark-gfm'
-import {NoteFilesDisplay} from "../../components/note/note-files/note-files-display";
+import React, { useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from "react-router-dom";
+import rehypeRaw from 'rehype-raw';
+import gfm from 'remark-gfm';
+import Header from "../../components/header/Header";
 import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
-import AddToHomeScreen from '@ideasio/add-to-homescreen-react';
+import NoteCreation from '../../components/note-creation/note-creation';
+import { NoteFilesDisplay } from "../../components/note/note-files/note-files-display";
+import {
+  cancelNoteCreation, launchSearch, saveNote, selectCreatingNote, selectFilter, selectHasMoreNotes, selectNotes,
+  selectNotesLoading, selectRaz, startNoteCreation
+} from '../../store/features/notesSlice';
+import { notifyInfo } from '../../store/features/notificationsSlice';
+import "../../styles/layout.scss";
+import { get } from "../../utils/http";
+import "./notes.scss";
 
 
 function orDefault(count, defaultValue) {
@@ -41,60 +46,37 @@ function orDefaultString(str, defaultValue) {
 const Notes = () =>  {
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const [notes, setNotes] = useState([])
-  const [filter, setFilter] = useState({count: 20, offset: 0})
-  const [needsSearch, setNeedSearch] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [notification, setNotification] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [hasMoreNotes, setHasMoreNotes] = useState(true)
-  const [error, setError] = useState("")
-  const [raz, setRaz] = useState(true)
+  const location = useLocation()
+  const notes = useSelector(selectNotes);
+  const notesLoading = useSelector(selectNotesLoading)
+  const hasMoreNotes = useSelector(selectHasMoreNotes)
+  const filter = useSelector(selectFilter)
+  const raz = useSelector(selectRaz)
+  const creating = useSelector(selectCreatingNote)
+  const dispatch = useDispatch()
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {
-      setFilter(_filter)
-      setNeedSearch(true)
+      const _filterForSearch = getFilter(filter)
+      dispatch(launchSearch(_filterForSearch, false))
     })
   }, [])
 
-  useEffect(() => {
-    if(needsSearch) {
-      const params = new URLSearchParams(location.search)
-      const _filterForSearch = getFilter(filter)
-      get("/api/notes", _filterForSearch).then(_notes => {
-        setNotes(raz ? _notes : [...notes, ..._notes])
-        setHasMoreNotes(_notes && _notes.length > 0)
-        setFilter(filter)
-        setLoading(false)
-        setNeedSearch(false)
-        seekNote(params.get('note'))
-        setRaz(false)
-      }).catch(err => {
-        console.error(err)
-        setError("Erreur lors de la recherche de notes")
-        setNeedSearch(false)
-      })
-    }
-  }, [needsSearch]);
-
   function filterChanged(newFilter) {
-    const updated = {
+    const updatedFilter = {
       count: 20,
       offset: 0,
       ...newFilter
     }
-    updateRouteParams(updated)
-    setRaz(true)
-    setFilter(updated);
-    setNeedSearch(true)
+    const rawFilter = filterToRawQuery(updatedFilter)
+    dispatch(launchSearch(rawFilter, true))
+    updateRouteParams(rawFilter)
   }
 
   function loadFilterFromURL() {
     const promises = []
     const params = new URLSearchParams(location.search)
-    const src = params.get('src')
+    const src = params.get('source')
     if(src) {
       promises.push(get(`/api/sources/${src}`))
     }
@@ -132,13 +114,23 @@ const Notes = () =>  {
     return promiseLoadAll
   }
 
-  function updateRouteParams(__filter) {
-    const _filter = __filter || filter
-    const src = _filter.source ? _filter.source.uri : ''
-    const tags = (_filter.tags || []).map(t => t.uri).join(',')
-    const notTags = (_filter.notTags || []).map(t => t.uri).join(',')
-    const q = (_filter.q || '').trim()
-    navigate(`/notes?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}&notTags=${notTags}&q=${encodeURIComponent(q)}`)
+  function filterToRawQuery(filter) {
+    const source = filter.source ? filter.source.uri : ''
+    const tags = (filter.tags || []).map(t => t.uri).join(',')
+    const notTags = (filter.notTags || []).map(t => t.uri).join(',')
+    const q = (filter.q || '').trim()
+    return {
+      count: filter.count,
+      offset:filter.offset,
+      source,
+      tags,
+      notTags,
+      q
+    }
+  }
+
+  function updateRouteParams(filter) {
+    navigate(`/notes?count=${filter.count}&offset=${filter.offset}&source=${filter.source}&tags=${filter.tags}&notTags=${filter.notTags}&q=${encodeURIComponent(filter.q)}`)
   }
 
   function getFilter(__filter) {
@@ -162,7 +154,7 @@ const Notes = () =>  {
   }
 
   function startCreation() {
-    setCreating(true)
+    dispatch(startNoteCreation())
   }
 
   function getListItem(note) {
@@ -204,17 +196,11 @@ const Notes = () =>  {
 
   function onDone(note) {
     if(note) {
-      const newNotes = [...notes];
-      const index = lodash.findIndex(newNotes, n => n.uri === note.uri);
-      if(index >=0) {
-        newNotes[index] = note;
-      } else {
-        newNotes.unshift(note);
-      }
-      setNotification('Note sauvegardée')
-      setNotes(newNotes)
+      dispatch(saveNote(note))
+      dispatch(notifyInfo('Note sauvegardée'))
+    } else {
+      dispatch(cancelNoteCreation())
     }
-    setCreating(false)
   }
 
   function loadMore() {
@@ -222,9 +208,8 @@ const Notes = () =>  {
       ...filter,
       offset: filter.offset+20
     }
-    setFilter(newFilter)
+    dispatch(launchSearch(newFilter, false))
     updateRouteParams(newFilter)
-    setNeedSearch(true)
   }
 
   function navigateToNote(note) {
@@ -241,19 +226,17 @@ const Notes = () =>  {
       <Header title="Notes" goBack={false} withSearch={true} filterChanged={filterChanged}/>
       <List className="notes-list">
         <ListItem key="spinner-loading-first" className="centered-item">
-          {loading? <CircularProgress /> : ''}
+          {notesLoading? <CircularProgress /> : ''}
         </ListItem>
         {notes.map(elt => <ListItem key={elt.uri} id={elt.uri}>{getListItem(elt)}</ListItem>)}
-        {hasMoreNotes && !loading ? <ListItem className="centered-item" key="load-more">
+        {hasMoreNotes && !notesLoading ? <ListItem className="centered-item" key="load-more">
           <Button size="small" color="primary" onClick={() => loadMore()}>Voir plus</Button>
         </ListItem> : <></>}
         <ListItem key="spinner-loading" className="centered-item">
-          {loading? <CircularProgress /> : ''}
+          {notesLoading? <CircularProgress /> : ''}
         </ListItem>
       </List>
       {creating ? <NoteCreation creating={creating} onDone={onDone}/> : <></>}
-      <Toaster error={error}/>
-      <Toaster error={notification} severity="info"/>
       <Fab color="primary" aria-label="add" className="fab" onClick={() => startCreation()}>
         <AddIcon />
       </Fab>

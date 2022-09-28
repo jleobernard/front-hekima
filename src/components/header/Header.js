@@ -1,125 +1,81 @@
-import * as React from "react";
+import { AppBar, Box, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar } from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
-import {getLanguages, logout} from "../../utils/storage";
-import {Link} from "react-router-dom";
-import SearchIcon from '@material-ui/icons/Search';
-import "./header.scss";
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import SearchFilter from "../search-filter/search-filter";
 import MenuIcon from "@material-ui/icons/Menu";
-import {AppBar, Box, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar} from "@material-ui/core";
+import SearchIcon from '@material-ui/icons/Search';
+import * as React from "react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import SearchFilter from "../search-filter/search-filter";
+import "./header.scss";
 
-class Header extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      menuOpened: false,
-      progress: 0,
-      openFilter: false,
-      filter: {}
-    };
-    this.goBack = this.goBack.bind(this);
-    this.goHome = this.goHome.bind(this);
-    this.toggleDrawer = this.toggleDrawer.bind(this);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.startSearch = this.startSearch.bind(this);
-    this.updateFilter = this.updateFilter.bind(this);
+export const Header = ({filterChanged, title, withSearch, goBack }) => {
+  const [menuOpened, setMenuOpened] = useState(false)
+  const [openFilter, setOpenFilter] = useState(false)
+  const [filter, setFilter] = useState({})
+  const navigate = useNavigate();
+  
+  function doGoBack() {
+    navigate(-1)
   }
-  goBack() {
-    this.props.history.goBack()
+  function goHome() {
+    navigate("/notes")
   }
-  goHome() {
-    this.props.history.push("/notes")
+  function toggleDrawer(newState) {
+    setMenuOpened(newState);
   }
-  handleKeyDown(event ) {
-    if(event.key === 'Enter') {
-      if(!(event.shiftKey || event.altKey)) {
-        if(this.props.onSearch) {
-          this.props.onSearch(this.state.searchInput);
-        }
-      }
-    }
-  }
-  toggleDrawer(newState) {
-    this.setState({menuOpened: newState});
-  }
-  logout() {
-    logout();
-    this.props.history.push('/login');
+  function startSearch() {
+    setOpenFilter(true)
   }
 
-  updateProgressBar(textCredit) {
-    const languageModel = getLanguages().filter(l => l.code === this.props.language);
-    let credit;
-    if(languageModel && languageModel.length > 0 && languageModel[0].motherTongue) {
-      credit = textCredit;
-    } else {
-      credit = 20 - textCredit;
-    }
-    this.setState({progress: credit * 5 /* = 100 / 20*/})
+  function updateFilter(newFilter) {
+    setOpenFilter(false)
+    setFilter(newFilter)
+    filterChanged(newFilter)
   }
-
-  startSearch() {
-    this.setState({
-      openFilter: true
-    })
-  }
-
-  updateFilter(newFilter) {
-    this.setState({
-      openFilter: false,
-      filter: newFilter
-    });
-    this.props.filterChanged(newFilter)
-  }
-
-  render() {
-    return (
-      <AppBar position="fixed">
-        <Toolbar className="toolbar">
-          <IconButton
-            edge="start"
-            className="with-margin-right"
-            color="inherit"
-            aria-label="open drawer"
-            onClick={() => this.toggleDrawer(true)}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h5" className={"title " + (!this.props.title ? 'website-title-header' : '')} noWrap
-            onClick={() => this.goHome()}>
-            {this.props.title || 'Notes'}
-          </Typography>
-          {this.props.withSearch ? <SearchIcon onClick={this.startSearch}/>: ''}
-          {this.props.goBack ? <div className="back-icon" onClick={this.goBack}><ArrowBackIcon /></div> : ''}
-        </Toolbar>
-        <SwipeableDrawer
-          anchor='left'
-          open={this.state.menuOpened}
-          onClose={() => this.toggleDrawer(false)}
-          onOpen={() => this.toggleDrawer(true)}
+  return (
+    <AppBar position="fixed">
+      <Toolbar className="toolbar">
+        <IconButton
+          edge="start"
+          className="with-margin-right"
+          color="inherit"
+          aria-label="open drawer"
+          onClick={() => toggleDrawer(true)}
         >
-          <Box role="presentation" className="side-menu">
-            <List>
-              <ListItem button key='notes'>
-                <Link to={"/"}>
-                  <ListItemText primary={'Notes'} />
-                </Link>
-              </ListItem>
-              <ListItem button key='quizz' className="side-menu-item">
-                <Link to={"/quizz/init"}>
-                  <ListItemText primary={'Quizz'} />
-                </Link>
-              </ListItem>
-            </List>
-          </Box>
-        </SwipeableDrawer>
-        <SearchFilter open={this.state.openFilter}
-    filter={this.state.filter}
-    onDone={this.updateFilter}/>
-      </AppBar>
-    )
-  }
+          <MenuIcon />
+        </IconButton>
+        <Typography variant="h5" className={"title " + (!title ? 'website-title-header' : '')} noWrap
+          onClick={() => goHome()}>
+          {title || 'Notes'}
+        </Typography>
+        {withSearch ? <SearchIcon onClick={startSearch}/>: ''}
+        {goBack ? <div className="back-icon" onClick={doGoBack}><ArrowBackIcon /></div> : ''}
+      </Toolbar>
+      <SwipeableDrawer
+        anchor='left'
+        open={menuOpened}
+        onClose={() => toggleDrawer(false)}
+        onOpen={() => toggleDrawer(true)}
+      >
+        <Box role="presentation" className="side-menu">
+          <List>
+            <ListItem button key='notes'>
+              <Link to={"/"}>
+                <ListItemText primary={'Notes'} />
+              </Link>
+            </ListItem>
+            <ListItem button key='quizz' className="side-menu-item">
+              <Link to={"/quizz/init"}>
+                <ListItemText primary={'Quizz'} />
+              </Link>
+            </ListItem>
+          </List>
+        </Box>
+      </SwipeableDrawer>
+      <SearchFilter open={openFilter} onDone={updateFilter}/>
+    </AppBar>
+  )
 }
 
 export default Header;

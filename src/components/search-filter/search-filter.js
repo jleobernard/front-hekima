@@ -1,81 +1,69 @@
-import * as React from "react";
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
-import DialogActions from "@material-ui/core/DialogActions/DialogActions";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog/Dialog";
+import DialogActions from "@material-ui/core/DialogActions/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
+import React, { useEffect, useState } from "react";
+import { useSelector } from 'react-redux';
+import {
+  selectFilter
+} from '../../store/features/notesSlice';
 import NoteFilter from "../filter/filter";
-import * as lodash from 'lodash';
 
-class SearchFilter extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      filter: null,
-      version: 0
-    };
-    this.closeFilter = this.closeFilter.bind(this);
-    this.onFilterChanged = this.onFilterChanged.bind(this);
-    this.reinit = this.reinit.bind(this);
-  }
+export const SearchFilter = ({onDone, open}) => {
 
-  reinit() {
-    this.setState({filter: {source:null, tags: [], q: ""}});
-    this.props.onDone({});
-  }
-  onFilterChanged(event) {
-    this.setState({filter: event});
+  const globalFilter = useSelector(selectFilter)
+  const [myFilter, setMyFilter] = useState({})
+
+  useEffect(() => {
+    setMyFilter(globalFilter)
+  }, [globalFilter])
+
+  function reinit() {
+    setMyFilter({source:null, tags: [], q: ""})
+    onDone({})
   }
 
-  closeFilter(save) {
-    const filter = save ? this.state.filter : {};
-    this.props.onDone(filter);
+  function onFilterChanged(event) {
+    setMyFilter(event)
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    if(this.props.open) {
-      if (!prevProps.open) {
-        this.setState({
-          filter: lodash.cloneDeep(this.props.filter),
-          version: this.state.version + 1
-        });
-      }
-    } else if(prevProps.open) {
-      this.setState({filter: null})
-    }
+  function closeFilter(save) {
+    const _filter = save ? myFilter : {}
+    onDone(_filter)
   }
 
-  render() {
-    return (
-      <Dialog open={this.props.open}
-              onClose={() => this.closeFilter(false)}
-              fullScreen={true}
-              aria-labelledby="search-filter-dialog">
-        <DialogTitle id="search-filter-dialog">Rechercher</DialogTitle>
-        <DialogContent>
-          <form onSubmit={this.handleSubmit} className="form">
-            <NoteFilter filter={this.state.filter}
-                        version={this.state.version}
-                        onFilterChanged={this.onFilterChanged}
-                        allowCreation={false}
-                        withFTS={true}
-            />
-          </form>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => this.closeFilter(false)} color="primary">
-            Annuler
-          </Button>
-          <Button onClick={this.reinit} color="primary">
-            Réinitialiser
-          </Button>
-          <Button onClick={() => this.closeFilter(true)} color="primary">
-            Valider
-          </Button>
-        </DialogActions>
-      </Dialog>
-    )
+  function handleSubmit() {
+    onDone(myFilter)
   }
+
+  return (
+    <Dialog open={open}
+            onClose={() => closeFilter(false)}
+            fullScreen={true}
+            aria-labelledby="search-filter-dialog">
+      <DialogTitle id="search-filter-dialog">Rechercher</DialogTitle>
+      <DialogContent>
+        <form onSubmit={handleSubmit} className="form">
+          <NoteFilter filter={myFilter}
+                      onFilterChanged={onFilterChanged}
+                      allowCreation={false}
+          />
+        </form>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => closeFilter(false)} color="primary">
+          Annuler
+        </Button>
+        <Button onClick={reinit} color="primary">
+          Réinitialiser
+        </Button>
+        <Button onClick={() => closeFilter(true)} color="primary">
+          Valider
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
 }
 
 export default SearchFilter;
