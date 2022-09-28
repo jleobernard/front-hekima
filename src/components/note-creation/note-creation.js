@@ -340,7 +340,7 @@ const NoteCreation = ({note, creating, onDone}) => {
               onClose={() => handleClose(null, true)}
               fullScreen={true}
               aria-labelledby="creation-dialog-title">
-        <DialogTitle id="creation-dialog-title">{noteUri ? 'Nouvelle note' : 'Modification'}</DialogTitle>
+        <DialogTitle id="creation-dialog-title">{noteUri ? 'Modification' : 'Nouvelle note'}</DialogTitle>
         <DialogContent>
           <form onSubmit={() => handleSubmit(false)} className="form no-padding">
             <NoteFilesEdit note={note} onChange={fileChanged}/>
