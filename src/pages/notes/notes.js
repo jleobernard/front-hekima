@@ -1,39 +1,33 @@
-import React, {useEffect, useState} from 'react';
-import {useLocation, useNavigate} from "react-router-dom";
-import { useSelector, useDispatch } from 'react-redux';
-import {get} from "../../utils/http";
-import {selectNotes,
-   selectNotesLoading,
-   saveNote,
-   cancelNoteCreation,
-   selectHasMoreNotes,
-   selectFilter,
-   selectRaz,
-   launchSearch,
-   startNoteCreation,
-   selectCreatingNote} from '../../store/features/notesSlice';
-import "./notes.scss";
-import "../../styles/layout.scss";
-import Header from "../../components/header/Header";
-import List from '@material-ui/core/List';
-import ListItem from "@material-ui/core/ListItem";
+import AddToHomeScreen from '@ideasio/add-to-homescreen-react';
+import Button from "@material-ui/core/Button";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import Button from "@material-ui/core/Button";
-import Typography from "@material-ui/core/Typography";
 import Chip from "@material-ui/core/Chip";
-import Fab from "@material-ui/core/Fab";
-import AddIcon from '@material-ui/icons/Add';
-import NoteCreation from '../../components/note-creation/note-creation';
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
+import Fab from "@material-ui/core/Fab";
+import List from '@material-ui/core/List';
+import ListItem from "@material-ui/core/ListItem";
+import Typography from "@material-ui/core/Typography";
+import AddIcon from '@material-ui/icons/Add';
 import * as lodash from 'lodash';
-import ReactMarkdown from 'react-markdown'
-import rehypeRaw from 'rehype-raw'
-import gfm from 'remark-gfm'
-import {NoteFilesDisplay} from "../../components/note/note-files/note-files-display";
+import React, { useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from "react-router-dom";
+import rehypeRaw from 'rehype-raw';
+import gfm from 'remark-gfm';
+import Header from "../../components/header/Header";
 import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
-import AddToHomeScreen from '@ideasio/add-to-homescreen-react';
+import NoteCreation from '../../components/note-creation/note-creation';
+import { NoteFilesDisplay } from "../../components/note/note-files/note-files-display";
+import {
+  cancelNoteCreation, launchSearch, saveNote, selectCreatingNote, selectFilter, selectHasMoreNotes, selectNotes,
+  selectNotesLoading, selectRaz, startNoteCreation
+} from '../../store/features/notesSlice';
 import { notifyInfo } from '../../store/features/notificationsSlice';
+import "../../styles/layout.scss";
+import { get } from "../../utils/http";
+import "./notes.scss";
 
 
 function orDefault(count, defaultValue) {
@@ -74,14 +68,15 @@ const Notes = () =>  {
       offset: 0,
       ...newFilter
     }
-    dispatch(launchSearch(updatedFilter, true))
-    updateRouteParams(updatedFilter)
+    const rawFilter = filterToRawQuery(updatedFilter)
+    dispatch(launchSearch(rawFilter, true))
+    updateRouteParams(rawFilter)
   }
 
   function loadFilterFromURL() {
     const promises = []
     const params = new URLSearchParams(location.search)
-    const src = params.get('src')
+    const src = params.get('source')
     if(src) {
       promises.push(get(`/api/sources/${src}`))
     }
@@ -119,13 +114,23 @@ const Notes = () =>  {
     return promiseLoadAll
   }
 
-  function updateRouteParams(__filter) {
-    const _filter = __filter || filter
-    const src = _filter.source ? _filter.source.uri : ''
-    const tags = (_filter.tags || []).map(t => t.uri).join(',')
-    const notTags = (_filter.notTags || []).map(t => t.uri).join(',')
-    const q = (_filter.q || '').trim()
-    navigate(`/notes?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}&notTags=${notTags}&q=${encodeURIComponent(q)}`)
+  function filterToRawQuery(filter) {
+    const source = filter.source ? filter.source.uri : ''
+    const tags = (filter.tags || []).map(t => t.uri).join(',')
+    const notTags = (filter.notTags || []).map(t => t.uri).join(',')
+    const q = (filter.q || '').trim()
+    return {
+      count: filter.count,
+      offset:filter.offset,
+      source,
+      tags,
+      notTags,
+      q
+    }
+  }
+
+  function updateRouteParams(filter) {
+    navigate(`/notes?count=${filter.count}&offset=${filter.offset}&source=${filter.source}&tags=${filter.tags}&notTags=${filter.notTags}&q=${encodeURIComponent(filter.q)}`)
   }
 
   function getFilter(__filter) {

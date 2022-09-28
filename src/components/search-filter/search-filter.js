@@ -1,12 +1,13 @@
-import React, {useState, useEffect} from "react";
-import { useSelector, useDispatch } from 'react-redux';
-import {
-  selectFilter} from '../../store/features/notesSlice';
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
-import DialogActions from "@material-ui/core/DialogActions/DialogActions";
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog/Dialog";
+import DialogActions from "@material-ui/core/DialogActions/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
+import React, { useEffect, useState } from "react";
+import { useSelector } from 'react-redux';
+import {
+  selectFilter
+} from '../../store/features/notesSlice';
 import NoteFilter from "../filter/filter";
 
 export const SearchFilter = ({onDone, open}) => {
@@ -47,8 +48,6 @@ export const SearchFilter = ({onDone, open}) => {
           <NoteFilter filter={myFilter}
                       onFilterChanged={onFilterChanged}
                       allowCreation={false}
-                      withKeyword={true}
-                      withExcludedTags={true}
           />
         </form>
       </DialogContent>

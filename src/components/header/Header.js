@@ -1,22 +1,18 @@
-import * as React from "react";
-import {useState} from "react";
-import {useLocation, useNavigate} from "react-router-dom";
+import { AppBar, Box, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar } from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
-import {getLanguages, logout} from "../../utils/storage";
-import {Link} from "react-router-dom";
-import SearchIcon from '@material-ui/icons/Search';
-import "./header.scss";
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import SearchFilter from "../search-filter/search-filter";
 import MenuIcon from "@material-ui/icons/Menu";
-import {AppBar, Box, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar} from "@material-ui/core";
+import SearchIcon from '@material-ui/icons/Search';
+import * as React from "react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import SearchFilter from "../search-filter/search-filter";
+import "./header.scss";
 
-export const Header = ({onSearch, filterChanged, title, withSearch, goBack }) => {
+export const Header = ({filterChanged, title, withSearch, goBack }) => {
   const [menuOpened, setMenuOpened] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [openFilter, setOpenFilter] = useState(false)
   const [filter, setFilter] = useState({})
-  const [searchInput, setSearchInput] = useState('')
   const navigate = useNavigate();
   
   function doGoBack() {

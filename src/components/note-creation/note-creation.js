@@ -1,32 +1,33 @@
-import * as React from "react";
-import {useEffect, useState} from "react";
-import { useDispatch } from 'react-redux';
-import {post, upload, uploadFilesWithRequest} from "../../utils/http";
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
+import { ButtonGroup, Input, InputAdornment, InputLabel, Paper } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import Dialog from "@material-ui/core/Dialog/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import FormControl from "@material-ui/core/FormControl";
-import "../../styles/forms.scss";
-import * as lodash from 'lodash';
 import IconButton from "@material-ui/core/IconButton";
-import "./note-creation.scss"
-import CircularProgress from "@material-ui/core/CircularProgress";
-import NoteFilter from "../filter/filter";
-import {ButtonGroup, Input, InputAdornment, InputLabel, Paper} from "@material-ui/core";
-import {Camera, Visibility, VisibilityOff} from "@material-ui/icons";
+import { Camera, Visibility, VisibilityOff } from "@material-ui/icons";
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
-import gfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
+import { SourcesSelector } from "components/filter/sources-selector";
+import { TagsSelector } from "components/filter/tags-selector";
+import * as lodash from 'lodash';
+import * as React from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import {NoteFilesEdit} from "../note/note-files/note-files-edit";
-import "../../styles/science.scss";
-import VideoList from "../medias/video-list";
-import {getKey} from "../../utils/keys";
-import LoadingMask from "../loading-mask/loading-mask";
-import SubsSearcher from "../subs/subs-searcher";
+import { useDispatch } from 'react-redux';
+import rehypeRaw from "rehype-raw";
+import gfm from "remark-gfm";
 import { notifyError, notifyWarn } from '../../store/features/notificationsSlice';
+import "../../styles/forms.scss";
+import "../../styles/science.scss";
+import { post, upload, uploadFilesWithRequest } from "../../utils/http";
+import { getKey } from "../../utils/keys";
+import LoadingMask from "../loading-mask/loading-mask";
+import VideoList from "../medias/video-list";
+import { NoteFilesEdit } from "../note/note-files/note-files-edit";
+import SubsSearcher from "../subs/subs-searcher";
+import "./note-creation.scss";
 
 const NoteCreation = ({note, creating, onDone}) => {
 
@@ -36,8 +37,8 @@ const NoteCreation = ({note, creating, onDone}) => {
   const [noteUri, setNoteUri] = useState(note && note.uri ? note.uri : null)
   const [selectedSubs, setSelectedSubs] = useState([])
   const [valeur, setValeur] = useState("")
-  const [source, setSource] = useState({})
-  const [tags, setTags] = useState([])
+  const [source, setSource] = useState(note ? note.source : {})
+  const [tags, setTags] = useState(note ? note.tags : [])
   const [filesChanges, setFilesChanges] = useState(false)
   const [toolbar, setToolbar] = useState('')
   const [parsedResult, setParsedResult] = useState(null)
@@ -131,11 +132,6 @@ const NoteCreation = ({note, creating, onDone}) => {
         dispatch(notifyError("Impossible de sauvegarder : " + err))
       })
     }
-  }
-
-  function onFilterChanged(event) {
-    setSource(event.source)
-    setTags(event.tags)
   }
 
   function valueChanged(event) {
@@ -330,10 +326,6 @@ const NoteCreation = ({note, creating, onDone}) => {
     )
   }
 
-  const filter = {
-    source : source,
-    tags: tags || []
-  };
   return (
     <>
       <Dialog open={creating || !!note} key="main-dialog"
@@ -400,11 +392,10 @@ const NoteCreation = ({note, creating, onDone}) => {
                      ref={refInputFile}/>
 
             </FormControl>
-            <NoteFilter filter={filter}
-                        onFilterChanged={onFilterChanged}
-                        allowCreation={true}
-                        withKeyword={false}
-                        withExcludedTags={false}/>
+            <div className="flex-column">
+              <SourcesSelector allowCreation={true} onChange={source => setSource(source)} sources={source} multiple={false}/>
+              <TagsSelector allowCreation={true} onChange={tags => setTags(tags)} tags={tags}/>
+            </div>
 
             <VideoList className="with-margin-top" key={"selected-subs"} title={""} videos={selectedSubs}
                        editable={true} onChange={(sub) => setSubsChanged(sub, true)} withTexts={false}/>

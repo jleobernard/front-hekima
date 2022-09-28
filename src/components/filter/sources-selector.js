@@ -15,11 +15,11 @@ import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
 import Dialog from "@material-ui/core/Dialog/Dialog";
 
-export function SourcesSelector({className, onChange, allowCreation}) {
+export function SourcesSelector({className, onChange, allowCreation, sources, multiple}) {
   const [loading, setLoading] = useState(false)
   const [creatingSource, setCreatingSource] = useState(false)
   const [q, setQ] = useState("")
-  const [sources, setSources] = useState([])
+  const [_sources, setSources] = useState(sources)
   const [sourcesSuggestions, setSourcesSuggestions] = useState([])
   const [newSource, setNewSource] = useState({})
   const types = [
@@ -42,7 +42,7 @@ export function SourcesSelector({className, onChange, allowCreation}) {
   },[q])
 
   function selectSources(event, sources) {
-    const source = lodash.last(sources);
+    const source = multiple ? lodash.last(sources) : sources;
     if(source && source.inputValue) {
       const realSource = {...source}
       realSource.titre = source.inputValue
@@ -79,9 +79,9 @@ export function SourcesSelector({className, onChange, allowCreation}) {
     <FormControl margin="normal" className={className}>
       <Autocomplete
         id="sources-selector"
-        multiple
+        multiple={multiple}
         loading={loading}
-        value={sources}
+        value={_sources}
         onChange={selectSources}
         onInputChange={(event) => event ? setQ(event.target.value) : null}
         options={sourcesSuggestions}
@@ -97,7 +97,7 @@ export function SourcesSelector({className, onChange, allowCreation}) {
           <TextField {...params} label="Source" variant="outlined" placeholder="Sources" />
         )}
       />
-      {sources && sources.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez une ou plusieurs sources</FormHelperText>}
+      {_sources && _sources.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez une ou plusieurs sources</FormHelperText>}
       <Dialog open={newSource && creatingSource}
               onClose={closeSourceCreation}
               fullScreen={true}
