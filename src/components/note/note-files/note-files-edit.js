@@ -55,15 +55,28 @@ export const NoteFilesEdit = ({note, onChange, editable}) => {
   function renderImage(idx) {
     const preview = previews[idx]
     if(preview && preview.data) {
-      return (
-        <div className={"note-image " + (deleted[idx] ? "deleted" : "")} key={preview.key}>
-          <img src={preview.data}
-             alt={"en construction"}/>
-          <IconButton className="top-right-icon" aria-label="delete-image" onClick={() => deleteImage(idx)}>
-            <Delete />
-          </IconButton>
-        </div>
-      )
+      const isVideo = preview.data.startsWith('data:video/')
+      if(isVideo) {
+        return (
+          <div className={"note-image " + (deleted[idx] ? "deleted" : "")} key={preview.key}>
+            <video src={preview.data}
+               alt={"en construction"}/>
+            <IconButton className="top-right-icon" aria-label="delete-image" onClick={() => deleteImage(idx)}>
+              <Delete />
+            </IconButton>
+          </div>
+        )
+      } else {
+        return (
+          <div className={"note-image " + (deleted[idx] ? "deleted" : "")} key={preview.key}>
+            <img src={preview.data}
+               alt={"en construction"}/>
+            <IconButton className="top-right-icon" aria-label="delete-image" onClick={() => deleteImage(idx)}>
+              <Delete />
+            </IconButton>
+          </div>
+        )
+      }
     } else if(note && note.files && note.files.length > idx){
       const file = note.files[idx]
       return (
@@ -89,6 +102,6 @@ export const NoteFilesEdit = ({note, onChange, editable}) => {
           </IconButton>
         </div>
       </div>
-      <input type="file" id="recipe-picture" accept="image/*" onChange={fileChanged} hidden={true} ref={refInputFile}/>
+      <input type="file" id="recipe-picture" accept="image/*,video/*" onChange={fileChanged} hidden={true} ref={refInputFile}/>
     </>)
 }

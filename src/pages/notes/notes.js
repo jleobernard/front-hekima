@@ -57,7 +57,7 @@ const Notes = () =>  {
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {
-      const _filterForSearch = getFilter(filter)
+      const _filterForSearch = getFilter(_filter)
       dispatch(launchSearch(_filterForSearch, false))
     })
   }, [])
@@ -136,7 +136,8 @@ const Notes = () =>  {
   function getFilter(__filter) {
     const _filter = {
       offset: raz ? 0 : __filter.offset,
-      count: raz ? __filter.count + __filter.offset : __filter.count
+      count: raz ? __filter.count + __filter.offset : __filter.count,
+      q: __filter.q
     };
     if(__filter.source) {
       _filter.source = __filter.source.uri;
@@ -146,9 +147,6 @@ const Notes = () =>  {
     }
     if(__filter.notTags) {
       _filter.notTags = lodash.map(__filter.notTags, t => t.uri);
-    }
-    if(__filter.q) {
-      _filter.q = __filter.q
     }
     return _filter;
   }

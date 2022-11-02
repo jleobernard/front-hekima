@@ -67,9 +67,8 @@ export function SourcesSelector({className, onChange, allowCreation, sources, mu
       post('/api/sources', newSource)
       .then(insertedSource => {
         closeSourceCreation()
-        const newSources = [...sources]
-        newSources.push(insertedSource)
-        onChange(newSources);
+        setSources(insertedSource)
+        onChange(insertedSource);
       })
       .finally(() => setCreatingSource(false))
     }
@@ -98,7 +97,7 @@ export function SourcesSelector({className, onChange, allowCreation, sources, mu
         )}
       />
       {_sources && _sources.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez une ou plusieurs sources</FormHelperText>}
-      <Dialog open={newSource && creatingSource}
+      <Dialog open={newSource && newSource.creating}
               onClose={closeSourceCreation}
               fullScreen={true}
               aria-labelledby="creation-source-dialog-title">

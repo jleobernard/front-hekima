@@ -10,7 +10,7 @@ $empty-height : 50px;
   &.empty {
     height: $empty-height;
     .note-image {
-      > img {
+      > img, video {
         height: $empty-height;
       }
       &.placeholder {

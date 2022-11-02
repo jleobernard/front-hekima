@@ -16,7 +16,10 @@ export const NoteFilesDisplay = ({note}) => {
 
   function renderFile(file) {
     return (<div className="note-image">
-      <img key={file.file_id} src={"/api/notes/" + note.uri + "/files/" + file.file_id} alt={file.file_id} onClick={(e) => openFile(file, e)}/>
+      {file.mime_type.startsWith('video') ? 
+      <video key={file.file_id} src={"/api/notes/" + note.uri + "/files/" + file.file_id} onClick={(e) => openFile(file, e)}/>
+      :
+      <img key={file.file_id} src={"/api/notes/" + note.uri + "/files/" + file.file_id} alt={file.file_id} onClick={(e) => openFile(file, e)}/>}
     </div>)
   }
 

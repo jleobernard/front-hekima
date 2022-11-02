@@ -51,7 +51,11 @@ export const NoteFileFullscreen = ({note, file, onClose}) => {
   function renderOpenedFile() {
     if(openedFile) {
       return (<div className="zoomed-picture" onClick={closeFile}>
+        {openedFile.mime_type.startsWith('video') ? 
+        <video src={"/api/notes/" + note.uri + "/files/" + openedFile.file_id}  onClick={e => e.stopPropagation()} controls/>
+        :
         <img src={"/api/notes/" + note.uri + "/files/" + openedFile.file_id} alt={openedFile.file_id} onClick={e => e.stopPropagation()}/>
+        }
         <IconButton aria-label="zoom-picture-close" onClick={closeFile} className="icon">
           <CloseIcon />
         </IconButton>

@@ -388,7 +388,7 @@ const NoteCreation = ({note, creating, onDone}) => {
                 {toolbar === 'maths' ? renderMaths() : <></>}
                 {toolbar === 'greek' ? renderGreek() : <></>}
               </div>
-              <input type="file" id="picture" accept="image/*" onChange={parsePictureChanged} hidden={true}
+              <input type="file" id="picture" accept="image/*,video/*" onChange={parsePictureChanged} hidden={true}
                      ref={refInputFile}/>
 
             </FormControl>
