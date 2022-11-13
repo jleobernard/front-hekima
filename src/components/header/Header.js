@@ -6,6 +6,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { upload } from "utils/http";
 import SearchFilter from "../search-filter/search-filter";
 import "./header.scss";
 
@@ -33,6 +34,18 @@ export const Header = ({filterChanged, title, withSearch, goBack }) => {
     setFilter(newFilter)
     filterChanged(newFilter)
   }
+
+  function fileChanged(event) {
+    const file = event.target.files[0]
+    const formData = new FormData();
+		formData.append('File', file);
+    upload('/api/kosubs:upload', file)
+    .then((response) => console.log("Done uploading..."))
+    .catch((error) => {
+      console.error('Error :', error);
+    });
+  }
+
   return (
     <AppBar position="fixed">
       <Toolbar className="toolbar">
@@ -69,6 +82,9 @@ export const Header = ({filterChanged, title, withSearch, goBack }) => {
               <Link to={"/quizz/init"}>
                 <ListItemText primary={'Quizz'} />
               </Link>
+            </ListItem>
+            <ListItem button key='upload' className="side-menu-item">
+                <input type="file" id="uploaded-file" accept="video/*" onChange={fileChanged} />
             </ListItem>
           </List>
         </Box>

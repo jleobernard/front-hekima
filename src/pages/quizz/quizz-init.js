@@ -25,9 +25,10 @@ const QuizzInit = () => {
     get("/api/notes:count", {
       tags: (tags || []).map(t => t.uri),
       notTags: (notTags || []).map(t => t.uri),
-      sources: (sources || []).map(s => s.uri)})
+      sources: (sources || {}).uri
+    })
     .then(count => setCount(count))
-    .catch(count => setCount(-1))
+    .catch(_ => setCount(-1))
   }, [tags, notTags, sources])
 
   function startQuizz() {
@@ -37,7 +38,7 @@ const QuizzInit = () => {
       get("/api/quizz:generate", {
         tags: (tags || []).map(t => t.uri),
         notTags: (notTags || []).map(t => t.uri),
-        sources: (sources || []).map(s => s.uri),
+        sources: (sources || {}).uri,
         count: maxCards})
       .then(notes => {
         localStorage.setItem("quizz", JSON.stringify(notes))

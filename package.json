@@ -1,6 +1,6 @@
 {
   "name": "hekima-front",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "private": true,
   "dependencies": {
     "@ideasio/add-to-homescreen-react": "^1.0.10",
