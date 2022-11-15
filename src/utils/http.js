@@ -197,6 +197,7 @@ const doUploadFilesWithRequest = (url, request, files, accessToken) => {
 
 const asParams = (params)=> {
   return Object.keys(params || {})
+  .filter(k => params[k] !== null && params[k] !== undefined)
   .map(key => key + "=" + encodeURIComponent(params[key]))
   .join("&");
 }

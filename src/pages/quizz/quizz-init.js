@@ -16,7 +16,7 @@ const QuizzInit = () => {
   const [error, setError] = useState({msg:"", sev: "info"})
   const [tags, setTags] = useState([])
   const [notTags, setNotTags] = useState([])
-  const [sources, setSources] = useState([])
+  const [sources, setSources] = useState({})
   const [maxCards, setMaxCards] = useState(10)
   const [count, setCount] = useState(-1)
   const history = useNavigate()
@@ -25,7 +25,7 @@ const QuizzInit = () => {
     get("/api/notes:count", {
       tags: (tags || []).map(t => t.uri),
       notTags: (notTags || []).map(t => t.uri),
-      sources: (sources || {}).uri
+      sources: sources ? sources.uri : null
     })
     .then(count => setCount(count))
     .catch(_ => setCount(-1))
@@ -38,7 +38,7 @@ const QuizzInit = () => {
       get("/api/quizz:generate", {
         tags: (tags || []).map(t => t.uri),
         notTags: (notTags || []).map(t => t.uri),
-        sources: (sources || {}).uri,
+        sources: sources ? sources.uri : null,
         count: maxCards})
       .then(notes => {
         localStorage.setItem("quizz", JSON.stringify(notes))
