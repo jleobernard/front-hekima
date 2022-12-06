@@ -1,6 +1,13 @@
 @import "dimensions.scss";
 @import "colors.scss";
-
+.MuiDialogActions-root.bottom-button-bar {
+  padding-left: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  .MuiButtonGroup-root.button-group {
+    flex-wrap: nowrap;
+  }
+}
 .MuiButtonGroup-root.button-group {
   flex-wrap: wrap;
   &.spread {

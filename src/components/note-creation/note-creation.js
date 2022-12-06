@@ -403,7 +403,7 @@ const NoteCreation = ({note, creating, onDone}) => {
                           onVideoSelected={sub => setSubsChanged(sub, false)}/>
           </form>
         </DialogContent>
-        <DialogActions>
+        <DialogActions className="bottom-button-bar">
           <ButtonGroup className="button-group centered">
             <Button onClick={() => handleClose(null,true)} color="primary">
               Fermer
