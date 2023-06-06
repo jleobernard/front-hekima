@@ -1,14 +1,13 @@
-import AddToHomeScreen from '@ideasio/add-to-homescreen-react';
-import Button from "@material-ui/core/Button";
-import Card from "@material-ui/core/Card";
-import CardContent from "@material-ui/core/CardContent";
-import Chip from "@material-ui/core/Chip";
-import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
-import Fab from "@material-ui/core/Fab";
-import List from '@material-ui/core/List';
-import ListItem from "@material-ui/core/ListItem";
-import Typography from "@material-ui/core/Typography";
-import AddIcon from '@material-ui/icons/Add';
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
+import Fab from "@mui/material/Fab";
+import List from '@mui/material/List';
+import ListItem from "@mui/material/ListItem";
+import Typography from "@mui/material/Typography";
+import AddIcon from '@mui/icons-material/Add';
 import * as lodash from 'lodash';
 import React, { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -28,6 +27,8 @@ import { notifyInfo } from '../../store/features/notificationsSlice';
 import "../../styles/layout.scss";
 import { get } from "../../utils/http";
 import "./notes.scss";
+import { supabase } from '../../services/supabase-client';
+
 
 
 function orDefault(count, defaultValue) {
@@ -56,11 +57,17 @@ const Notes = () =>  {
   const dispatch = useDispatch()
 
   useEffect(() => {
-    loadFilterFromURL().then(_filter => {
+    testSupabase()
+    /*loadFilterFromURL().then(_filter => {
       const _filterForSearch = getFilter(_filter)
       dispatch(launchSearch(_filterForSearch, false))
-    })
+    })*/
   }, [])
+
+  async function testSupabase() {
+    const {data} = await supabase.from("note").select().limit(5).order('id', {ascending: false});
+    console.log(data);
+  }
 
   function filterChanged(newFilter) {
     const updatedFilter = {
@@ -220,7 +227,6 @@ const Notes = () =>  {
   }
   return (
     <div className="app">
-      <AddToHomeScreen appId="com.leo.notes" />
       <Header title="Notes" goBack={false} withSearch={true} filterChanged={filterChanged}/>
       <List className="notes-list">
         <ListItem key="spinner-loading-first" className="centered-item">

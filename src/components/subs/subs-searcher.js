@@ -1,5 +1,5 @@
 import VideoList from "../medias/video-list";
-import FormControl from "@material-ui/core/FormControl";
+import FormControl from "@mui/material/FormControl";
 import {
   CircularProgress,
   Dialog,
@@ -7,16 +7,16 @@ import {
   DialogContent,
   InputAdornment,
   TextField
-} from "@material-ui/core";
+} from "@mui/material";
 import * as React from "react";
 import {useEffect, useMemo, useState} from "react";
 import {get} from "../../utils/http";
 import {getKey} from "../../utils/keys";
 import {debounce} from "lodash";
-import {Autocomplete} from "@material-ui/lab";
-import SearchIcon from "@material-ui/icons/Search";
+import { Autocomplete } from '@mui/material';
+import SearchIcon from "@mui/icons-material/Search";
 import {SUBS_MIN_DOWNGRADABLE, SUBS_MIN_SIM_DEFAULT, SUBS_SIM_STEP} from "../../utils/const";
-import Button from "@material-ui/core/Button";
+import Button from "@mui/material/Button";
 
 export default function SubsSearcher({onVideoSelected, className}) {
   const [searchSubs, setSearchSubs] = useState('')
@@ -102,7 +102,7 @@ export default function SubsSearcher({onVideoSelected, className}) {
                           onChange={(e) => doSearchSubs(e.target.value)}
                           options={subsOptions}
                           getOptionLabel={i => i || ''}
-                          getOptionSelected={(option, value) => option === value}
+                          isOptionEqualToValue={(option, value) => option === value}
                           renderInput={(params) => (
                             <TextField {...params} label="Recherche sous-titres" InputProps={{
                               ...params.InputProps,
@@ -132,7 +132,7 @@ export default function SubsSearcher({onVideoSelected, className}) {
           </Button>
         </DialogActions>
       </Dialog>
-    )
+    );
   }
 
   function startSearchSubs() {

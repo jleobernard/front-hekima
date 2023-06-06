@@ -1,14 +1,14 @@
-import { ButtonGroup, Input, InputAdornment, InputLabel, Paper } from "@material-ui/core";
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import Dialog from "@material-ui/core/Dialog/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
-import FormControl from "@material-ui/core/FormControl";
-import IconButton from "@material-ui/core/IconButton";
-import { Camera, Visibility, VisibilityOff } from "@material-ui/icons";
-import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
+import { ButtonGroup, Input, InputAdornment, InputLabel, Paper } from "@mui/material";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
+import FormControl from "@mui/material/FormControl";
+import IconButton from "@mui/material/IconButton";
+import { Camera, Visibility, VisibilityOff } from "@mui/icons-material";
+import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
 import { SourcesSelector } from "components/filter/sources-selector";
 import { TagsSelector } from "components/filter/tags-selector";
 import * as lodash from 'lodash';
@@ -245,12 +245,18 @@ const NoteCreation = ({note, creating, onDone}) => {
     return (
       <ButtonGroup className="button-group centered with-margin-top">
         {colors.map(color =>
-          <IconButton style={{color}} aria-label={color} key={color} component="span" onClick={() => addColorTag(color)}>
+          <IconButton
+            style={{color}}
+            aria-label={color}
+            key={color}
+            component="span"
+            onClick={() => addColorTag(color)}
+            size="large">
             <FiberManualRecordRoundedIcon />
           </IconButton>
         )}
       </ButtonGroup>
-    )
+    );
   }
 
   function renderTitles() {
@@ -310,144 +316,160 @@ const NoteCreation = ({note, creating, onDone}) => {
       <div>
         <ButtonGroup className="button-group centered" key="lowercase">
           {lower.map(letter =>
-            <IconButton key={"greek-" + letter} component="span" onClick={() => addSingle(letter)}>
+            <IconButton
+              key={"greek-" + letter}
+              component="span"
+              onClick={() => addSingle(letter)}
+              size="large">
               <span>{letter}</span>
             </IconButton>
           )}
         </ButtonGroup>
         <ButtonGroup className="button-group centered" key="uppercase">
           {upper.map(letter =>
-            <IconButton key={"greek-" + letter} component="span" onClick={() => addSingle(letter)}>
+            <IconButton
+              key={"greek-" + letter}
+              component="span"
+              onClick={() => addSingle(letter)}
+              size="large">
               <span>{letter}</span>
             </IconButton>
           )}
         </ButtonGroup>
       </div>
-    )
+    );
   }
 
-  return (
-    <>
-      <Dialog open={creating || !!note} key="main-dialog"
-              onClose={() => handleClose(null, true)}
-              fullScreen={true}
-              aria-labelledby="creation-dialog-title">
-        <DialogTitle id="creation-dialog-title">{noteUri ? 'Modification' : 'Nouvelle note'}</DialogTitle>
-        <DialogContent>
-          <form onSubmit={() => handleSubmit(false)} className="form no-padding">
-            <NoteFilesEdit note={note} onChange={fileChanged}/>
-            <FormControl>
-              <InputLabel htmlFor="valeur-ne">Note</InputLabel>
-              {displayMode ?
-                <Paper elevation={3} className="with-padding with-margin-top">
-                  <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={valeur}/>
-                </Paper> :
-                <Input
-                  id="valeur-ne"
-                  required autoFocus={true}
-                  value={valeur}
-                  ref={refValeur}
-                  multiline rows={3} rowsMax={25} variant="outlined"
-                  onChange={valueChanged}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="analyse image"
-                        onClick={() => refInputFile.current.click()}
-                      >
-                        {parsing ? <CircularProgress/> : <Camera/>}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              }
-
-              {displayMode ?
-                <ButtonGroup className="button-group centered with-margin-top">
-                  <IconButton className="block" onClick={() => setDisplayMode(false)} aria-label="Édition" component="span">
-                    <VisibilityOff />
-                  </IconButton>
-                </ButtonGroup>
-                :
-                <ButtonGroup className="button-group centered with-margin-top">
-                  <IconButton className="block" onClick={() => setDisplayMode(true)} aria-label="Aperçu" component="span">
-                    <Visibility />
-                  </IconButton>
-                  <Button className="block" onClick={() => doSetToolbar("titles")}>Titres</Button>
-                  <Button className="block" onClick={() => doSetToolbar('colours')}>Couleurs</Button>
-                  <Button className="block" onClick={() => doSetToolbar('text')}>Texte</Button>
-                  <Button className="block" onClick={() => doSetToolbar('maths')}>Maths</Button>
-                  <Button className="block" onClick={() => doSetToolbar('greek')}>Grec</Button>
-                </ButtonGroup>
-              }
-
-              <div className="with-margin-top with-margin-bottom">
-                {toolbar === 'colours' ? renderColours() : <></>}
-                {toolbar === 'titles' ? renderTitles() : <></>}
-                {toolbar === 'text' ? renderText() : <></>}
-                {toolbar === 'maths' ? renderMaths() : <></>}
-                {toolbar === 'greek' ? renderGreek() : <></>}
-              </div>
-              <input type="file" id="picture" accept="image/*,video/*" onChange={parsePictureChanged} hidden={true}
-                     ref={refInputFile}/>
-
-            </FormControl>
-            <div className="flex-column">
-              <SourcesSelector allowCreation={true} onChange={source => setSource(source)} sources={source} multiple={false}/>
-              <TagsSelector allowCreation={true} onChange={tags => setTags(tags)} tags={tags}/>
-            </div>
-
-            <VideoList className="with-margin-top" key={"selected-subs"} title={""} videos={selectedSubs}
-                       editable={true} onChange={(sub) => setSubsChanged(sub, true)} withTexts={false}/>
-            <SubsSearcher className={"with-margin-top with-margin-bottom"}
-                          onVideoSelected={sub => setSubsChanged(sub, false)}/>
-          </form>
-        </DialogContent>
-        <DialogActions className="bottom-button-bar">
-          <ButtonGroup className="button-group centered">
-            <Button onClick={() => handleClose(null,true)} color="primary">
-              Fermer
-            </Button>
-            <Button onClick={_ => handleSubmit(false)} color="primary">
-              Sauvegarder {saving ? <CircularProgress /> : ''}
-            </Button>
-            <Button onClick={_ => handleSubmit(true)} color="primary">
-              Sauvegarder et fermer{saving ? <CircularProgress /> : ''}
-            </Button>
-          </ButtonGroup>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={parsedResult} key="parsed-result"
-              onClose={() => setParsedResult(null)}
-              fullScreen={true}
-              aria-labelledby="parsed-result-dialog-title">
-        <DialogTitle id="parsed-result-dialog-title">Résultat de l'analyse</DialogTitle>
-        <DialogContent>
-          <form onSubmit={addParsedResult} className="form">
-            <FormControl>
-              <InputLabel htmlFor="parsed-value">Texte analysé</InputLabel>
+  return <>
+    <Dialog open={creating || !!note} key="main-dialog"
+            onClose={() => handleClose(null, true)}
+            fullScreen={true}
+            aria-labelledby="creation-dialog-title">
+      <DialogTitle id="creation-dialog-title">{noteUri ? 'Modification' : 'Nouvelle note'}</DialogTitle>
+      <DialogContent>
+        <form onSubmit={() => handleSubmit(false)} className="form no-padding">
+          <NoteFilesEdit note={note} onChange={fileChanged}/>
+          <FormControl>
+            <InputLabel htmlFor="valeur-ne">Note</InputLabel>
+            {displayMode ?
+              <Paper elevation={3} className="with-padding with-margin-top">
+                <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={valeur}/>
+              </Paper> :
               <Input
-                id="parsed-value"
+                id="valeur-ne"
                 required autoFocus={true}
-                value={parsedResult}
+                value={valeur}
+                ref={refValeur}
                 multiline rows={3} rowsMax={25} variant="outlined"
-                onChange={parsedResultChanged}
+                onChange={valueChanged}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="analyse image"
+                      onClick={() => refInputFile.current.click()}
+                      size="large">
+                      {parsing ? <CircularProgress/> : <Camera/>}
+                    </IconButton>
+                  </InputAdornment>
+                }
               />
-            </FormControl>
-          </form>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setParsedResult(null)} color="primary">
+            }
+
+            {displayMode ?
+              <ButtonGroup className="button-group centered with-margin-top">
+                <IconButton
+                  className="block"
+                  onClick={() => setDisplayMode(false)}
+                  aria-label="Édition"
+                  component="span"
+                  size="large">
+                  <VisibilityOff />
+                </IconButton>
+              </ButtonGroup>
+              :
+              <ButtonGroup className="button-group centered with-margin-top">
+                <IconButton
+                  className="block"
+                  onClick={() => setDisplayMode(true)}
+                  aria-label="Aperçu"
+                  component="span"
+                  size="large">
+                  <Visibility />
+                </IconButton>
+                <Button className="block" onClick={() => doSetToolbar("titles")}>Titres</Button>
+                <Button className="block" onClick={() => doSetToolbar('colours')}>Couleurs</Button>
+                <Button className="block" onClick={() => doSetToolbar('text')}>Texte</Button>
+                <Button className="block" onClick={() => doSetToolbar('maths')}>Maths</Button>
+                <Button className="block" onClick={() => doSetToolbar('greek')}>Grec</Button>
+              </ButtonGroup>
+            }
+
+            <div className="with-margin-top with-margin-bottom">
+              {toolbar === 'colours' ? renderColours() : <></>}
+              {toolbar === 'titles' ? renderTitles() : <></>}
+              {toolbar === 'text' ? renderText() : <></>}
+              {toolbar === 'maths' ? renderMaths() : <></>}
+              {toolbar === 'greek' ? renderGreek() : <></>}
+            </div>
+            <input type="file" id="picture" accept="image/*,video/*" onChange={parsePictureChanged} hidden={true}
+                   ref={refInputFile}/>
+
+          </FormControl>
+          <div className="flex-column">
+            <SourcesSelector allowCreation={true} onChange={source => setSource(source)} sources={source} multiple={false}/>
+            <TagsSelector allowCreation={true} onChange={tags => setTags(tags)} tags={tags}/>
+          </div>
+
+          <VideoList className="with-margin-top" key={"selected-subs"} title={""} videos={selectedSubs}
+                     editable={true} onChange={(sub) => setSubsChanged(sub, true)} withTexts={false}/>
+          <SubsSearcher className={"with-margin-top with-margin-bottom"}
+                        onVideoSelected={sub => setSubsChanged(sub, false)}/>
+        </form>
+      </DialogContent>
+      <DialogActions className="bottom-button-bar">
+        <ButtonGroup className="button-group centered">
+          <Button onClick={() => handleClose(null,true)} color="primary">
             Fermer
           </Button>
-          <Button onClick={addParsedResult} color="primary">
-            Ajouter
+          <Button onClick={_ => handleSubmit(false)} color="primary">
+            Sauvegarder {saving ? <CircularProgress /> : ''}
           </Button>
-        </DialogActions>
-      </Dialog>
-      <LoadingMask loading={loading || saving}/>
-    </>
-  )
+          <Button onClick={_ => handleSubmit(true)} color="primary">
+            Sauvegarder et fermer{saving ? <CircularProgress /> : ''}
+          </Button>
+        </ButtonGroup>
+      </DialogActions>
+    </Dialog>
+    <Dialog open={parsedResult} key="parsed-result"
+            onClose={() => setParsedResult(null)}
+            fullScreen={true}
+            aria-labelledby="parsed-result-dialog-title">
+      <DialogTitle id="parsed-result-dialog-title">Résultat de l'analyse</DialogTitle>
+      <DialogContent>
+        <form onSubmit={addParsedResult} className="form">
+          <FormControl>
+            <InputLabel htmlFor="parsed-value">Texte analysé</InputLabel>
+            <Input
+              id="parsed-value"
+              required autoFocus={true}
+              value={parsedResult}
+              multiline rows={3} rowsMax={25} variant="outlined"
+              onChange={parsedResultChanged}
+            />
+          </FormControl>
+        </form>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setParsedResult(null)} color="primary">
+          Fermer
+        </Button>
+        <Button onClick={addParsedResult} color="primary">
+          Ajouter
+        </Button>
+      </DialogActions>
+    </Dialog>
+    <LoadingMask loading={loading || saving}/>
+  </>;
 }
 
 export default NoteCreation;

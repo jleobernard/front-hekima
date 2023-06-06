@@ -8,11 +8,13 @@ import {get} from "./utils/http";
 import QuizzInit from "./pages/quizz/quizz-init";
 import QuizzRun from "./pages/quizz/quizz-run";
 import Toaster from "./components/Toaster";
+import { createClient } from "@supabase/supabase-js";
+
 
 function App() {
-  useEffect(() => {
+  /*useEffect(() => {
     setInterval(() => get("/api/user").catch(err => console.error(err)), 60 * 1000)
-  }, [])
+  }, [])*/
   return (
     <div className="root">
       <div className="app-wrapper">

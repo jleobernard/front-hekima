@@ -1,8 +1,8 @@
-import Button from "@material-ui/core/Button";
-import Dialog from "@material-ui/core/Dialog/Dialog";
-import DialogActions from "@material-ui/core/DialogActions/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog/Dialog";
+import DialogActions from "@mui/material/DialogActions/DialogActions";
+import DialogContent from "@mui/material/DialogContent/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
 import React, { useEffect, useState } from "react";
 import { useSelector } from 'react-redux';
 import {

@@ -3,17 +3,17 @@ import {useEffect, useMemo, useState} from "react";
 import * as lodash from "lodash";
 import {debounce} from "lodash";
 import {get, post} from "../../utils/http";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import Chip from "@material-ui/core/Chip";
-import TextField from "@material-ui/core/TextField";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import FormControl from "@material-ui/core/FormControl";
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
-import DialogActions from "@material-ui/core/DialogActions/DialogActions";
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
-import Dialog from "@material-ui/core/Dialog/Dialog";
+import Autocomplete from '@mui/material/Autocomplete';
+import Chip from "@mui/material/Chip";
+import TextField from "@mui/material/TextField";
+import FormHelperText from "@mui/material/FormHelperText";
+import FormControl from "@mui/material/FormControl";
+import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
+import DialogContent from "@mui/material/DialogContent/DialogContent";
+import DialogActions from "@mui/material/DialogActions/DialogActions";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
+import Dialog from "@mui/material/Dialog/Dialog";
 
 export function SourcesSelector({className, onChange, allowCreation, sources, multiple}) {
   const [loading, setLoading] = useState(false)

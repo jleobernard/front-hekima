@@ -1,12 +1,12 @@
 import {NoteFilesDisplay} from "./note-files/note-files-display";
 import VideoThumbnailList from "../medias/video-tumbnail-list";
-import Typography from "@material-ui/core/Typography";
+import Typography from "@mui/material/Typography";
 import ReactMarkdown from "react-markdown";
 import gfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import Chip from "@material-ui/core/Chip";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import Chip from "@mui/material/Chip";
 import React from "react";
 
 export function NoteDetail({note}) {

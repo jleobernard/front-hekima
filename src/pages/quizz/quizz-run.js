@@ -4,12 +4,12 @@ import Header from "../../components/header/Header";
 import LoadingMask from "../../components/loading-mask/loading-mask";
 import Toaster from "../../components/Toaster";
 import {NoteDetail} from "../../components/note/note-detail";
-import {Rating} from "@material-ui/lab";
-import {CircularProgress, IconButton, LinearProgress} from "@material-ui/core";
+import { Rating } from '@mui/material';
+import {CircularProgress, IconButton, LinearProgress} from "@mui/material";
 import './quizz-run.scss'
 import {MAX_GRADE_QUIZZ} from "../../utils/const";
-import {ArrowForward} from "@material-ui/icons";
-import {Visibility} from "@material-ui/icons";
+import {ArrowForward} from "@mui/icons-material";
+import {Visibility} from "@mui/icons-material";
 import {getNumberOfTitles} from "../../services/note-services";
 import {useNavigate} from "react-router-dom";
 
@@ -94,7 +94,7 @@ const QuizzRun = () => {
             color="inherit"
             aria-label="reveal note"
             onClick={() => setNoteState("")}
-          >
+            size="large">
             <Visibility />
           </IconButton>
           :
@@ -114,7 +114,7 @@ const QuizzRun = () => {
             color="inherit"
             aria-label="pass note"
             onClick={() => setPosition(position + 1)}
-          >
+            size="large">
             <ArrowForward />
           </IconButton>
           {saving ? <CircularProgress className="saving" /> : <></>}
@@ -125,6 +125,6 @@ const QuizzRun = () => {
       <LoadingMask loading={loading}/>
       <Toaster error={error.msg} severity={error.sev}/>
     </div>
-  )
+  );
 }
 export default QuizzRun;

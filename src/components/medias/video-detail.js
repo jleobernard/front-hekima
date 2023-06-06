@@ -1,8 +1,8 @@
 import "./video-detail.scss"
 import * as React from "react";
-import {FormControl, InputLabel, MenuItem, Select} from "@material-ui/core";
-import ArrowBackIcon from "@material-ui/icons/ArrowBack";
-import {ArrowForward} from "@material-ui/icons";
+import {FormControl, InputLabel, MenuItem, Select} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {ArrowForward} from "@mui/icons-material";
 import SubsText from "./subs-text";
 
 export default function VideoDetail({video, hasMoreVideos, changeVideo}) {

@@ -2,10 +2,10 @@ import React, {useEffect, useState} from 'react';
 import {useLocation, useNavigate} from "react-router-dom";
 import {get, post} from "../../utils/http";
 import "../../styles/layout.scss";
-import FormControl from "@material-ui/core/FormControl";
-import TextField from "@material-ui/core/TextField/TextField";
-import ButtonGroup from "@material-ui/core/ButtonGroup";
-import Button from "@material-ui/core/Button";
+import FormControl from "@mui/material/FormControl";
+import TextField from "@mui/material/TextField/TextField";
+import ButtonGroup from "@mui/material/ButtonGroup";
+import Button from "@mui/material/Button";
 import Toaster from "../../components/Toaster";
 import LoadingMask from "../../components/loading-mask/loading-mask";
 

@@ -3,11 +3,11 @@ import {useEffect, useMemo, useState} from "react";
 import * as lodash from "lodash";
 import {debounce} from "lodash";
 import {get, post} from "../../utils/http";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import Chip from "@material-ui/core/Chip";
-import TextField from "@material-ui/core/TextField";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import FormControl from "@material-ui/core/FormControl";
+import Autocomplete from '@mui/material/Autocomplete';
+import Chip from "@mui/material/Chip";
+import TextField from "@mui/material/TextField";
+import FormHelperText from "@mui/material/FormHelperText";
+import FormControl from "@mui/material/FormControl";
 
 export function TagsSelector({className, onChange, allowCreation, title, tags}) {
   const [loading, setLoading] = useState(false)

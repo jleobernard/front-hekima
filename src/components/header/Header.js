@@ -1,8 +1,8 @@
-import { AppBar, Box, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar } from "@material-ui/core";
-import Typography from "@material-ui/core/Typography";
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import MenuIcon from "@material-ui/icons/Menu";
-import SearchIcon from '@material-ui/icons/Search';
+import { AppBar, Box, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar } from "@mui/material";
+import Typography from "@mui/material/Typography";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import MenuIcon from "@mui/icons-material/Menu";
+import SearchIcon from '@mui/icons-material/Search';
 import * as React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -55,7 +55,7 @@ export const Header = ({filterChanged, title, withSearch, goBack }) => {
           color="inherit"
           aria-label="open drawer"
           onClick={() => toggleDrawer(true)}
-        >
+          size="large">
           <MenuIcon />
         </IconButton>
         <Typography variant="h5" className={"title " + (!title ? 'website-title-header' : '')} noWrap
@@ -91,7 +91,7 @@ export const Header = ({filterChanged, title, withSearch, goBack }) => {
       </SwipeableDrawer>
       <SearchFilter open={openFilter} onDone={updateFilter}/>
     </AppBar>
-  )
+  );
 }
 
 export default Header;

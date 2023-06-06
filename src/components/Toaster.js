@@ -1,9 +1,9 @@
 import * as React from "react";
-import Snackbar from '@material-ui/core/Snackbar';
-import IconButton from "@material-ui/core/IconButton";
-import CloseIcon from '@material-ui/icons/Close';
+import Snackbar from '@mui/material/Snackbar';
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from '@mui/icons-material/Close';
 import {getNls} from "../utils/nls";
-import Alert from "@material-ui/lab/Alert";
+import Alert from '@mui/material/Alert';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectLevel, selectMessage } from "../store/features/notificationsSlice";
 
