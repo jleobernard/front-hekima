@@ -57,11 +57,11 @@ const Notes = () =>  {
   const dispatch = useDispatch()
 
   useEffect(() => {
-    testSupabase()
-    /*loadFilterFromURL().then(_filter => {
+    //testSupabase()
+    loadFilterFromURL().then(_filter => {
       const _filterForSearch = getFilter(_filter)
       dispatch(launchSearch(_filterForSearch, false))
-    })*/
+    })
   }, [])
 
   async function testSupabase() {
@@ -85,13 +85,14 @@ const Notes = () =>  {
     const params = new URLSearchParams(location.search)
     const src = params.get('source')
     if(src) {
-      promises.push(get(`/api/sources/${src}`))
+      promises.push(supabase.from("note_source").select().eq('uri', src))
     }
     const withTagsUri = (params.get('tags') || '').split(',');
     const withoutTagsUri = (params.get('notTags') || '').split(',');
-    [...withTagsUri, ...withoutTagsUri]
-    .filter(uri => !!uri)
-    .forEach(uri => promises.push(get(`/api/tags/${uri}`)))
+    const allTagsUri = [...withTagsUri, ...withoutTagsUri].filter(uri => !!uri);
+    if(allTagsUri.length > 0) {
+      promises.push(supabase.from("tag").select().in('uri', allTagsUri))
+    }
     const _filter = {
       ...filter,
       q: orDefaultString(params.get('q'), ''),
@@ -104,14 +105,16 @@ const Notes = () =>  {
         Promise.all(promises).then(responses => {
           let beginTags;
           if(src) {
-            _filter.source = responses[0]
+            _filter.source = responses[0].data[0]
             beginTags = 1
           } else {
             beginTags = 0
           }
-          const fetchedTags = responses.slice(beginTags)
-          _filter.tags = withTagsUri.map(wt => lodash.find(fetchedTags, t => t.uri === wt)).filter(u => !!u)
-          _filter.notTags = withoutTagsUri.map(wt => lodash.find(fetchedTags, t => t.uri === wt)).filter(u => !!u)
+          if(allTagsUri.length > 0) {
+            const fetchedTags = responses[beginTags].data
+            _filter.tags = withTagsUri.map(wt => lodash.find(fetchedTags, t => t.uri === wt)).filter(u => !!u)
+            _filter.notTags = withoutTagsUri.map(wt => lodash.find(fetchedTags, t => t.uri === wt)).filter(u => !!u)
+          }
           resolve(_filter)
         }).catch(() => resolve(_filter))
       })
