@@ -2,7 +2,7 @@ import * as React from "react";
 import {useEffect, useMemo, useState} from "react";
 import * as lodash from "lodash";
 import {debounce} from "lodash";
-import {get, post} from "../../utils/http";
+import {post} from "../../utils/http";
 import Autocomplete from '@mui/material/Autocomplete';
 import Chip from "@mui/material/Chip";
 import TextField from "@mui/material/TextField";
@@ -14,6 +14,7 @@ import DialogActions from "@mui/material/DialogActions/DialogActions";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
 import Dialog from "@mui/material/Dialog/Dialog";
+import { searchSources } from "services/source-service";
 
 export function SourcesSelector({className, onChange, allowCreation, sources, multiple}) {
   const [loading, setLoading] = useState(false)
@@ -31,7 +32,7 @@ export function SourcesSelector({className, onChange, allowCreation, sources, mu
 
   const debounceSearch = useMemo(() => debounce((q)  => {
     setLoading(true)
-    get('/api/sources', {q})
+    searchSources(q)
     .then(sources => setSourcesSuggestions(sources))
     .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps

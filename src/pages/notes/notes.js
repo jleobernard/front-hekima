@@ -55,23 +55,18 @@ const Notes = () =>  {
   const raz = useSelector(selectRaz)
   const creating = useSelector(selectCreatingNote)
   const dispatch = useDispatch()
+  const DEFAULT_NOTES_COUNT = 4;
 
   useEffect(() => {
-    //testSupabase()
     loadFilterFromURL().then(_filter => {
       const _filterForSearch = getFilter(_filter)
       dispatch(launchSearch(_filterForSearch, false))
     })
   }, [])
 
-  async function testSupabase() {
-    const {data} = await supabase.from("note").select().limit(5).order('id', {ascending: false});
-    console.log(data);
-  }
-
   function filterChanged(newFilter) {
     const updatedFilter = {
-      count: 20,
+      count: DEFAULT_NOTES_COUNT,
       offset: 0,
       ...newFilter
     }
@@ -96,7 +91,7 @@ const Notes = () =>  {
     const _filter = {
       ...filter,
       q: orDefaultString(params.get('q'), ''),
-      count: orDefault(params.get('count'), 20),
+      count: orDefault(params.get('count'), DEFAULT_NOTES_COUNT),
       offset: orDefault(params.get('offset'), 0)
     }
     let promiseLoadAll;
@@ -214,7 +209,7 @@ const Notes = () =>  {
   function loadMore() {
     const newFilter = {
       ...filter,
-      offset: filter.offset+20
+      offset: filter.offset+DEFAULT_NOTES_COUNT
     }
     dispatch(launchSearch(newFilter, false))
     updateRouteParams(newFilter)

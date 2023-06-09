@@ -58,7 +58,6 @@ export const launchSearch = (filter, raz) => {
   return async (dispatch) => {
     dispatch(searchStarted(filter))
     try {
-      //const notes = await get("/api/notes", filter)
       let queryBuilder = supabase.from("note").select(`
       id,
        uri, valeur, mime_type, file_id, created_at, files, subs,

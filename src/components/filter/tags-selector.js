@@ -2,12 +2,13 @@ import * as React from "react";
 import {useEffect, useMemo, useState} from "react";
 import * as lodash from "lodash";
 import {debounce} from "lodash";
-import {get, post} from "../../utils/http";
+import {post} from "../../utils/http";
 import Autocomplete from '@mui/material/Autocomplete';
 import Chip from "@mui/material/Chip";
 import TextField from "@mui/material/TextField";
 import FormHelperText from "@mui/material/FormHelperText";
 import FormControl from "@mui/material/FormControl";
+import { searchTags } from "services/tags-service";
 
 export function TagsSelector({className, onChange, allowCreation, title, tags}) {
   const [loading, setLoading] = useState(false)
@@ -18,7 +19,7 @@ export function TagsSelector({className, onChange, allowCreation, title, tags}) 
 
   const debounceSearch = useMemo(() => debounce((q)  => {
     setLoading(true)
-    get('/api/tags', {q})
+    searchTags(q)
     .then(tags => setTagsSuggestions(tags))
     .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
