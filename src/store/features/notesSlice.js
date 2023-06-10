@@ -1,8 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
-import {get} from "../../utils/http";
 import * as lodash from 'lodash';
 import { notifyError } from './notificationsSlice';
-import { supabase } from '../../services/supabase-client';
+import { searchNotes } from 'services/note-services';
 
 export const notesSlice = createSlice({
   name: 'notes',
@@ -58,40 +57,15 @@ export const launchSearch = (filter, raz) => {
   return async (dispatch) => {
     dispatch(searchStarted(filter))
     try {
-      let queryBuilder = supabase.from("note").select(`
-      id,
-       uri, valeur, mime_type, file_id, created_at, files, subs,
-       note_source(id, uri, titre, source_type, auteur)
-      `);
-      if(filter.q) {
-        // NLP Search
-        console.warn("not yet implemented")
-      } else {
-        queryBuilder = getNoteUrisByFilter(filter, queryBuilder)
-      }
-      const {data} = await queryBuilder.range(filter.offset, filter.offset + filter.count - 1)
-      dispatch(searchDone({notes: toView(data), raz}))
+      const notes = await searchNotes(filter)
+      dispatch(searchDone({notes, raz}))
     } catch(err) {
       dispatch(searchError())
       dispatch(notifyError(err))
     }
   }
 }
-function toView(data) {
-  return data.map(d => {
-    if(d.note_source) {
-      d.source = d.note_source 
-    }
-    return d
-  })
-}
 
-function getNoteUrisByFilter(filter, queryBuilder) {
-  if(filter.source) {
-    queryBuilder.eq('source_id', supabase.from("source").select("id").eq('uri', filter.source))
-  }
-  return queryBuilder;
-}
 
 export const selectNotes = (state) => state.notes.notes
 export const selectNotesLoading = (state) => state.notes.loading

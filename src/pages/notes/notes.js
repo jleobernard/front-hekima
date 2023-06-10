@@ -25,10 +25,15 @@ import {
 } from '../../store/features/notesSlice';
 import { notifyInfo } from '../../store/features/notificationsSlice';
 import "../../styles/layout.scss";
-import { get } from "../../utils/http";
 import "./notes.scss";
 import { supabase } from '../../services/supabase-client';
 
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import { uspertNote } from "services/note-services";
+import { Color } from '@tiptap/extension-color'
+import TextStyle from '@tiptap/extension-text-style'
+import NoteContent from "components/note/note-content";
 
 
 function orDefault(count, defaultValue) {
@@ -56,6 +61,24 @@ const Notes = () =>  {
   const creating = useSelector(selectCreatingNote)
   const dispatch = useDispatch()
   const DEFAULT_NOTES_COUNT = 4;
+
+  const editor = useEditor({
+    extensions: [
+      Color.configure({ types: [TextStyle.name, ListItem.name] }),
+      TextStyle.configure({ types: [ListItem.name] }),
+      StarterKit.configure({
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
+        },
+      }),
+    ],
+    content: '',
+  })
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {
@@ -167,7 +190,7 @@ const Notes = () =>  {
         {note.subs  && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs} />: <></>}
         <CardContent onClick={() => navigateToNote(note)}>
           <Typography component="p" className={"note-text"} gutterBottom={true}>
-            <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={note.valeur}/>
+            <NoteContent note={note} readOnly={true}></NoteContent>
           </Typography>
           {note.source ? <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
             in {note.source.titre} de {note.source.auteur}

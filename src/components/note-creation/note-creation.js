@@ -77,12 +77,18 @@ const NoteCreation = ({note, creating, onDone}) => {
   useEffect(() => {
       const _note = (note || {})
       setNoteUri(_note.uri)
-      setValeur(_note.valeur)
       setSource({...(_note.source || {}) })
       setTags([...(_note.tags || [])])
       setSelectedSubs((_note.subs || []).map(s => {
         return {...s, selected: true, key: getKey("subs") }
       }))
+      if(_note.valeurJson) {
+        editor.commands.setContent(_note.valeurJson)
+      } else if(_note.valeur) {
+        editor.commands.setContent(_note.valeur)
+      } else {
+        editor.commands.setContent('');
+      }
   }, [_noteUri]);
 
   function setSubsChanged(sub, fromSelectedList) {

@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {get, httpDelete} from "../../utils/http";
+import {httpDelete} from "../../utils/http";
 import "./note-view.scss";
 import "../../styles/layout.scss";
 import Header from "../../components/header/Header";
@@ -20,6 +20,7 @@ import NoteCreation from "../../components/note-creation/note-creation";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {NoteDetail} from "../../components/note/note-detail";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
+import { findNoteByUri } from 'services/note-services';
 
 
 const NoteView = () => {
@@ -42,10 +43,11 @@ const NoteView = () => {
     function load() {
         const uri = params.uri
         setLoading(true)
-        return get('/api/notes/' + uri)
+
+        return findNoteByUri(uri)
             .then(note => {
-                setNote(note)
-                setEditing(false)
+              setNote(note)
+              setEditing(false)
             })
             .catch(err => setError("Impossible de charger la note : " + err))
             .finally(() => setLoading(false))

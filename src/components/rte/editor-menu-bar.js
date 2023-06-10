@@ -1,6 +1,6 @@
 import React from 'react'
 
-const MenuBar = ({ editor }) => {
+const EditorMenuBar = ({ editor }) => {
   if (!editor) {
     return null
   }
@@ -171,4 +171,4 @@ const MenuBar = ({ editor }) => {
   )
 }
 
-export default MenuBar;
+export default EditorMenuBar;
