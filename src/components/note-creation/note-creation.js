@@ -1,4 +1,4 @@
-import { ButtonGroup, Input, InputAdornment, InputLabel, Paper } from "@mui/material";
+import { ButtonGroup, Input, InputLabel, Paper } from "@mui/material";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Dialog from "@mui/material/Dialog/Dialog";
@@ -7,33 +7,26 @@ import DialogContent from "@mui/material/DialogContent/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
 import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
-import { Camera, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
 import { SourcesSelector } from "components/filter/sources-selector";
 import { TagsSelector } from "components/filter/tags-selector";
 import * as lodash from 'lodash';
 import * as React from "react";
 import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import { useDispatch } from 'react-redux';
-import rehypeRaw from "rehype-raw";
-import gfm from "remark-gfm";
 import { notifyError, notifyWarn } from '../../store/features/notificationsSlice';
 import "../../styles/forms.scss";
 import "../../styles/science.scss";
-import { post, upload, uploadFilesWithRequest } from "../../utils/http";
+import { upload, uploadFilesWithRequest } from "../../utils/http";
 import { getKey } from "../../utils/keys";
 import LoadingMask from "../loading-mask/loading-mask";
 import VideoList from "../medias/video-list";
 import { NoteFilesEdit } from "../note/note-files/note-files-edit";
 import SubsSearcher from "../subs/subs-searcher";
 import "./note-creation.scss";
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
 import { uspertNote } from "services/note-services";
-import { Color } from '@tiptap/extension-color'
-import ListItem from '@tiptap/extension-list-item'
-import TextStyle from '@tiptap/extension-text-style'
+import NoteContent from "components/note/note-content";
 
 const NoteCreation = ({note, creating, onDone}) => {
 
@@ -56,23 +49,6 @@ const NoteCreation = ({note, creating, onDone}) => {
 
   const _noteUri = (note || {}).uri
 
-  const editor = useEditor({
-    extensions: [
-      Color.configure({ types: [TextStyle.name, ListItem.name] }),
-      TextStyle.configure({ types: [ListItem.name] }),
-      StarterKit.configure({
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
-        },
-      }),
-    ],
-    content: '',
-  })
 
   useEffect(() => {
       const _note = (note || {})
@@ -82,13 +58,6 @@ const NoteCreation = ({note, creating, onDone}) => {
       setSelectedSubs((_note.subs || []).map(s => {
         return {...s, selected: true, key: getKey("subs") }
       }))
-      if(_note.valeurJson) {
-        editor.commands.setContent(_note.valeurJson)
-      } else if(_note.valeur) {
-        editor.commands.setContent(_note.valeur)
-      } else {
-        editor.commands.setContent('');
-      }
   }, [_noteUri]);
 
   function setSubsChanged(sub, fromSelectedList) {
@@ -137,10 +106,11 @@ const NoteCreation = ({note, creating, onDone}) => {
 
   async function handleSubmit(closeAfterSaving) {
     if(!saving) {
+      debugger
       setSaving(true)
       const request = {
         uri: noteUri,
-        valeurJson: editor.getJSON(),
+        valeurJson: 'pwet',
         tags: lodash.map(tags, t => t.uri),
         source: source ? source.uri : null,
         subs: (selectedSubs || []).map(s => ({name: s.name, from: s.from, to: s.to}))
@@ -381,9 +351,8 @@ const NoteCreation = ({note, creating, onDone}) => {
         <form onSubmit={() => handleSubmit(false)} className="form no-padding">
           <NoteFilesEdit note={note} onChange={fileChanged}/>
           <FormControl>
-            <InputLabel htmlFor="valeur-ne">Note</InputLabel>
             <Paper elevation={3} className="with-padding with-margin-top">
-              <EditorContent editor={editor} readOnly={displayMode}/>
+              <NoteContent note={note} readOnly={displayMode}></NoteContent>
             </Paper>
             {displayMode ?
               <ButtonGroup className="button-group centered with-margin-top">
@@ -397,30 +366,8 @@ const NoteCreation = ({note, creating, onDone}) => {
                 </IconButton>
               </ButtonGroup>
               :
-              <ButtonGroup className="button-group centered with-margin-top">
-                <IconButton
-                  className="block"
-                  onClick={() => setDisplayMode(true)}
-                  aria-label="Aperçu"
-                  component="span"
-                  size="large">
-                  <Visibility />
-                </IconButton>
-                <Button className="block" onClick={() => doSetToolbar("titles")}>Titres</Button>
-                <Button className="block" onClick={() => doSetToolbar('colours')}>Couleurs</Button>
-                <Button className="block" onClick={() => doSetToolbar('text')}>Texte</Button>
-                <Button className="block" onClick={() => doSetToolbar('maths')}>Maths</Button>
-                <Button className="block" onClick={() => doSetToolbar('greek')}>Grec</Button>
-              </ButtonGroup>
+              <></>
             }
-
-            <div className="with-margin-top with-margin-bottom">
-              {toolbar === 'colours' ? renderColours() : <></>}
-              {toolbar === 'titles' ? renderTitles() : <></>}
-              {toolbar === 'text' ? renderText() : <></>}
-              {toolbar === 'maths' ? renderMaths() : <></>}
-              {toolbar === 'greek' ? renderGreek() : <></>}
-            </div>
             <input type="file" id="picture" accept="image/*,video/*" onChange={parsePictureChanged} hidden={true}
                    ref={refInputFile}/>
 
