@@ -165,7 +165,7 @@ const Notes = () =>  {
           <Typography component="div" className={"note-text"} gutterBottom={true}>
             <NoteContent note={note} readOnly={true}></NoteContent>
           </Typography>
-          {note.source ? <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
+          {note.source ? <Typography variant="body2" color="textSecondary" component="div" className={"note-from"}>
             in {note.source.titre} de {note.source.auteur}
           </Typography> : <></>}
           <List className="list-horizontal-display">

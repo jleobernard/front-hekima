@@ -12,7 +12,7 @@ export function NoteDetail({note}) {
     <div>
       <NoteFilesDisplay note={note}/>
       {note.subs && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs}/> : <></>}
-      <Typography component="p" className={"note-text"} gutterBottom={true}>
+      <Typography component="div" className={"note-text"} gutterBottom={true}>
         <NoteContent note={note} readOnly={true}></NoteContent>
       </Typography>
       {note.source ? <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
