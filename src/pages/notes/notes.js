@@ -1,3 +1,4 @@
+import AddIcon from '@mui/icons-material/Add';
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -7,18 +8,15 @@ import Fab from "@mui/material/Fab";
 import List from '@mui/material/List';
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
-import AddIcon from '@mui/icons-material/Add';
 import * as lodash from 'lodash';
 import React, { useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from "react-router-dom";
-import rehypeRaw from 'rehype-raw';
-import gfm from 'remark-gfm';
 import Header from "../../components/header/Header";
 import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
 import NoteCreation from '../../components/note-creation/note-creation';
 import { NoteFilesDisplay } from "../../components/note/note-files/note-files-display";
+import { supabase } from '../../services/supabase-client';
 import {
   cancelNoteCreation, launchSearch, saveNote, selectCreatingNote, selectFilter, selectHasMoreNotes, selectNotes,
   selectNotesLoading, selectRaz, startNoteCreation
@@ -26,13 +24,7 @@ import {
 import { notifyInfo } from '../../store/features/notificationsSlice';
 import "../../styles/layout.scss";
 import "./notes.scss";
-import { supabase } from '../../services/supabase-client';
 
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { uspertNote } from "services/note-services";
-import { Color } from '@tiptap/extension-color'
-import TextStyle from '@tiptap/extension-text-style'
 import NoteContent from "components/note/note-content";
 
 
@@ -60,25 +52,7 @@ const Notes = () =>  {
   const raz = useSelector(selectRaz)
   const creating = useSelector(selectCreatingNote)
   const dispatch = useDispatch()
-  const DEFAULT_NOTES_COUNT = 4;
-
-  const editor = useEditor({
-    extensions: [
-      Color.configure({ types: [TextStyle.name, ListItem.name] }),
-      TextStyle.configure({ types: [ListItem.name] }),
-      StarterKit.configure({
-        bulletList: {
-          keepMarks: true,
-          keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
-        },
-        orderedList: {
-          keepMarks: true,
-          keepAttributes: false, // TODO : Making this as `false` becase marks are not preserved when I try to preserve attrs, awaiting a bit of help
-        },
-      }),
-    ],
-    content: '',
-  })
+  const DEFAULT_NOTES_COUNT = 1;
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {

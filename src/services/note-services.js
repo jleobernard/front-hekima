@@ -1,4 +1,6 @@
 import { supabase } from "./supabase-client"
+import { v4 as uuidv4 } from 'uuid';
+
 
 const re = RegExp('(^|[^#])#[^#]+?#[^#]','g')
 export function getNumberOfTitles(note) {
@@ -18,7 +20,45 @@ export async function searchNotes(filter) {
 }
 
 export async function uspertNote(note) {
-  
+  let uri = note.uri;
+  let noteModel;
+  if(uri) {
+    const {data} = await supabase.from("note").select().eq('uri', uri);
+    if(data && data.length > 0) {
+      noteModel = data[0]
+    }
+  } else {
+    uri = uuidv4()
+  }
+  if(noteModel) {
+    noteModel.source_id = null
+    await supabase.from('note_tag').delete().eq('note_id', noteModel.id)
+  } else {
+    noteModel.uri = uri
+  }
+  noteModel.value_json = note.valueJson
+  noteModel.mime_type = note.mimeType
+  noteModel.file_id = note.fileId
+  if(note.source) {
+    const {data} = await supabase.from("note_source").select('id').eq('uri', note.source)
+    if(data && data.length > 0) {
+      noteModel.source_id = data[0].id
+    }
+  }
+  // WIP continue here
+  if(note.tags) {
+    const { data } = await supabase.from("tag").select('id').in('uri', note.tags)
+    const { error } = await supabase.from("note_tag").insert({
+      {
+        note_id: ,
+        tag_id: 
+      }
+    })
+    if(data && data.length > 0) {
+      noteModel.source_id = data[0].id
+    }
+  }
+
   return {}
 }
 
@@ -33,11 +73,11 @@ export async function findNoteByUri(uri) {
   return noteView;
 }
 
-export async function notesToView(data) {
+export function notesToView(data) {
   return data.map(d => noteToView(d))
 }
 
-export async function noteToView(d) {
+export function noteToView(d) {
   if(d.note_source) {
     d.source = d.note_source 
   }

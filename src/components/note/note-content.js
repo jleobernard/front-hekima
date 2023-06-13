@@ -6,7 +6,21 @@ import TextStyle from '@tiptap/extension-text-style'
 import React from 'react';
 import EditorMenuBar from 'components/rte/editor-menu-bar';
 
-const NoteContent = ({note, readOnly}) => {
+const NoteContent = ({note, readOnly, onBlur}) => {
+  function handleOnBlur(event) {
+    if(onBlur) {
+      onBlur(editor.getJSON())
+    }
+  }
+  function getContent() {
+    let content;
+    if(note) {
+      content = note.valueJson || note.valeur;
+    } else {
+      content = ''
+    }
+    return content;
+  }
   const editor = useEditor({
     extensions: [
       Color.configure({ types: [TextStyle.name, ListItem.name] }),
@@ -22,12 +36,12 @@ const NoteContent = ({note, readOnly}) => {
         },
       }),
     ],
-    content: note.valeurJson ? note.valeurJson : note.valeur || '',
+    content: getContent(note),
     editable: !readOnly
   })
   return <div>
     {readOnly ? <></> : <EditorMenuBar editor={editor}></EditorMenuBar>}
-    <EditorContent editor={editor} readOnly={readOnly}/>
+    <EditorContent editor={editor} readOnly={readOnly} onBlur={e => handleOnBlur(e)}/>
   </div>
 }
 

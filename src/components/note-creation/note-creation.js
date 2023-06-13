@@ -45,6 +45,7 @@ const NoteCreation = ({note, creating, onDone}) => {
   const refInputFile = React.createRef()
   const refValeur = React.createRef()
   const [displayMode, setDisplayMode] = useState(false);
+  const [noteValueJson, setNoteValueJson] = useState(note && note.valueJson ? note.valueJson : '')
   const dispatch = useDispatch()
 
   const _noteUri = (note || {}).uri
@@ -110,7 +111,7 @@ const NoteCreation = ({note, creating, onDone}) => {
       setSaving(true)
       const request = {
         uri: noteUri,
-        valeurJson: 'pwet',
+        valueJson: noteValueJson,
         tags: lodash.map(tags, t => t.uri),
         source: source ? source.uri : null,
         subs: (selectedSubs || []).map(s => ({name: s.name, from: s.from, to: s.to}))
@@ -351,9 +352,7 @@ const NoteCreation = ({note, creating, onDone}) => {
         <form onSubmit={() => handleSubmit(false)} className="form no-padding">
           <NoteFilesEdit note={note} onChange={fileChanged}/>
           <FormControl>
-            <Paper elevation={3} className="with-padding with-margin-top">
-              <NoteContent note={note} readOnly={displayMode}></NoteContent>
-            </Paper>
+            <NoteContent note={note} readOnly={displayMode} onBlur={content => setNoteValueJson(content)}></NoteContent>
             {displayMode ?
               <ButtonGroup className="button-group centered with-margin-top">
                 <IconButton
