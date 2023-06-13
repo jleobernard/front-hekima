@@ -158,12 +158,11 @@ const Notes = () =>  {
   }
 
   function getListItem(note) {
-    return <li>
-      <Card className={"note-card"}>
+    return <Card className={"note-card"}>
         <NoteFilesDisplay note={note} />
         {note.subs  && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs} />: <></>}
         <CardContent onClick={() => navigateToNote(note)}>
-          <Typography component="p" className={"note-text"} gutterBottom={true}>
+          <Typography component="div" className={"note-text"} gutterBottom={true}>
             <NoteContent note={note} readOnly={true}></NoteContent>
           </Typography>
           {note.source ? <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
@@ -178,7 +177,6 @@ const Notes = () =>  {
           </List>
         </CardContent>
       </Card>
-    </li>
   }
 
   function seekNote(noteUri) {

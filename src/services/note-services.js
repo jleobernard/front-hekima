@@ -20,7 +20,7 @@ export async function searchNotes(filter) {
 }
 
 export async function uspertNote(note) {
-  // WIP - cannot see created note and error after saving
+  // WIP - cannot see tags in tag selector
   let uri = note.uri;
   let noteModel;
   if(uri) {
@@ -84,8 +84,8 @@ export function noteToView(d) {
   if(d.note_source) {
     d.source = d.note_source 
   }
-  if(d.valeur_json) {
-    d.valeurJson = d.valeur_json
+  if(d.value_json) {
+    d.valueJson = d.value_json
   }
   return d
 }
@@ -94,7 +94,9 @@ function createBaseSelect() {
   return supabase.from("note").select(`
     id,
       uri, valeur, mime_type, file_id, created_at, files, subs,
-      note_source(id, uri, titre, source_type, auteur)
+      value_json,
+      note_source(id, uri, titre, source_type, auteur),
+      tag(id, uri, valeur)
   `);
 }
 
