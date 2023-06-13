@@ -107,7 +107,6 @@ const NoteCreation = ({note, creating, onDone}) => {
 
   async function handleSubmit(closeAfterSaving) {
     if(!saving) {
-      debugger
       setSaving(true)
       const request = {
         uri: noteUri,

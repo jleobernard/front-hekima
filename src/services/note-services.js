@@ -20,6 +20,7 @@ export async function searchNotes(filter) {
 }
 
 export async function uspertNote(note) {
+  // WIP - cannot see created note and error after saving
   let uri = note.uri;
   let noteModel;
   if(uri) {
@@ -34,7 +35,7 @@ export async function uspertNote(note) {
     noteModel.source_id = null
     await supabase.from('note_tag').delete().eq('note_id', noteModel.id)
   } else {
-    noteModel.uri = uri
+    noteModel = {uri}
   }
   noteModel.value_json = note.valueJson
   noteModel.mime_type = note.mimeType
@@ -45,21 +46,23 @@ export async function uspertNote(note) {
       noteModel.source_id = data[0].id
     }
   }
-  // WIP continue here
+  if(noteModel.id) {
+    await supabase.from("note").update(noteModel).eq('id', noteModel.id)
+  } else {
+    const {data, error} = await supabase.from("note").insert(noteModel).select()
+    noteModel = data[0]
+  }
   if(note.tags) {
     const { data } = await supabase.from("tag").select('id').in('uri', note.tags)
-    const { error } = await supabase.from("note_tag").insert({
-      {
-        note_id: ,
-        tag_id: 
-      }
-    })
-    if(data && data.length > 0) {
-      noteModel.source_id = data[0].id
+    for(let tag of data) {
+      const { error } = await supabase.from("note_tag").insert({
+          note_id: noteModel.id,
+          tag_id: tag.id
+      })
     }
   }
-
-  return {}
+  const insertedNote = await findNoteByUri(noteModel.uri)
+  return insertedNote
 }
 
 export async function findNoteByUri(uri) {
