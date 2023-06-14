@@ -84,6 +84,9 @@ export function noteToView(d) {
     d.source = d.note_source 
     delete d.note_source
   }
+  if(d.valeur) {
+    d.valeur = d.valeur.replaceAll('\\n', '<br />')
+  }
   if(d.value_json) {
     d.valueJson = d.value_json
     delete d.value_json
@@ -110,5 +113,6 @@ function getNoteUrisByFilter(filter, queryBuilder) {
   if(filter.source) {
     queryBuilder.eq('source_id', supabase.from("source").select("id").eq('uri', filter.source))
   }
+  queryBuilder.order('created_at', {ascending: false})
   return queryBuilder;
 }
