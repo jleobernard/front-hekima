@@ -1,60 +1,46 @@
-import React, {useEffect, useState} from 'react';
-import {useLocation, useNavigate} from "react-router-dom";
-import {get, post} from "../../utils/http";
-import "../../styles/layout.scss";
+import Button from "@mui/material/Button";
+import ButtonGroup from "@mui/material/ButtonGroup";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField/TextField";
-import ButtonGroup from "@mui/material/ButtonGroup";
-import Button from "@mui/material/Button";
-import Toaster from "../../components/Toaster";
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from 'services/supabase-client';
+import { notifyError } from 'store/features/notificationsSlice';
 import LoadingMask from "../../components/loading-mask/loading-mask";
+import "../../styles/layout.scss";
 
 const Login = () => {
 
-  const history = useNavigate();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const q = new URLSearchParams(useLocation().search);
 
-  function doRedirect(response) {
+  function doRedirect() {
     const redirect = q.get('redirect')
     if (redirect && !redirect.startsWith("/login") && !redirect.startsWith("/api/login")) {
-      history.push(redirect)
+      navigate(redirect)
     } else {
-      history.push('/')
+      navigate('/')
     }
   }
 
-  useEffect(() => {
-    setLoading(true)
-    get('/api/authentication:status', {}, true)
-    .then(response => {
-      if(response.authenticated) {
-        doRedirect(response)
-      }
-    })
-    .catch(err => {
-      console.error(err)
-    })
-    .finally(() => {
-      setLoading(false)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if(!loading) {
       setLoading(true)
-      post('/api/login', {username: email, password}, false)
-      .then(response => {
-        doRedirect(response)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
-      .catch(err => {
-        setError("Impossible de se connecter")
-      }).finally(() => setLoading(false))
+      setLoading(false)
+      if(error) {
+        console.error(error)
+        notifyError("Impossible de se connecter")
+      } else {
+        doRedirect()
+      }
     }
   }
 
@@ -74,7 +60,6 @@ const Login = () => {
         </ButtonGroup>
       </form>
       <LoadingMask loading={loading}/>
-      <Toaster error={error}/>
     </div>
   );
 }

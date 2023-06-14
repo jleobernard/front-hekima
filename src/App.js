@@ -1,20 +1,15 @@
-import React, {useEffect} from 'react';
-import {BrowserRouter as Router, Navigate, Route, Routes} from "react-router-dom";
-import Notes from './pages/notes/notes';
+import React from 'react';
+import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import './App.css';
+import Toaster from "./components/Toaster";
 import Login from "./pages/login/login";
 import NoteView from "./pages/note-view/note-view";
-import {get} from "./utils/http";
+import Notes from './pages/notes/notes';
 import QuizzInit from "./pages/quizz/quizz-init";
 import QuizzRun from "./pages/quizz/quizz-run";
-import Toaster from "./components/Toaster";
-import { createClient } from "@supabase/supabase-js";
 
 
 function App() {
-  /*useEffect(() => {
-    setInterval(() => get("/api/user").catch(err => console.error(err)), 60 * 1000)
-  }, [])*/
   return (
     <div className="root">
       <div className="app-wrapper">

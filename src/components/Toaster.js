@@ -1,11 +1,11 @@
-import * as React from "react";
-import Snackbar from '@mui/material/Snackbar';
-import IconButton from "@mui/material/IconButton";
 import CloseIcon from '@mui/icons-material/Close';
-import {getNls} from "../utils/nls";
 import Alert from '@mui/material/Alert';
-import { useSelector, useDispatch } from 'react-redux';
+import IconButton from "@mui/material/IconButton";
+import Snackbar from '@mui/material/Snackbar';
+import * as React from "react";
+import { useSelector } from 'react-redux';
 import { selectLevel, selectMessage } from "../store/features/notificationsSlice";
+import { getNls } from "../utils/nls";
 
 function Toaster(props) {
   const [open, setOpen] = React.useState(false);
