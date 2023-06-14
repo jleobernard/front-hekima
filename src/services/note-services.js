@@ -20,7 +20,6 @@ export async function searchNotes(filter) {
 }
 
 export async function uspertNote(note) {
-  // WIP - cannot see tags in tag selector
   let uri = note.uri;
   let noteModel;
   if(uri) {
@@ -83,9 +82,15 @@ export function notesToView(data) {
 export function noteToView(d) {
   if(d.note_source) {
     d.source = d.note_source 
+    delete d.note_source
   }
   if(d.value_json) {
     d.valueJson = d.value_json
+    delete d.value_json
+  }
+  if(d.tag) {
+    d.tags = d.tag
+    delete d.tag
   }
   return d
 }
