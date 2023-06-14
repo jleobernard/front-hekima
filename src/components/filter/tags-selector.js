@@ -1,14 +1,13 @@
-import * as React from "react";
-import {useEffect, useMemo, useState} from "react";
-import * as lodash from "lodash";
-import {debounce} from "lodash";
-import {post} from "../../utils/http";
 import Autocomplete from '@mui/material/Autocomplete';
 import Chip from "@mui/material/Chip";
-import TextField from "@mui/material/TextField";
-import FormHelperText from "@mui/material/FormHelperText";
 import FormControl from "@mui/material/FormControl";
-import { searchTags } from "services/tags-service";
+import FormHelperText from "@mui/material/FormHelperText";
+import TextField from "@mui/material/TextField";
+import * as lodash from "lodash";
+import { debounce } from "lodash";
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { searchTags, upsertTag } from "services/tags-service";
 
 export function TagsSelector({className, onChange, allowCreation, title, tags}) {
   const [loading, setLoading] = useState(false)
@@ -35,7 +34,7 @@ export function TagsSelector({className, onChange, allowCreation, title, tags}) 
       const realTags = [...tags];
       lastElement.valeur = lastElement.inputValue;
       setLoading(true);
-      post('/api/tags', {valeur: lastElement.valeur})
+      upsertTag(lastElement.valeur)
       .then(insertedTag => {
         realTags[realTags.length - 1] = insertedTag;
         setTags(realTags);

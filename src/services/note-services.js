@@ -1,3 +1,4 @@
+import { supabaseNow } from "utils/date";
 import { supabase } from "./supabase-client"
 import { v4 as uuidv4 } from 'uuid';
 
@@ -20,6 +21,7 @@ export async function searchNotes(filter) {
 }
 
 export async function uspertNote(note) {
+  const now = supabaseNow()
   let uri = note.uri;
   let noteModel;
   if(uri) {
@@ -34,15 +36,16 @@ export async function uspertNote(note) {
     noteModel.source_id = null
     await supabase.from('note_tag').delete().eq('note_id', noteModel.id)
   } else {
-    noteModel = {uri}
+    noteModel = {uri, created_at: now}
   }
   noteModel.value_json = note.valueJson
   noteModel.mime_type = note.mimeType
   noteModel.file_id = note.fileId
   if(note.source) {
-    const {data} = await supabase.from("note_source").select('id').eq('uri', note.source)
-    if(data && data.length > 0) {
-      noteModel.source_id = data[0].id
+    const {data} = await supabase.from("note_source").select('id').eq('uri', note.source).single()
+    if(data) {
+      noteModel.source_id = data.id
+      await supabase.from('note_source').update({last_used: now}).eq('id', data.id)
     }
   }
   if(noteModel.id) {
@@ -58,6 +61,10 @@ export async function uspertNote(note) {
           note_id: noteModel.id,
           tag_id: tag.id
       })
+    }
+    const tagIds = data.map(t => t.id)
+    if(tagIds && tagIds.length > 0) {
+      await supabase.from("tag").update({last_used: now}).in('id', tagIds)
     }
   }
   const insertedNote = await findNoteByUri(noteModel.uri)

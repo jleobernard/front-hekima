@@ -1,11 +1,13 @@
 import { sanitize } from "utils/string"
 import { supabase } from "./supabase-client"
+import sha1 from 'js-sha1';
+import { supabaseNow } from "utils/date";
 
 export async function searchTags(q, offset, count) {
   let builder = supabase.from('tag').select()
   if(q) {
     const sanitizedSearch = sanitize(q)
-    builder = builder.contains('valeur_recherche', sanitizedSearch)
+    builder = builder.like('valeur_recherche', `%${sanitizedSearch}%`)
   }
   let realOffset = offset;
   let realCount = count;
@@ -22,4 +24,25 @@ export async function searchTags(q, offset, count) {
   const {data} = await builder;
   const sources = (data || []);
   return sources;
+}
+
+export async function upsertTag(valeur) {
+  const realValue = valeur.trim()
+  const uri = sha1(realValue)
+  const { data, error} = await supabase.from('tag').select().eq('uri', uri).maybeSingle()
+  if(data) {
+    console.warn('Tag ', valeur, ' already exists')
+    return data
+  }
+  const insertResponse = await supabase.from('tag').insert({
+    uri,
+    valeur,
+    valeur_recherche: sanitize(valeur),
+    last_used: supabaseNow()}).select()
+  if(insertResponse.error) {
+    console.error('Cannot insert tag', valeur, error)
+    throw insertResponse.error
+  } else {
+    return insertResponse.data[0]
+  }
 }
