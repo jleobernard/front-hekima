@@ -56,12 +56,13 @@ export async function uspertNote(note) {
   }
   if(note.tags) {
     const { data } = await supabase.from("tag").select('id').in('uri', note.tags)
-    for(let tag of data) {
-      const { error } = await supabase.from("note_tag").insert({
-          note_id: noteModel.id,
-          tag_id: tag.id
-      })
-    }
+    const noteTagsToUpsert = data.map(tag => {
+      return {
+        note_id: noteModel.id,
+        tag_id: tag.id
+      }
+    })
+    const { error } = await supabase.from("note_tag").insert(noteTagsToUpsert)
     const tagIds = data.map(t => t.id)
     if(tagIds && tagIds.length > 0) {
       await supabase.from("tag").update({last_used: now}).in('id', tagIds)

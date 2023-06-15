@@ -1,20 +1,19 @@
-import * as React from "react";
-import {useEffect, useMemo, useState} from "react";
-import * as lodash from "lodash";
-import {debounce} from "lodash";
-import {post} from "../../utils/http";
 import Autocomplete from '@mui/material/Autocomplete';
-import Chip from "@mui/material/Chip";
-import TextField from "@mui/material/TextField";
-import FormHelperText from "@mui/material/FormHelperText";
-import FormControl from "@mui/material/FormControl";
-import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
-import DialogContent from "@mui/material/DialogContent/DialogContent";
-import DialogActions from "@mui/material/DialogActions/DialogActions";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
 import Dialog from "@mui/material/Dialog/Dialog";
-import { searchSources } from "services/source-service";
+import DialogActions from "@mui/material/DialogActions/DialogActions";
+import DialogContent from "@mui/material/DialogContent/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import TextField from "@mui/material/TextField";
+import * as lodash from "lodash";
+import { debounce } from "lodash";
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { searchSources, upsertSource } from "services/source-service";
 
 export function SourcesSelector({className, onChange, allowCreation, sources, multiple}) {
   const [loading, setLoading] = useState(false)
@@ -65,7 +64,7 @@ export function SourcesSelector({className, onChange, allowCreation, sources, mu
   function doCreateNewSource() {
     if(!creatingSource) {
       setCreatingSource(true)
-      post('/api/sources', newSource)
+      upsertSource(newSource)
       .then(insertedSource => {
         closeSourceCreation()
         setSources(insertedSource)
