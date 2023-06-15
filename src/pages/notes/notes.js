@@ -52,7 +52,7 @@ const Notes = () =>  {
   const raz = useSelector(selectRaz)
   const creating = useSelector(selectCreatingNote)
   const dispatch = useDispatch()
-  const DEFAULT_NOTES_COUNT = 1;
+  const DEFAULT_NOTES_COUNT = 10;
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {
