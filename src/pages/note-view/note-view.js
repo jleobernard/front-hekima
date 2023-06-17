@@ -1,26 +1,25 @@
-import React, {useEffect, useState} from 'react';
-import {httpDelete} from "../../utils/http";
-import "./note-view.scss";
-import "../../styles/layout.scss";
-import Header from "../../components/header/Header";
-import Toaster from "../../components/Toaster";
+import { DeleteForever } from "@mui/icons-material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
-import LoadingMask from "../../components/loading-mask/loading-mask";
-import {ButtonGroup} from "@mui/material";
-import IconButton from "@mui/material/IconButton";
-import {DeleteForever} from "@mui/icons-material";
-import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
-import DialogContent from "@mui/material/DialogContent/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogActions from "@mui/material/DialogActions/DialogActions";
+import { ButtonGroup } from "@mui/material";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
 import Dialog from "@mui/material/Dialog/Dialog";
+import DialogActions from "@mui/material/DialogActions/DialogActions";
+import DialogContent from "@mui/material/DialogContent/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
+import IconButton from "@mui/material/IconButton";
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { deleteNote, findNoteByUri } from 'services/note-services';
+import Toaster from "../../components/Toaster";
+import Header from "../../components/header/Header";
+import LoadingMask from "../../components/loading-mask/loading-mask";
 import NoteCreation from "../../components/note-creation/note-creation";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import {NoteDetail} from "../../components/note/note-detail";
-import {useLocation, useNavigate, useParams} from "react-router-dom";
-import { findNoteByUri } from 'services/note-services';
+import { NoteDetail } from "../../components/note/note-detail";
+import "../../styles/layout.scss";
+import "./note-view.scss";
 
 
 const NoteView = () => {
@@ -56,7 +55,7 @@ const NoteView = () => {
     function doDelete() {
         setDeleting(true)
         setAskDelete(false)
-        httpDelete('/api/notes/' + note.uri)
+        deleteNote(note.uri)
             .then(() => {
                 setError("La note a bien été supprimée");
                 setErrorSev("info")

@@ -1,6 +1,6 @@
 import { supabaseNow } from "utils/date";
-import { supabase } from "./supabase-client"
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "./supabase-client";
 
 
 const re = RegExp('(^|[^#])#[^#]+?#[^#]','g')
@@ -18,6 +18,10 @@ export async function searchNotes(filter) {
   }
   const {data} = await queryBuilder.range(filter.offset, filter.offset + filter.count - 1)
   return notesToView(data)
+}
+
+export async function deleteNote(noteUri) {
+  await supabase.from('note').delete(1).eq('uri', noteUri)
 }
 
 export async function uspertNote(note) {
