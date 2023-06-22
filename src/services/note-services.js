@@ -12,12 +12,33 @@ export async function searchNotes(filter) {
   let queryBuilder = createBaseSelect()
   if(filter.q) {
     // NLP Search
-    console.warn("not yet implemented")
+    queryBuilder = await getNoteUrisByNLQuery(filter.q, queryBuilder)
   } else {
     queryBuilder = getNoteUrisByFilter(filter, queryBuilder)
   }
   const {data} = await queryBuilder.range(filter.offset, filter.offset + filter.count - 1)
   return notesToView(data)
+}
+async function getNoteUrisByNLQuery(q, queryBuilder) {
+  const model = await window.use.load()
+  // Embed an array of sentences.
+  const sentences = [q];
+  const embeddings = await model.embed(sentences)
+  // `embeddings` is a 2D tensor consisting of the 512-dimensional embeddings for each sentence.
+  // So in this example `embeddings` has the shape [2, 512].
+  const embeddingsArray = await embeddings.array()
+  const qEmbedding = embeddingsArray[0]
+  const { error: matchError, data: noteIds } = await supabase.rpc(
+    'match_note_embeddings',
+    {
+      embedding: qEmbedding,
+      match_threshold: -0.75,
+      match_count: 10
+    }
+  );
+  console.error(matchError)
+  console.log(noteIds)
+  return queryBuilder.in('id', noteIds)
 }
 
 export async function deleteNote(noteUri) {
@@ -73,7 +94,25 @@ export async function uspertNote(note) {
     }
   }
   const insertedNote = await findNoteByUri(noteModel.uri)
+  window.use.load().then(async model => {
+    // Embed an array of sentences.
+    const sentences = getSentencesFromNote(noteModel.value_json, []);
+    console.log("Sentences are", sentences)
+    const embeddings = await model.embed(sentences)
+    // `embeddings` is a 2D tensor consisting of the 512-dimensional embeddings for each sentence.
+    const embeddingsArray = await embeddings.array()
+    const embeddingData = embeddingsArray.map(embedding => {
+      return {note_id: insertedNote.id, embedding: embedding}
+    })
+    await supabase.from('note_embedding').delete().eq('note_id', insertedNote.id)
+    await supabase.from('note_embedding')
+    .insert(embeddingData)
+  });
   return insertedNote
+}
+
+function normalize(d) {
+  return window.tf.div(d, window.tf.norm(d).dataSync()[0]).arraySync()
 }
 
 export async function findNoteByUri(uri) {
@@ -127,4 +166,35 @@ function getNoteUrisByFilter(filter, queryBuilder) {
   }
   queryBuilder.order('created_at', {ascending: false})
   return queryBuilder;
+}
+
+function getSentencesFromNote(valueJson, sentences) {
+  const my_type = valueJson['type']
+  if (valueJson.content) {
+      if (my_type === 'heading' || my_type === 'paragraph') {
+          let sentence = ''
+          const content = valueJson.content
+          for(let child of content) {
+            const child_type = child.type
+            if (child_type === 'text') {
+                sentence += child['text']
+            } else if (child_type == 'hardBreak') {
+                sentence += '.'
+            }
+          }
+          if (sentence.length > 0) {
+            for(let s of sentence.split('.')) {
+              if(s.length > 0) {
+                sentences.push(s)
+              }
+            }
+          }
+      } else {
+        const content = valueJson['content']
+        for(let child of content) {
+          sentences = getSentencesFromNote(child, sentences)
+        }
+      }
+  }
+  return sentences
 }

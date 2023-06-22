@@ -11,7 +11,7 @@ import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import EditorMenuBar from 'components/rte/editor-menu-bar';
 import './note-content.scss';
 
