@@ -135,8 +135,11 @@ export function noteToView(d) {
     d.source = d.note_source 
     delete d.note_source
   }
-  if(d.valeur) {
+  if(d.valeur && !d.value_json) {
     d.valeur = d.valeur.replaceAll('\\n', '<br />')
+    .replaceAll(/###(.+?)###/g, '<h1>$1</h1>')
+    .replaceAll(/###(.+?)###/g, '<h2>$1</h2>')
+    .replaceAll(/#(.+?)#/g, '<h1>$1</h1>')
   }
   if(d.value_json) {
     d.valueJson = d.value_json
@@ -178,7 +181,7 @@ function getSentencesFromNote(valueJson, sentences) {
             const child_type = child.type
             if (child_type === 'text') {
                 sentence += child['text']
-            } else if (child_type == 'hardBreak') {
+            } else if (child_type === 'hardBreak') {
                 sentence += '.'
             }
           }
