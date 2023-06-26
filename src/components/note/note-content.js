@@ -1,19 +1,20 @@
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
 import { Color } from '@tiptap/extension-color'
-import ListItem from '@tiptap/extension-list-item'
-import TextStyle from '@tiptap/extension-text-style'
 import Document from '@tiptap/extension-document'
+import Image from '@tiptap/extension-image'
+import ListItem from '@tiptap/extension-list-item'
 import Paragraph from '@tiptap/extension-paragraph'
-import Text from '@tiptap/extension-text'
 import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
+import Text from '@tiptap/extension-text'
+import TextStyle from '@tiptap/extension-text-style'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
 
-import React, { useEffect } from 'react';
-import EditorMenuBar from 'components/rte/editor-menu-bar';
-import './note-content.scss';
+import EditorMenuBar from 'components/rte/editor-menu-bar'
+import React from 'react'
+import './note-content.scss'
 
 const NoteContent = ({note, readOnly, onBlur}) => {
   function handleOnBlur(event) {
@@ -30,6 +31,7 @@ const NoteContent = ({note, readOnly, onBlur}) => {
     }
     return content;
   }
+
   const editor = useEditor({
     extensions: [
       Document, Paragraph, Text, TextStyle,// Color,
@@ -51,6 +53,9 @@ const NoteContent = ({note, readOnly, onBlur}) => {
       TableRow,
       TableHeader,
       TableCell,
+      Image.configure({
+        inline: true,
+      })
     ],
     content: getContent(note),
     editable: !readOnly

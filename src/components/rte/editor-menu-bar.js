@@ -1,21 +1,79 @@
-import React from 'react'
-import './editor-menu-bar.scss'
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import CodeIcon from '@mui/icons-material/Code';
+import DeveloperModeIcon from '@mui/icons-material/DeveloperMode';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
-import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
-import CodeIcon from '@mui/icons-material/Code';
-import TitleIcon from '@mui/icons-material/Title';
-import TableChartIcon from '@mui/icons-material/TableChart';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
-import DeveloperModeIcon from '@mui/icons-material/DeveloperMode';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
-import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
+import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import TitleIcon from '@mui/icons-material/Title';
+import UndoIcon from '@mui/icons-material/Undo';
+import React, { useRef } from 'react';
+import './editor-menu-bar.scss';
 
 const EditorMenuBar = ({ editor }) => {
   const [secondaryBar, setSecondaryBar] = React.useState('')
+  const refInputFile = useRef(null)
+  
+  function pictureChanged() {
+    const file = document.getElementById('picture');
+    const targetFile = file.files[0]
+    if (!targetFile) {
+      console.error("Sélectionnez un fichier");
+      return;
+    }
+    const fileName = targetFile.name;
+    const fileType = targetFile.type;
+    fetch(process.env.REACT_APP_URL_SIGNER_URL,{
+      method: "POST",
+      redirect: 'manual',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({fileName, fileType})
+    }).then(response => {
+      if(response.ok) {
+        response.json().then(signResponse => {
+          const {status, url: urls} = signResponse
+          if(status === 'ok' && urls && urls.length > 0) {
+            const url = urls[0]
+            const reader = new FileReader();
+            reader.addEventListener("load", async (event) => {
+              const bytes = event.target.result;
+              fetch(url, {
+                method: "PUT",
+                redirect: 'manual',
+                headers: {
+                  'Content-Type': fileType
+                },
+                body: bytes
+              }).then(response => {
+                console.log(response)
+                if(response.ok) {
+                  const imageUploadUrl = new URL(url)
+                  const imageUrl = process.env.REACT_APP_GCS_IMAGE_ORIGIN + imageUploadUrl.pathname
+                  editor.chain().focus().setImage({ src: imageUrl }).run()
+                } else {
+                  console.error('Cannot upload to GCS')
+                  const gcsError = response.text()
+                  console.error(gcsError);
+                }
+              }).catch(err => console.error("cannot upload file", err))
+            });
+            reader.readAsArrayBuffer(targetFile);
+          } else {
+            console.error("ko from signer", signResponse)
+          }
+        }).catch(err => console.error("not json", err))
+      } else {
+        console.error("signed url response ko", response)
+      }
+    }).catch(err => {
+      console.error("Cannot get signed url")
+    })
+  }
   
   function toggleSecondaryBar(mode) {
     if(secondaryBar === mode) {
@@ -24,6 +82,7 @@ const EditorMenuBar = ({ editor }) => {
       setSecondaryBar(mode)
     }
   }
+
 
   if (!editor) {
     return null
@@ -136,6 +195,7 @@ const EditorMenuBar = ({ editor }) => {
       >
       <RedoIcon  fontSize='small' />
       </button>
+      <button type="button" onClick={() => refInputFile.current.click()}><AddPhotoAlternateIcon  fontSize='small'/></button>
       <input className='color-button'
         type="color"
         onInput={event => editor.chain().focus().setColor(event.target.value).run()}
@@ -249,6 +309,7 @@ const EditorMenuBar = ({ editor }) => {
       <div className="editor-button-bar secondary-editor-button-bar">
         {renderSecondaryBar()}
       </div> : <></>}
+      <input type="file" id="picture" accept="image/*,video/*" onChange={pictureChanged} hidden={true} ref={refInputFile}/>
       
     </div>
   )
