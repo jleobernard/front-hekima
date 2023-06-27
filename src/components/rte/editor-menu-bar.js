@@ -14,6 +14,7 @@ import TitleIcon from '@mui/icons-material/Title';
 import UndoIcon from '@mui/icons-material/Undo';
 import React, { useRef } from 'react';
 import './editor-menu-bar.scss';
+import { notifyError, notifyInfo } from 'store/features/notificationsSlice';
 
 const EditorMenuBar = ({ editor }) => {
   const [secondaryBar, setSecondaryBar] = React.useState('')
@@ -33,7 +34,7 @@ const EditorMenuBar = ({ editor }) => {
       redirect: 'manual',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({fileName, fileType})
-    }).then(response => {
+    }).then(async response => {
       if(response.ok) {
         response.json().then(signResponse => {
           const {status, url: urls} = signResponse
@@ -46,32 +47,33 @@ const EditorMenuBar = ({ editor }) => {
                 method: "PUT",
                 redirect: 'manual',
                 headers: {
-                  'Content-Type': fileType
+                  'Content-Type': fileType,
+                  'Cache-Control': 'private, max-age=31536000'
                 },
                 body: bytes
-              }).then(response => {
-                console.log(response)
+              }).then(async response => {
                 if(response.ok) {
                   const imageUploadUrl = new URL(url)
                   const imageUrl = process.env.REACT_APP_GCS_IMAGE_ORIGIN + imageUploadUrl.pathname
+                  notifyInfo('Image téléversée')
                   editor.chain().focus().setImage({ src: imageUrl }).run()
                 } else {
-                  console.error('Cannot upload to GCS')
-                  const gcsError = response.text()
-                  console.error(gcsError);
+                  notifyError('Erreur lors de l\'import dans GCS')
+                  const gcsError = await response.text()
+                  notifyError(`Erreur lors de l\'import dans GCS : ${gcsError}`)
                 }
-              }).catch(err => console.error("cannot upload file", err))
+              }).catch(err => notifyError(`Impossible de lire le fichier ${err}`))
             });
             reader.readAsArrayBuffer(targetFile);
           } else {
-            console.error("ko from signer", signResponse)
+            notifyError(`Impossible de signer l'import ${signResponse}`)
           }
-        }).catch(err => console.error("not json", err))
+        }).catch(err => notifyError(`Réponse non JSON ${err}`))
       } else {
-        console.error("signed url response ko", response)
+        notifyError(`Impossible de signer l'import ${response}`)
       }
     }).catch(err => {
-      console.error("Cannot get signed url")
+      notifyError(`Impossible de signer l'import ${err}`)
     })
   }
   
