@@ -303,7 +303,7 @@ const EditorMenuBar = ({ editor }) => {
   }
 
   return (
-    <div>
+    <div className="editor-menu-bar">
       <div className="editor-button-bar main-editor-button-bar">
         {renderMainBar()}
       </div>
