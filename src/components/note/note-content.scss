@@ -4,4 +4,12 @@
         border: 1px solid #1976d2;
         border-radius: 3px;
     }
+    img {
+        height: auto;
+        max-width: 100%;
+    
+        &.ProseMirror-selectednode {
+          outline: 3px solid #68cef8;
+        }
+      }
 }
