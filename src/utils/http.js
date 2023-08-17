@@ -5,11 +5,11 @@ const deltaForExpiration = 0;
 const rootUrl = process.env.REACT_APP_API_ROOT_URL ? process.env.REACT_APP_API_ROOT_URL : '';
 
 function goToLoginOrRejectIfAlreadyOnLogin(reject) {
-  if(window.location.pathname === '/login') {
+  //if(window.location.pathname === '/login') {
     reject()
-  } else {
+  /*} else {
     window.location.href = process.env.PUBLIC_URL + '/login';
-  }
+  }*/
 }
 export const refreshToken = (force = false) => {
   return new Promise((resolve, reject) => {
@@ -130,11 +130,11 @@ const exchange = (url, body, accessToken, method = 'POST') => {
       } else {
         if(response.status === 401) {
           goToLoginOrRejectIfAlreadyOnLogin(reject);
-          if(loggingIn || window.location.pathname === '/login') {
+          //if(loggingIn || window.location.pathname === '/login') {
             reject(response)
-          } else {
+          /*} else {
             window.location.href = '/login?redirect=' + encodeURIComponent(document.location.pathname+document.location.search);
-          }
+          }*/
         } else {
           response.json().then(json => reject(json)).catch(() => reject(response));
         }

@@ -1,33 +1,32 @@
-import { ButtonGroup, Input, InputAdornment, InputLabel, Paper } from "@material-ui/core";
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress";
-import Dialog from "@material-ui/core/Dialog/Dialog";
-import DialogActions from "@material-ui/core/DialogActions";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
-import FormControl from "@material-ui/core/FormControl";
-import IconButton from "@material-ui/core/IconButton";
-import { Camera, Visibility, VisibilityOff } from "@material-ui/icons";
-import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
+import { ButtonGroup, Input, InputLabel, Paper } from "@mui/material";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
+import FormControl from "@mui/material/FormControl";
+import IconButton from "@mui/material/IconButton";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
 import { SourcesSelector } from "components/filter/sources-selector";
 import { TagsSelector } from "components/filter/tags-selector";
 import * as lodash from 'lodash';
 import * as React from "react";
 import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import { useDispatch } from 'react-redux';
-import rehypeRaw from "rehype-raw";
-import gfm from "remark-gfm";
 import { notifyError, notifyWarn } from '../../store/features/notificationsSlice';
 import "../../styles/forms.scss";
 import "../../styles/science.scss";
-import { post, upload, uploadFilesWithRequest } from "../../utils/http";
+import { upload, uploadFilesWithRequest } from "../../utils/http";
 import { getKey } from "../../utils/keys";
 import LoadingMask from "../loading-mask/loading-mask";
 import VideoList from "../medias/video-list";
 import { NoteFilesEdit } from "../note/note-files/note-files-edit";
 import SubsSearcher from "../subs/subs-searcher";
 import "./note-creation.scss";
+import { uspertNote } from "services/note-services";
+import NoteContent from "components/note/note-content";
 
 const NoteCreation = ({note, creating, onDone}) => {
 
@@ -46,13 +45,15 @@ const NoteCreation = ({note, creating, onDone}) => {
   const refInputFile = React.createRef()
   const refValeur = React.createRef()
   const [displayMode, setDisplayMode] = useState(false);
+  const [noteValueJson, setNoteValueJson] = useState(note && note.valueJson ? note.valueJson : '')
   const dispatch = useDispatch()
 
   const _noteUri = (note || {}).uri
+
+
   useEffect(() => {
       const _note = (note || {})
       setNoteUri(_note.uri)
-      setValeur(_note.valeur)
       setSource({...(_note.source || {}) })
       setTags([...(_note.tags || [])])
       setSelectedSubs((_note.subs || []).map(s => {
@@ -104,17 +105,17 @@ const NoteCreation = ({note, creating, onDone}) => {
     return {request, files};
   }
 
-  function handleSubmit(closeAfterSaving) {
+  async function handleSubmit(closeAfterSaving) {
     if(!saving) {
       setSaving(true)
       const request = {
         uri: noteUri,
-        valeur: valeur,
+        valueJson: noteValueJson,
         tags: lodash.map(tags, t => t.uri),
         source: source ? source.uri : null,
         subs: (selectedSubs || []).map(s => ({name: s.name, from: s.from, to: s.to}))
       };
-      post('/api/notes', request).then(saved => {
+      uspertNote(request).then(saved => {
         if(hasImageChanges()) {
           const metadata = getUploadFilesRequest(saved)
           uploadFilesWithRequest('/api/notes/'+saved.uri+'/files', metadata.request, metadata.files)
@@ -245,12 +246,18 @@ const NoteCreation = ({note, creating, onDone}) => {
     return (
       <ButtonGroup className="button-group centered with-margin-top">
         {colors.map(color =>
-          <IconButton style={{color}} aria-label={color} key={color} component="span" onClick={() => addColorTag(color)}>
+          <IconButton
+            style={{color}}
+            aria-label={color}
+            key={color}
+            component="span"
+            onClick={() => addColorTag(color)}
+            size="large">
             <FiberManualRecordRoundedIcon />
           </IconButton>
         )}
       </ButtonGroup>
-    )
+    );
   }
 
   function renderTitles() {
@@ -310,144 +317,114 @@ const NoteCreation = ({note, creating, onDone}) => {
       <div>
         <ButtonGroup className="button-group centered" key="lowercase">
           {lower.map(letter =>
-            <IconButton key={"greek-" + letter} component="span" onClick={() => addSingle(letter)}>
+            <IconButton
+              key={"greek-" + letter}
+              component="span"
+              onClick={() => addSingle(letter)}
+              size="large">
               <span>{letter}</span>
             </IconButton>
           )}
         </ButtonGroup>
         <ButtonGroup className="button-group centered" key="uppercase">
           {upper.map(letter =>
-            <IconButton key={"greek-" + letter} component="span" onClick={() => addSingle(letter)}>
+            <IconButton
+              key={"greek-" + letter}
+              component="span"
+              onClick={() => addSingle(letter)}
+              size="large">
               <span>{letter}</span>
             </IconButton>
           )}
         </ButtonGroup>
       </div>
-    )
+    );
   }
 
-  return (
-    <>
-      <Dialog open={creating || !!note} key="main-dialog"
-              onClose={() => handleClose(null, true)}
-              fullScreen={true}
-              aria-labelledby="creation-dialog-title">
-        <DialogTitle id="creation-dialog-title">{noteUri ? 'Modification' : 'Nouvelle note'}</DialogTitle>
-        <DialogContent>
-          <form onSubmit={() => handleSubmit(false)} className="form no-padding">
-            <NoteFilesEdit note={note} onChange={fileChanged}/>
-            <FormControl>
-              <InputLabel htmlFor="valeur-ne">Note</InputLabel>
-              {displayMode ?
-                <Paper elevation={3} className="with-padding with-margin-top">
-                  <ReactMarkdown className={"scientific-notation"} remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={valeur}/>
-                </Paper> :
-                <Input
-                  id="valeur-ne"
-                  required autoFocus={true}
-                  value={valeur}
-                  ref={refValeur}
-                  multiline rows={3} rowsMax={25} variant="outlined"
-                  onChange={valueChanged}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="analyse image"
-                        onClick={() => refInputFile.current.click()}
-                      >
-                        {parsing ? <CircularProgress/> : <Camera/>}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                />
-              }
+  return <>
+    <Dialog open={creating || !!note} key="main-dialog"
+            onClose={() => handleClose(null, true)}
+            fullScreen={true}
+            aria-labelledby="creation-dialog-title">
+      <DialogTitle id="creation-dialog-title">{noteUri ? 'Modification' : 'Nouvelle note'}</DialogTitle>
+      <DialogContent>
+        <form onSubmit={() => handleSubmit(false)} className="form no-padding">
+          <NoteFilesEdit note={note} onChange={fileChanged}/>
+          <FormControl>
+            <NoteContent note={note} readOnly={displayMode} onBlur={content => setNoteValueJson(content)}></NoteContent>
+            {displayMode ?
+              <ButtonGroup className="button-group centered with-margin-top">
+                <IconButton
+                  className="block"
+                  onClick={() => setDisplayMode(false)}
+                  aria-label="Édition"
+                  component="span"
+                  size="large">
+                  <VisibilityOff />
+                </IconButton>
+              </ButtonGroup>
+              :
+              <></>
+            }
+            <input type="file" id="picture" accept="image/*,video/*" onChange={parsePictureChanged} hidden={true}
+                   ref={refInputFile}/>
 
-              {displayMode ?
-                <ButtonGroup className="button-group centered with-margin-top">
-                  <IconButton className="block" onClick={() => setDisplayMode(false)} aria-label="Édition" component="span">
-                    <VisibilityOff />
-                  </IconButton>
-                </ButtonGroup>
-                :
-                <ButtonGroup className="button-group centered with-margin-top">
-                  <IconButton className="block" onClick={() => setDisplayMode(true)} aria-label="Aperçu" component="span">
-                    <Visibility />
-                  </IconButton>
-                  <Button className="block" onClick={() => doSetToolbar("titles")}>Titres</Button>
-                  <Button className="block" onClick={() => doSetToolbar('colours')}>Couleurs</Button>
-                  <Button className="block" onClick={() => doSetToolbar('text')}>Texte</Button>
-                  <Button className="block" onClick={() => doSetToolbar('maths')}>Maths</Button>
-                  <Button className="block" onClick={() => doSetToolbar('greek')}>Grec</Button>
-                </ButtonGroup>
-              }
+          </FormControl>
+          <div className="flex-column">
+            <SourcesSelector allowCreation={true} onChange={source => setSource(source)} sources={source} multiple={false}/>
+            <TagsSelector allowCreation={true} onChange={tags => setTags(tags)} tags={tags}/>
+          </div>
 
-              <div className="with-margin-top with-margin-bottom">
-                {toolbar === 'colours' ? renderColours() : <></>}
-                {toolbar === 'titles' ? renderTitles() : <></>}
-                {toolbar === 'text' ? renderText() : <></>}
-                {toolbar === 'maths' ? renderMaths() : <></>}
-                {toolbar === 'greek' ? renderGreek() : <></>}
-              </div>
-              <input type="file" id="picture" accept="image/*,video/*" onChange={parsePictureChanged} hidden={true}
-                     ref={refInputFile}/>
-
-            </FormControl>
-            <div className="flex-column">
-              <SourcesSelector allowCreation={true} onChange={source => setSource(source)} sources={source} multiple={false}/>
-              <TagsSelector allowCreation={true} onChange={tags => setTags(tags)} tags={tags}/>
-            </div>
-
-            <VideoList className="with-margin-top" key={"selected-subs"} title={""} videos={selectedSubs}
-                       editable={true} onChange={(sub) => setSubsChanged(sub, true)} withTexts={false}/>
-            <SubsSearcher className={"with-margin-top with-margin-bottom"}
-                          onVideoSelected={sub => setSubsChanged(sub, false)}/>
-          </form>
-        </DialogContent>
-        <DialogActions className="bottom-button-bar">
-          <ButtonGroup className="button-group centered">
-            <Button onClick={() => handleClose(null,true)} color="primary">
-              Fermer
-            </Button>
-            <Button onClick={_ => handleSubmit(false)} color="primary">
-              Sauvegarder {saving ? <CircularProgress /> : ''}
-            </Button>
-            <Button onClick={_ => handleSubmit(true)} color="primary">
-              Sauvegarder et fermer{saving ? <CircularProgress /> : ''}
-            </Button>
-          </ButtonGroup>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={parsedResult} key="parsed-result"
-              onClose={() => setParsedResult(null)}
-              fullScreen={true}
-              aria-labelledby="parsed-result-dialog-title">
-        <DialogTitle id="parsed-result-dialog-title">Résultat de l'analyse</DialogTitle>
-        <DialogContent>
-          <form onSubmit={addParsedResult} className="form">
-            <FormControl>
-              <InputLabel htmlFor="parsed-value">Texte analysé</InputLabel>
-              <Input
-                id="parsed-value"
-                required autoFocus={true}
-                value={parsedResult}
-                multiline rows={3} rowsMax={25} variant="outlined"
-                onChange={parsedResultChanged}
-              />
-            </FormControl>
-          </form>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setParsedResult(null)} color="primary">
+          <VideoList className="with-margin-top" key={"selected-subs"} title={""} videos={selectedSubs}
+                     editable={true} onChange={(sub) => setSubsChanged(sub, true)} withTexts={false}/>
+          <SubsSearcher className={"with-margin-top with-margin-bottom"}
+                        onVideoSelected={sub => setSubsChanged(sub, false)}/>
+        </form>
+      </DialogContent>
+      <DialogActions className="bottom-button-bar">
+        <ButtonGroup className="button-group centered">
+          <Button onClick={() => handleClose(null,true)} color="primary">
             Fermer
           </Button>
-          <Button onClick={addParsedResult} color="primary">
-            Ajouter
+          <Button onClick={_ => handleSubmit(false)} color="primary">
+            Sauvegarder {saving ? <CircularProgress /> : ''}
           </Button>
-        </DialogActions>
-      </Dialog>
-      <LoadingMask loading={loading || saving}/>
-    </>
-  )
+          <Button onClick={_ => handleSubmit(true)} color="primary">
+            Sauvegarder et fermer{saving ? <CircularProgress /> : ''}
+          </Button>
+        </ButtonGroup>
+      </DialogActions>
+    </Dialog>
+    <Dialog open={parsedResult} key="parsed-result"
+            onClose={() => setParsedResult(null)}
+            fullScreen={true}
+            aria-labelledby="parsed-result-dialog-title">
+      <DialogTitle id="parsed-result-dialog-title">Résultat de l'analyse</DialogTitle>
+      <DialogContent>
+        <form onSubmit={addParsedResult} className="form">
+          <FormControl>
+            <InputLabel htmlFor="parsed-value">Texte analysé</InputLabel>
+            <Input
+              id="parsed-value"
+              required autoFocus={true}
+              value={parsedResult}
+              multiline rows={3} rowsMax={25} variant="outlined"
+              onChange={parsedResultChanged}
+            />
+          </FormControl>
+        </form>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setParsedResult(null)} color="primary">
+          Fermer
+        </Button>
+        <Button onClick={addParsedResult} color="primary">
+          Ajouter
+        </Button>
+      </DialogActions>
+    </Dialog>
+    <LoadingMask loading={loading || saving}/>
+  </>;
 }
 
 export default NoteCreation;

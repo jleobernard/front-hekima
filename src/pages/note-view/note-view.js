@@ -1,25 +1,25 @@
-import React, {useEffect, useState} from 'react';
-import {get, httpDelete} from "../../utils/http";
-import "./note-view.scss";
-import "../../styles/layout.scss";
-import Header from "../../components/header/Header";
+import { DeleteForever } from "@mui/icons-material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import { ButtonGroup } from "@mui/material";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
+import Dialog from "@mui/material/Dialog/Dialog";
+import DialogActions from "@mui/material/DialogActions/DialogActions";
+import DialogContent from "@mui/material/DialogContent/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
+import IconButton from "@mui/material/IconButton";
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { deleteNote, findNoteByUri } from 'services/note-services';
 import Toaster from "../../components/Toaster";
-import EditIcon from "@material-ui/icons/Edit";
+import Header from "../../components/header/Header";
 import LoadingMask from "../../components/loading-mask/loading-mask";
-import {ButtonGroup} from "@material-ui/core";
-import IconButton from "@material-ui/core/IconButton";
-import {DeleteForever} from "@material-ui/icons";
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
-import DialogContentText from "@material-ui/core/DialogContentText";
-import DialogActions from "@material-ui/core/DialogActions/DialogActions";
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
-import Dialog from "@material-ui/core/Dialog/Dialog";
 import NoteCreation from "../../components/note-creation/note-creation";
-import ArrowBackIcon from "@material-ui/icons/ArrowBack";
-import {NoteDetail} from "../../components/note/note-detail";
-import {useLocation, useNavigate, useParams} from "react-router-dom";
+import { NoteDetail } from "../../components/note/note-detail";
+import "../../styles/layout.scss";
+import "./note-view.scss";
 
 
 const NoteView = () => {
@@ -42,10 +42,11 @@ const NoteView = () => {
     function load() {
         const uri = params.uri
         setLoading(true)
-        return get('/api/notes/' + uri)
+
+        return findNoteByUri(uri)
             .then(note => {
-                setNote(note)
-                setEditing(false)
+              setNote(note)
+              setEditing(false)
             })
             .catch(err => setError("Impossible de charger la note : " + err))
             .finally(() => setLoading(false))
@@ -54,7 +55,7 @@ const NoteView = () => {
     function doDelete() {
         setDeleting(true)
         setAskDelete(false)
-        httpDelete('/api/notes/' + note.uri)
+        deleteNote(note.uri)
             .then(() => {
                 setError("La note a bien été supprimée");
                 setErrorSev("info")
@@ -87,17 +88,18 @@ const NoteView = () => {
             <div>
                 <NoteDetail note={note} />
                 <ButtonGroup className="button-group centered with-margin-top spread bottom coloured">
-                    <IconButton type='submit' color="primary"
-                                onClick={() => goBack()}>
+                    <IconButton type='submit' color="primary" onClick={() => goBack()} size="large">
                         <ArrowBackIcon/>
                     </IconButton>
-                    <IconButton type='submit' color="secondary"
-                                onClick={() => setAskDelete(true)}><DeleteForever/></IconButton>
-                    <IconButton type='submit'
-                                onClick={() => setEditing(true)}><EditIcon/></IconButton>
+                    <IconButton
+                        type='submit'
+                        color="secondary"
+                        onClick={() => setAskDelete(true)}
+                        size="large"><DeleteForever/></IconButton>
+                    <IconButton type='submit' onClick={() => setEditing(true)} size="large"><EditIcon/></IconButton>
                 </ButtonGroup>
             </div>
-        )
+        );
     }
 
     function renderNote() {

@@ -1,19 +1,19 @@
-import * as React from "react";
-import {useEffect, useMemo, useState} from "react";
+import Autocomplete from '@mui/material/Autocomplete';
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
+import Dialog from "@mui/material/Dialog/Dialog";
+import DialogActions from "@mui/material/DialogActions/DialogActions";
+import DialogContent from "@mui/material/DialogContent/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import TextField from "@mui/material/TextField";
 import * as lodash from "lodash";
-import {debounce} from "lodash";
-import {get, post} from "../../utils/http";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import Chip from "@material-ui/core/Chip";
-import TextField from "@material-ui/core/TextField";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import FormControl from "@material-ui/core/FormControl";
-import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent/DialogContent";
-import DialogActions from "@material-ui/core/DialogActions/DialogActions";
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
-import Dialog from "@material-ui/core/Dialog/Dialog";
+import { debounce } from "lodash";
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { searchSources, upsertSource } from "services/source-service";
 
 export function SourcesSelector({className, onChange, allowCreation, sources, multiple}) {
   const [loading, setLoading] = useState(false)
@@ -31,7 +31,7 @@ export function SourcesSelector({className, onChange, allowCreation, sources, mu
 
   const debounceSearch = useMemo(() => debounce((q)  => {
     setLoading(true)
-    get('/api/sources', {q})
+    searchSources(q)
     .then(sources => setSourcesSuggestions(sources))
     .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +64,7 @@ export function SourcesSelector({className, onChange, allowCreation, sources, mu
   function doCreateNewSource() {
     if(!creatingSource) {
       setCreatingSource(true)
-      post('/api/sources', newSource)
+      upsertSource(newSource)
       .then(insertedSource => {
         closeSourceCreation()
         setSources(insertedSource)

@@ -1,13 +1,13 @@
-import * as React from "react";
-import {useEffect, useMemo, useState} from "react";
+import Autocomplete from '@mui/material/Autocomplete';
+import Chip from "@mui/material/Chip";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import TextField from "@mui/material/TextField";
 import * as lodash from "lodash";
-import {debounce} from "lodash";
-import {get, post} from "../../utils/http";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import Chip from "@material-ui/core/Chip";
-import TextField from "@material-ui/core/TextField";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import FormControl from "@material-ui/core/FormControl";
+import { debounce } from "lodash";
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { searchTags, upsertTag } from "services/tags-service";
 
 export function TagsSelector({className, onChange, allowCreation, title, tags}) {
   const [loading, setLoading] = useState(false)
@@ -18,7 +18,7 @@ export function TagsSelector({className, onChange, allowCreation, title, tags}) 
 
   const debounceSearch = useMemo(() => debounce((q)  => {
     setLoading(true)
-    get('/api/tags', {q})
+    searchTags(q)
     .then(tags => setTagsSuggestions(tags))
     .finally(() => setLoading(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -34,7 +34,7 @@ export function TagsSelector({className, onChange, allowCreation, title, tags}) 
       const realTags = [...tags];
       lastElement.valeur = lastElement.inputValue;
       setLoading(true);
-      post('/api/tags', {valeur: lastElement.valeur})
+      upsertTag(lastElement.valeur)
       .then(insertedTag => {
         realTags[realTags.length - 1] = insertedTag;
         setTags(realTags);

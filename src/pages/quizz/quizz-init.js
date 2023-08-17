@@ -3,11 +3,11 @@ import LoadingMask from "../../components/loading-mask/loading-mask";
 import Toaster from "../../components/Toaster";
 import React, {useEffect, useState} from "react";
 import {TagsSelector} from "../../components/filter/tags-selector";
-import Button from "@material-ui/core/Button";
-import CircularProgress from "@material-ui/core/CircularProgress";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import {SourcesSelector} from "../../components/filter/sources-selector";
 import {get} from "../../utils/http";
-import {FormControl, TextField} from "@material-ui/core";
+import {FormControl, TextField} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 
 

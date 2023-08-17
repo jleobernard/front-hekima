@@ -1,33 +1,31 @@
-import AddToHomeScreen from '@ideasio/add-to-homescreen-react';
-import Button from "@material-ui/core/Button";
-import Card from "@material-ui/core/Card";
-import CardContent from "@material-ui/core/CardContent";
-import Chip from "@material-ui/core/Chip";
-import CircularProgress from "@material-ui/core/CircularProgress/CircularProgress";
-import Fab from "@material-ui/core/Fab";
-import List from '@material-ui/core/List';
-import ListItem from "@material-ui/core/ListItem";
-import Typography from "@material-ui/core/Typography";
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from '@mui/icons-material/Add';
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
+import Fab from "@mui/material/Fab";
+import List from '@mui/material/List';
+import ListItem from "@mui/material/ListItem";
+import Typography from "@mui/material/Typography";
 import * as lodash from 'lodash';
 import React, { useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLocation, useNavigate } from "react-router-dom";
-import rehypeRaw from 'rehype-raw';
-import gfm from 'remark-gfm';
 import Header from "../../components/header/Header";
 import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
 import NoteCreation from '../../components/note-creation/note-creation';
 import { NoteFilesDisplay } from "../../components/note/note-files/note-files-display";
+import { supabase } from '../../services/supabase-client';
 import {
   cancelNoteCreation, launchSearch, saveNote, selectCreatingNote, selectFilter, selectHasMoreNotes, selectNotes,
   selectNotesLoading, selectRaz, startNoteCreation
 } from '../../store/features/notesSlice';
 import { notifyInfo } from '../../store/features/notificationsSlice';
 import "../../styles/layout.scss";
-import { get } from "../../utils/http";
 import "./notes.scss";
+
+import NoteContent from "components/note/note-content";
 
 
 function orDefault(count, defaultValue) {
@@ -54,6 +52,7 @@ const Notes = () =>  {
   const raz = useSelector(selectRaz)
   const creating = useSelector(selectCreatingNote)
   const dispatch = useDispatch()
+  const DEFAULT_NOTES_COUNT = 10;
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {
@@ -64,7 +63,7 @@ const Notes = () =>  {
 
   function filterChanged(newFilter) {
     const updatedFilter = {
-      count: 20,
+      count: DEFAULT_NOTES_COUNT,
       offset: 0,
       ...newFilter
     }
@@ -78,17 +77,18 @@ const Notes = () =>  {
     const params = new URLSearchParams(location.search)
     const src = params.get('source')
     if(src) {
-      promises.push(get(`/api/sources/${src}`))
+      promises.push(supabase.from("note_source").select().eq('uri', src))
     }
     const withTagsUri = (params.get('tags') || '').split(',');
     const withoutTagsUri = (params.get('notTags') || '').split(',');
-    [...withTagsUri, ...withoutTagsUri]
-    .filter(uri => !!uri)
-    .forEach(uri => promises.push(get(`/api/tags/${uri}`)))
+    const allTagsUri = [...withTagsUri, ...withoutTagsUri].filter(uri => !!uri);
+    if(allTagsUri.length > 0) {
+      promises.push(supabase.from("tag").select().in('uri', allTagsUri))
+    }
     const _filter = {
       ...filter,
       q: orDefaultString(params.get('q'), ''),
-      count: orDefault(params.get('count'), 20),
+      count: orDefault(params.get('count'), DEFAULT_NOTES_COUNT),
       offset: orDefault(params.get('offset'), 0)
     }
     let promiseLoadAll;
@@ -97,14 +97,16 @@ const Notes = () =>  {
         Promise.all(promises).then(responses => {
           let beginTags;
           if(src) {
-            _filter.source = responses[0]
+            _filter.source = responses[0].data[0]
             beginTags = 1
           } else {
             beginTags = 0
           }
-          const fetchedTags = responses.slice(beginTags)
-          _filter.tags = withTagsUri.map(wt => lodash.find(fetchedTags, t => t.uri === wt)).filter(u => !!u)
-          _filter.notTags = withoutTagsUri.map(wt => lodash.find(fetchedTags, t => t.uri === wt)).filter(u => !!u)
+          if(allTagsUri.length > 0) {
+            const fetchedTags = responses[beginTags].data
+            _filter.tags = withTagsUri.map(wt => lodash.find(fetchedTags, t => t.uri === wt)).filter(u => !!u)
+            _filter.notTags = withoutTagsUri.map(wt => lodash.find(fetchedTags, t => t.uri === wt)).filter(u => !!u)
+          }
           resolve(_filter)
         }).catch(() => resolve(_filter))
       })
@@ -156,15 +158,14 @@ const Notes = () =>  {
   }
 
   function getListItem(note) {
-    return <li>
-      <Card className={"note-card"}>
+    return <Card className={"note-card"}>
         <NoteFilesDisplay note={note} />
         {note.subs  && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs} />: <></>}
         <CardContent onClick={() => navigateToNote(note)}>
-          <Typography component="p" className={"note-text"} gutterBottom={true}>
-            <ReactMarkdown remarkPlugins={[gfm]} rehypePlugins={[rehypeRaw]} children={note.valeur}/>
+          <Typography component="div" className={"note-text"} gutterBottom={true}>
+            <NoteContent note={note} readOnly={true}></NoteContent>
           </Typography>
-          {note.source ? <Typography variant="body2" color="textSecondary" component="p" className={"note-from"}>
+          {note.source ? <Typography variant="body2" color="textSecondary" component="div" className={"note-from"}>
             in {note.source.titre} de {note.source.auteur}
           </Typography> : <></>}
           <List className="list-horizontal-display">
@@ -176,7 +177,6 @@ const Notes = () =>  {
           </List>
         </CardContent>
       </Card>
-    </li>
   }
 
   function seekNote(noteUri) {
@@ -204,7 +204,7 @@ const Notes = () =>  {
   function loadMore() {
     const newFilter = {
       ...filter,
-      offset: filter.offset+20
+      offset: filter.offset+DEFAULT_NOTES_COUNT
     }
     dispatch(launchSearch(newFilter, false))
     updateRouteParams(newFilter)
@@ -220,7 +220,6 @@ const Notes = () =>  {
   }
   return (
     <div className="app">
-      <AddToHomeScreen appId="com.leo.notes" />
       <Header title="Notes" goBack={false} withSearch={true} filterChanged={filterChanged}/>
       <List className="notes-list">
         <ListItem key="spinner-loading-first" className="centered-item">

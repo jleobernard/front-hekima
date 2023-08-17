@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
-import {get} from "../../utils/http";
 import * as lodash from 'lodash';
 import { notifyError } from './notificationsSlice';
+import { searchNotes } from 'services/note-services';
 
 export const notesSlice = createSlice({
   name: 'notes',
@@ -57,7 +57,7 @@ export const launchSearch = (filter, raz) => {
   return async (dispatch) => {
     dispatch(searchStarted(filter))
     try {
-      const notes = await get("/api/notes", filter)
+      const notes = await searchNotes(filter)
       dispatch(searchDone({notes, raz}))
     } catch(err) {
       dispatch(searchError())
@@ -65,6 +65,7 @@ export const launchSearch = (filter, raz) => {
     }
   }
 }
+
 
 export const selectNotes = (state) => state.notes.notes
 export const selectNotesLoading = (state) => state.notes.loading

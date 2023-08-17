@@ -2,9 +2,9 @@ import "./video-list.scss"
 import * as React from "react";
 import * as lodash from 'lodash';
 import {useEffect, useState} from "react";
-import {Chip, IconButton} from "@material-ui/core";
+import {Chip, IconButton} from "@mui/material";
 import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/const";
-import {Add, ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@material-ui/icons";
+import {Add, ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@mui/icons-material";
 import SubsText from "./subs-text";
 
 export default function VideoList({title, videos, editable, onChange, className, withTexts}) {
@@ -197,29 +197,49 @@ export default function VideoList({title, videos, editable, onChange, className,
           <div className={"video-controls"}>
             <div className={"video-controls-line"}>
               <div className={"video-bound"}>
-                <IconButton onClick={() => valueChanged(videoMetadata, 'from', from - 1)} className="icon">
+                <IconButton
+                  onClick={() => valueChanged(videoMetadata, 'from', from - 1)}
+                  className="icon"
+                  size="large">
                   <Remove />
                 </IconButton>
                 <div className={"video-bound-value"}>{from}</div>
-                <IconButton onClick={() => valueChanged(videoMetadata, 'from', from + 1)} className="icon">
+                <IconButton
+                  onClick={() => valueChanged(videoMetadata, 'from', from + 1)}
+                  className="icon"
+                  size="large">
                   <Add />
                 </IconButton>
               </div>
               {videoMetadata.selected ?
-                <IconButton aria-label="remove" onClick={() => valueChanged(videoMetadata, 'selected', false)} className="icon">
+                <IconButton
+                  aria-label="remove"
+                  onClick={() => valueChanged(videoMetadata, 'selected', false)}
+                  className="icon"
+                  size="large">
                   <Remove />
                 </IconButton>
                 :
-                <IconButton aria-label="add" onClick={() => valueChanged(videoMetadata, 'selected', true)} className="icon">
+                <IconButton
+                  aria-label="add"
+                  onClick={() => valueChanged(videoMetadata, 'selected', true)}
+                  className="icon"
+                  size="large">
                   <PlaylistAdd />
                 </IconButton>
               }
               <div className={"video-bound"}>
-                <IconButton onClick={() => valueChanged(videoMetadata, 'to', to - 1)} className="icon">
+                <IconButton
+                  onClick={() => valueChanged(videoMetadata, 'to', to - 1)}
+                  className="icon"
+                  size="large">
                   <Remove />
                 </IconButton>
                 <div className={"video-bound-value"}>{to}</div>
-                <IconButton onClick={() => valueChanged(videoMetadata, 'to', to + 1)} className="icon">
+                <IconButton
+                  onClick={() => valueChanged(videoMetadata, 'to', to + 1)}
+                  className="icon"
+                  size="large">
                   <Add />
                 </IconButton>
               </div>
@@ -228,15 +248,19 @@ export default function VideoList({title, videos, editable, onChange, className,
               {videoMetadata.name}
             </div>
             <div className={"video-controls-line"}>
-              <IconButton aria-label="previous"
-                          onClick={() => changeVideo(-1)}
-                          className="icon">
+              <IconButton
+                aria-label="previous"
+                onClick={() => changeVideo(-1)}
+                className="icon"
+                size="large">
                 <ArrowBack />
               </IconButton>
               <Chip label={(index + 1) + ' / ' + browseIndex.length} />
-              <IconButton aria-label="previous"
-                          onClick={() => changeVideo(+1)}
-                          className="icon">
+              <IconButton
+                aria-label="previous"
+                onClick={() => changeVideo(+1)}
+                className="icon"
+                size="large">
                 <ArrowForward />
               </IconButton>
             </div>
@@ -251,7 +275,7 @@ export default function VideoList({title, videos, editable, onChange, className,
         <></>}
         {withTexts ? <SubsText video={videoMetadata}/> : <></>}
       </div>
-    )
+    );
   }
 
   return (
