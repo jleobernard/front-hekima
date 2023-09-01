@@ -149,6 +149,9 @@ export function noteToView(d) {
     d.tags = d.tag
     delete d.tag
   }
+  if(d.subs && d.subs.subs) {
+    d.subs = d.subs.subs
+  }
   return d
 }
 

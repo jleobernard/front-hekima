@@ -8,6 +8,7 @@ import React from "react";
 import NoteContent from "./note-content";
 
 export function NoteDetail({note}) {
+  console.log(note.subs)
   return (
     <div>
       <NoteFilesDisplay note={note}/>

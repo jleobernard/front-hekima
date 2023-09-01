@@ -6,6 +6,7 @@ import {Chip, IconButton} from "@mui/material";
 import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/const";
 import {Add, ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@mui/icons-material";
 import SubsText from "./subs-text";
+import { getAccessToken } from "services/gcp-service";
 
 export default function VideoList({title, videos, editable, onChange, className, withTexts}) {
 
@@ -14,6 +15,11 @@ export default function VideoList({title, videos, editable, onChange, className,
   const [browseIndex, setBrowseIndex] = useState([]);
   const [version, setVersion] = useState(0);
   const [groups, setGroups] = useState([])
+  const [accessToken, setAccessToken] = useState('')
+  const [videoSource, setVideoSource] = useState('');
+
+  const bucketName = process.env.REACT_APP_VIDEOS_BUCKET_NAME
+  const videosRootUrl = `https://${bucketName}.storage.googleapis.com/videos`
 
 
   useEffect(() => {
@@ -47,6 +53,23 @@ export default function VideoList({title, videos, editable, onChange, className,
   useEffect(() => {
     loadVideo()
   }, [index, browseIndex])
+
+  useEffect(()  => {
+    getAccessToken().then(token => setAccessToken(token))
+  }, [])
+
+  function handleTimeUpdate(event, from, to) {
+    const videoElt = event.currentTarget
+    const currentTime = videoElt.currentTime
+    if(currentTime < from || currentTime > to) {
+      videoElt.currentTime = from;
+      //videoElt.play()
+    }
+  }
+  function onloadedmetadata(video, from) {
+    video.currentTime = from;
+    //setTimeout(() => video.play(), 200)
+  }
 
 
   function setIndexToSameVideo(newGroups, indexToKeep) {
@@ -182,16 +205,16 @@ export default function VideoList({title, videos, editable, onChange, className,
       valueChanged(videoMetadata, 'to', to)
       return (<></>)
     }
-    let src;
-    if(editable) {
-      src = "/kosubs/" + videoMetadata.name + ".mp4#t=" + from +"," + to
-    } else {
-      src ="/kosubs/loop/" + videoMetadata.name + "/" + from + "/" + to + ".mp4"
-    }
     return (
       <div className={"video " + (browseIndex && browseIndex.length === 1 ? 'alone' : '')}>
-        <video controls loop onError={err => handleVideoError(err)} id={"video-" + videoMetadata.key}>
-          <source src={src} type="video/mp4" />
+        <video controls preload="metadata"
+          src={`${videosRootUrl}/${videoMetadata.name}/${videoMetadata.name}.mp4?access_token=${accessToken}`}
+          onError={err => handleVideoError(err)} 
+          id={"video-" + videoMetadata.key}
+          onTimeUpdate={e => handleTimeUpdate(e, from, to)}
+          onLoadedMetadata={e => onloadedmetadata(e.currentTarget, from)}
+        >
+          <source src={videoSource} type="video/mp4" />
         </video>
         {editable ?
           <div className={"video-controls"}>

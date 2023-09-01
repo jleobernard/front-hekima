@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog/Dialog";
 import VideoDetail from "./video-detail";
 import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/const";
+import VideoThumbnail from "./video-thumbnail";
 
 export default function VideoThumbnailList({title, videos}) {
 
@@ -40,12 +41,18 @@ export default function VideoThumbnailList({title, videos}) {
   function renderThumbnail(videoMetadata, index) {
     let from = videoMetadata.from
     let to = videoMetadata.to
+    return (<VideoThumbnail 
+      name={videoMetadata.name}
+      from={from} 
+      to={to}
+      key={videoMetadata.name + '_' + from + '_' + to}/>)
+    /*
     return (
       <img className={"thumbnail" + (videos && videos.length === 1 ? ' alone' : '')} key={"thumbnail-" + index} alt={"Thumbnail of video " + videoMetadata.name +" from " + from + " to " + to +" seconds"}
         onError={err => handleImageError(err)}
         onClick={() => setDetailIndex(index)}
         src={"/kosubs/thumbnail/" + videoMetadata.name + "/" + from + "/" + to + ".jpg"} />
-    )
+    )*/
   }
   function onChangeVideo(delta) {
     let newIndex = (detailIndex + delta)
@@ -74,7 +81,8 @@ export default function VideoThumbnailList({title, videos}) {
           <DialogContent>
             <VideoDetail video={videos[detailIndex]}
                          changeVideo={delta => onChangeVideo(delta)}
-                         hasMoreVideos={videos.length > 1} />
+                         hasMoreVideos={videos.length > 1} 
+                         key={detailIndex}/>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDetailIndex(-1)} color="primary">

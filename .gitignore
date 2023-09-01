@@ -25,3 +25,4 @@ yarn-error.log*
 .eslintcache
 .idea
 /scripts/bucket-cors.json
+scripts/bucket-videos-cors.json

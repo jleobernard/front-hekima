@@ -17,6 +17,7 @@ import { Autocomplete } from '@mui/material';
 import SearchIcon from "@mui/icons-material/Search";
 import {SUBS_MIN_DOWNGRADABLE, SUBS_MIN_SIM_DEFAULT, SUBS_SIM_STEP} from "../../utils/const";
 import Button from "@mui/material/Button";
+import {search} from "../../services/ksubs-service";
 
 export default function SubsSearcher({onVideoSelected, className}) {
   const [searchSubs, setSearchSubs] = useState('')
@@ -53,8 +54,10 @@ export default function SubsSearcher({onVideoSelected, className}) {
   function doSearchSubs(q) {
     setOpen(false)
     setSearchingSubs(true)
-    get('/api/kosubs', {q, exact, minSim, maxSim, exclMax: maxSim < 1})
+    //get('/api/kosubs', {q, exact, minSim, maxSim, exclMax: maxSim < 1})
+    search(q)
     .then(results => {
+      console.log(results)
       setSubs((results || []).map(r => ({...r, selected: false, key: getKey("subs")})))
       setCanSeeDowngraded((minSim - SUBS_SIM_STEP) >= SUBS_MIN_DOWNGRADABLE)
     })
