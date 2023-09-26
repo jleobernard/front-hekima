@@ -1,4 +1,4 @@
-import { AppBar, Box, IconButton, List, ListItem, ListItemText, SwipeableDrawer, Toolbar } from "@mui/material";
+import { AppBar, Box, IconButton, List, ListItem, ListItemButton, ListItemText, SwipeableDrawer, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MenuIcon from "@mui/icons-material/Menu";
@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { upload } from "utils/http";
 import SearchFilter from "../search-filter/search-filter";
 import "./header.scss";
+import { getClient } from "services/gcp-service";
 
 export const Header = ({filterChanged, title, withSearch, goBack }) => {
   const [menuOpened, setMenuOpened] = useState(false)
@@ -44,6 +45,10 @@ export const Header = ({filterChanged, title, withSearch, goBack }) => {
     .catch((error) => {
       console.error('Error :', error);
     });
+  }
+
+  function triggerGCPAuthent() {
+    getClient().requestAccessToken();
   }
 
   return (
@@ -82,6 +87,9 @@ export const Header = ({filterChanged, title, withSearch, goBack }) => {
               <Link to={"/quizz/init"}>
                 <ListItemText primary={'Quizz'} />
               </Link>
+            </ListItem>
+            <ListItem button key='gcp-authent' className="side-menu-item">
+                <ListItemButton onClick={() => triggerGCPAuthent()}>GCP</ListItemButton>
             </ListItem>
             <ListItem button key='upload' className="side-menu-item">
                 <input type="file" id="uploaded-file" accept="video/*" onChange={fileChanged} />
