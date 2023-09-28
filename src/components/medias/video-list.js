@@ -63,12 +63,7 @@ export default function VideoList({title, videos, editable, onChange, className,
     const currentTime = videoElt.currentTime
     if(currentTime < from || currentTime > to) {
       videoElt.currentTime = from;
-      //videoElt.play()
     }
-  }
-  function onloadedmetadata(video, from) {
-    video.currentTime = from;
-    //setTimeout(() => video.play(), 200)
   }
 
 
@@ -208,11 +203,10 @@ export default function VideoList({title, videos, editable, onChange, className,
     return (
       <div className={"video " + (browseIndex && browseIndex.length === 1 ? 'alone' : '')}>
         <video controls preload="metadata"
-          src={`${videosRootUrl}/${videoMetadata.name}/${videoMetadata.name}.mp4?access_token=${accessToken}`}
+          src={`${videosRootUrl}/${videoMetadata.name}/${videoMetadata.name}.mp4?access_token=${accessToken}#t=${from},${to}`}
           onError={err => handleVideoError(err)} 
           id={"video-" + videoMetadata.key}
           onTimeUpdate={e => handleTimeUpdate(e, from, to)}
-          onLoadedMetadata={e => onloadedmetadata(e.currentTarget, from)}
         >
           <source src={videoSource} type="video/mp4" />
         </video>
