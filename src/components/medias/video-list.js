@@ -7,6 +7,7 @@ import {RELOAD_RESOURCE_DELAY, RELOAD_RESOURCE_MAX_RETRIES} from "../../utils/co
 import {Add, ArrowBack, ArrowForward, PlaylistAdd, Remove} from "@mui/icons-material";
 import SubsText from "./subs-text";
 import { getAccessToken } from "services/gcp-service";
+import { clipVideo } from "services/video-service";
 
 export default function VideoList({title, videos, editable, onChange, className, withTexts}) {
 
@@ -122,7 +123,15 @@ export default function VideoList({title, videos, editable, onChange, className,
     if(fieldName === "to" || fieldName === "from") {
       setVersion(version + 1)
     }
+    if('selected' === fieldName && value) {
+      const realIndex = getRealIndex()
+      const videoMetadata = (videos[realIndex])
+      let from = Math.floor(videoMetadata.from)
+      let to = Math.ceil(videoMetadata.to)
+      clipVideo(videoMetadata.name, from, to)
+    }
   }
+  
   function handleVideoError(err) {
     const video = err.currentTarget
     const source = video.children[0]
@@ -142,7 +151,9 @@ export default function VideoList({title, videos, editable, onChange, className,
       setErrorsCount(newCounts)
       setTimeout(() => {
         //console.log("Tentative de recharger ", src, " pour la ", newCounts[src], " fois")
-        video.load()
+        if(video) {
+          video.load()
+        }
       }, RELOAD_RESOURCE_DELAY)
     }
   }

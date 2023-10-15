@@ -8,11 +8,10 @@ import React from "react";
 import NoteContent from "./note-content";
 
 export function NoteDetail({note}) {
-  console.log(note.subs)
   return (
     <div>
       <NoteFilesDisplay note={note}/>
-      {note.subs && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs}/> : <></>}
+      {note.subs && note.subs.length > 0 ? <VideoThumbnailList title="" videos={note.subs}></VideoThumbnailList> : <></>}
       <Typography component="div" className={"note-text"} gutterBottom={true}>
         <NoteContent note={note} readOnly={true}></NoteContent>
       </Typography>

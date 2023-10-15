@@ -1,29 +1,32 @@
 import { useEffect, useRef, useState } from "react";
+import { getAccessToken } from "services/gcp-service";
+import { deleteJob, getJob, getJobUriForVideoClipping } from "services/jobs-services";
+import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
 
 export default function VideoThumbnail({name, from, to}) {
     const [url, setUrl] = useState('')
     const [listenerSet, setListenerSet] = useState(false)
+    const [loading, setLoading] = useState(true)
     const videoRef = useRef(null);
+    const bucketName = process.env.REACT_APP_VIDEOS_BUCKET_NAME
+    const videosRootUrl = `https://${bucketName}.storage.googleapis.com/videos`
     useEffect(() => {
-        fetch(process.env.REACT_APP_URL_SIGNER_URL,{
-            method: "POST",
-            redirect: 'manual',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                action: 'read-video',
-                fileName: name
-            })
-          }).then(async response => {
-            if(response.ok) {
-              response.json().then(signResponse => {
-                const {status, url: urls} = signResponse
-                if(status === 'ok' && urls && urls.length > 0) {
-                  setUrl(urls[0])
-                }
-              })
-            }
-        }).catch(err => console.error(err))
-    }, [name])
+      async function fetchUrl(){
+        const jobUri = getJobUriForVideoClipping(name, from, to)
+        const job = await getJob(jobUri)
+        if(job) {
+          if (job.state === 'OK') {
+            await deleteJob(jobUri)
+            populateVideoUrl()
+          } else {
+            setLoading(false)
+          }
+        } else {
+          populateVideoUrl()
+        }
+      }
+      fetchUrl()
+    }, [name, from, to])
     useEffect(() => {
         if(videoRef === null) {
 
@@ -43,11 +46,18 @@ export default function VideoThumbnail({name, from, to}) {
               };
         }
     }, [videoRef])
+
+    async function populateVideoUrl() {
+      const accessToken = await getAccessToken()
+      setUrl(`${videosRootUrl}/${name}/${name}_${from}_${to}.mp4?access_token=${accessToken}`)
+      setLoading(false)
+    }
     function renderVideo() {
         return (
+          loading ? <CircularProgress /> :
         <video ref={videoRef} src={url} controls id={name+'_'+from+'_'+to}
-                preload="metadata">
-            <source src={url} type="video/webm" />
+                preload="metadata" loop={true}>
+            <source src={url} type="video/mp4" />
         </video>)
     }
     return url ? 

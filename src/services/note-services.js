@@ -66,6 +66,7 @@ export async function uspertNote(note) {
   noteModel.value_json = note.valueJson
   noteModel.mime_type = note.mimeType
   noteModel.file_id = note.fileId
+  noteModel.subs = note.subs
   if(note.source) {
     const {data} = await supabase.from("note_source").select('id').eq('uri', note.source).single()
     if(data) {
@@ -94,20 +95,22 @@ export async function uspertNote(note) {
     }
   }
   const insertedNote = await findNoteByUri(noteModel.uri)
-  window.use.load().then(async model => {
-    // Embed an array of sentences.
-    const sentences = getSentencesFromNote(noteModel.value_json, []);
-    console.log("Sentences are", sentences)
-    const embeddings = await model.embed(sentences)
-    // `embeddings` is a 2D tensor consisting of the 512-dimensional embeddings for each sentence.
-    const embeddingsArray = await embeddings.array()
-    const embeddingData = embeddingsArray.map(embedding => {
-      return {note_id: insertedNote.id, embedding: embedding}
-    })
-    await supabase.from('note_embedding').delete().eq('note_id', insertedNote.id)
-    await supabase.from('note_embedding')
-    .insert(embeddingData)
-  });
+  if(window.use) {
+    window.use.load().then(async model => {
+      // Embed an array of sentences.
+      const sentences = getSentencesFromNote(noteModel.value_json, []);
+      console.log("Sentences are", sentences)
+      const embeddings = await model.embed(sentences)
+      // `embeddings` is a 2D tensor consisting of the 512-dimensional embeddings for each sentence.
+      const embeddingsArray = await embeddings.array()
+      const embeddingData = embeddingsArray.map(embedding => {
+        return {note_id: insertedNote.id, embedding: embedding}
+      })
+      await supabase.from('note_embedding').delete().eq('note_id', insertedNote.id)
+      await supabase.from('note_embedding')
+      .insert(embeddingData)
+    });
+  }
   return insertedNote
 }
 
