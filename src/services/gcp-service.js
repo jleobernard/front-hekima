@@ -5,6 +5,7 @@ let tokenInfo = {
 };
 let observers = [];
 let loaded = false;
+let promiseConnection = null;
 
 function load() {
   if (!loaded) {
@@ -38,19 +39,24 @@ export function getClient() {
 
 export async function getAccessToken() {
   load();
-  return new Promise((resolve) => {
-    if (Date.now() > tokenInfo.refreshAt) {
-      const id = String(Math.random());
-      observers.push({
-        id,
-        handler: () => {
-          resolve(tokenInfo.token);
-          observers = observers.filter((o) => o.id !== id);
-        },
-      });
-      getClient().requestAccessToken();
-    } else {
-      resolve(tokenInfo.token);
-    }
-  });
+  if(promiseConnection == null) {
+    promiseConnection = new Promise((resolve) => {
+      if (Date.now() > tokenInfo.refreshAt) {
+        const id = String(Math.random());
+        observers.push({
+          id,
+          handler: () => {
+            resolve(tokenInfo.token);
+            observers = observers.filter((o) => o.id !== id);
+            promiseConnection = null;
+          },
+        });
+        getClient().requestAccessToken();
+      } else {
+        resolve(tokenInfo.token);
+        promiseConnection = null;
+      }
+    });
+  }
+  return promiseConnection;
 }
