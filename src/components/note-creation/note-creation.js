@@ -7,7 +7,7 @@ import DialogContent from "@mui/material/DialogContent/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
 import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { VisibilityOff } from "@mui/icons-material";
 import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
 import { SourcesSelector } from "components/filter/sources-selector";
 import { TagsSelector } from "components/filter/tags-selector";
