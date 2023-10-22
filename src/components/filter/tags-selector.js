@@ -50,7 +50,6 @@ export function TagsSelector({className, onChange, allowCreation, title, tags}) 
   return (
     <FormControl margin="normal" className={className}>
       <Autocomplete
-        id="tags-selector"
         multiple
         loading={loading}
         value={_tags}
