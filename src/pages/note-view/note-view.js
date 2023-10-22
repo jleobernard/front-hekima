@@ -1,4 +1,4 @@
-import { DeleteForever } from "@mui/icons-material";
+import { DeleteForever, RefreshOutlined } from "@mui/icons-material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import { ButtonGroup } from "@mui/material";
@@ -12,7 +12,7 @@ import DialogTitle from "@mui/material/DialogTitle/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { deleteNote, findNoteByUri } from 'services/note-services';
+import { deleteNote, findNoteByUri, refreshNote } from 'services/note-services';
 import Toaster from "../../components/Toaster";
 import Header from "../../components/header/Header";
 import LoadingMask from "../../components/loading-mask/loading-mask";
@@ -83,6 +83,19 @@ const NoteView = () => {
         navigate('/notes'+getParams)
     }
 
+    async function refresh() {
+        setLoading(true)
+        await refreshNote(note);
+        setLoading(false)
+    }
+/*
+    async function refreshAll() {
+
+        setLoading(true)
+        await refreshAllNotes();
+        setLoading(false)
+    }*/
+
     function renderDisplay() {
         return (
             <div>
@@ -90,6 +103,9 @@ const NoteView = () => {
                 <ButtonGroup className="button-group centered with-margin-top spread bottom coloured">
                     <IconButton type='submit' color="primary" onClick={() => goBack()} size="large">
                         <ArrowBackIcon/>
+                    </IconButton>
+                    <IconButton type='submit' color="primary" onClick={() => refresh()} size="large">
+                        <RefreshOutlined/>
                     </IconButton>
                     <IconButton
                         type='submit'

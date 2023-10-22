@@ -97,7 +97,7 @@ export function SourcesSelector({className, onChange, allowCreation, sources, mu
         )}
       />
       {_sources && _sources.length > 0 ? <></> : <FormHelperText id={"source-helper"}>Sélectionnez une ou plusieurs sources</FormHelperText>}
-      <Dialog open={newSource && newSource.creating}
+      <Dialog open={!!(newSource && newSource.creating)}
               onClose={closeSourceCreation}
               fullScreen={true}
               aria-labelledby="creation-source-dialog-title">
