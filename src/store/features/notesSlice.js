@@ -39,6 +39,9 @@ export const notesSlice = createSlice({
       }
       state.creating = false
     },
+    setRaz: (state, action) => {
+      state.raz = action.payload
+    },
     startNoteCreation: state => {
       state.creating = true
     },
@@ -48,7 +51,7 @@ export const notesSlice = createSlice({
   }
 })
 
-export const { searchStarted, saveNote, startNoteCreation, cancelNoteCreation, searchDone, searchError } = notesSlice.actions
+export const { setRaz, searchStarted, saveNote, startNoteCreation, cancelNoteCreation, searchDone, searchError } = notesSlice.actions
 
 export default notesSlice.reducer
 

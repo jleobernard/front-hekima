@@ -57,7 +57,7 @@ const Notes = () =>  {
   useEffect(() => {
     loadFilterFromURL().then(_filter => {
       const _filterForSearch = getFilter(_filter)
-      dispatch(launchSearch(_filterForSearch, false))
+      dispatch(launchSearch(_filterForSearch, true))
     })
   }, [])
 
