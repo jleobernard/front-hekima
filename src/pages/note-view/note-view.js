@@ -20,7 +20,6 @@ import NoteCreation from "../../components/note-creation/note-creation";
 import { NoteDetail } from "../../components/note/note-detail";
 import "../../styles/layout.scss";
 import "./note-view.scss";
-import { setRaz } from "store/features/notesSlice";
 import { useDispatch } from 'react-redux';
 
 
@@ -76,7 +75,6 @@ const NoteView = () => {
     }
 
     function goBack() {
-        dispatch(setRaz(true))
         const fields = ['src', 'tags', 'offset', 'count']
         const urlParams = new URLSearchParams(location.search)
         const _params = fields.filter(f => urlParams.get(f))

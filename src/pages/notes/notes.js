@@ -9,23 +9,22 @@ import List from '@mui/material/List';
 import ListItem from "@mui/material/ListItem";
 import Typography from "@mui/material/Typography";
 import * as lodash from 'lodash';
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/header/Header";
 import VideoThumbnailList from "../../components/medias/video-tumbnail-list";
 import NoteCreation from '../../components/note-creation/note-creation';
 import { NoteFilesDisplay } from "../../components/note/note-files/note-files-display";
 import { supabase } from '../../services/supabase-client';
-import {
-  cancelNoteCreation, launchSearch, saveNote, selectCreatingNote, selectFilter, selectHasMoreNotes, selectNotes,
-  selectNotesLoading, selectRaz, startNoteCreation
-} from '../../store/features/notesSlice';
 import { notifyInfo } from '../../store/features/notificationsSlice';
 import "../../styles/layout.scss";
 import "./notes.scss";
+import { notifyError } from '../../store/features/notificationsSlice';
+
 
 import NoteContent from "components/note/note-content";
+import { searchNotes } from 'services/note-services';
 
 
 function orDefault(count, defaultValue) {
@@ -45,21 +44,40 @@ const Notes = () =>  {
 
   const navigate = useNavigate();
   const location = useLocation()
-  const notes = useSelector(selectNotes);
-  const notesLoading = useSelector(selectNotesLoading)
-  const hasMoreNotes = useSelector(selectHasMoreNotes)
-  const filter = useSelector(selectFilter)
-  const raz = useSelector(selectRaz)
-  const creating = useSelector(selectCreatingNote)
+  const [notes, setNotes] = useState([]);
+  const [notesLoading, setNotesLoading] = useState(false)
+  const [hasMoreNotes, setHasMoreNotes] = useState(true)
+  const [filter, setFilter] = useState({count: 20, offset: 0})
+  const [creating, setCreating] = useState(false)
   const dispatch = useDispatch()
   const DEFAULT_NOTES_COUNT = 10;
 
   useEffect(() => {
     loadFilterFromURL().then(_filter => {
       const _filterForSearch = getFilter(_filter)
-      dispatch(launchSearch(_filterForSearch, true))
+      launchSearch(_filterForSearch, true)
     })
   }, [])
+
+
+  const launchSearch = async (filter, raz) => {
+    setNotesLoading(true);
+    setFilter(filter)
+    try {
+      let realFilter = {...filter}
+      if(raz) {
+        realFilter.count = filter.count + realFilter.offset
+        realFilter.offset = 0
+      }
+      const fetchedNotes = await searchNotes(realFilter)
+      setHasMoreNotes(fetchedNotes && fetchedNotes.length > 0)
+      setNotes(raz ? fetchedNotes : [...notes, ...fetchedNotes])
+    } catch(err) {
+      dispatch(notifyError(err))
+    } finally {
+      setNotesLoading(false)
+    }
+  }
 
   function filterChanged(newFilter) {
     const updatedFilter = {
@@ -68,8 +86,8 @@ const Notes = () =>  {
       ...newFilter
     }
     const rawFilter = filterToRawQuery(updatedFilter)
-    dispatch(launchSearch(rawFilter, true))
     updateRouteParams(rawFilter)
+    launchSearch(rawFilter, true)
   }
 
   function loadFilterFromURL() {
@@ -132,13 +150,13 @@ const Notes = () =>  {
   }
 
   function updateRouteParams(filter) {
-    navigate(`/notes?count=${filter.count}&offset=${filter.offset}&source=${filter.source}&tags=${filter.tags}&notTags=${filter.notTags}&q=${encodeURIComponent(filter.q)}`)
+    navigate(`/notes?count=${filter.count}&offset=${filter.offset}&source=${filter.source || ''}&tags=${filter.tags || ''}&notTags=${filter.notTags || ''}&q=${encodeURIComponent(filter.q)}`)
   }
 
   function getFilter(__filter) {
     const _filter = {
-      offset: raz ? 0 : __filter.offset,
-      count: raz ? __filter.count + __filter.offset : __filter.count,
+      offset: __filter.offset,
+      count: __filter.count,
       q: __filter.q
     };
     if(__filter.source) {
@@ -154,7 +172,7 @@ const Notes = () =>  {
   }
 
   function startCreation() {
-    dispatch(startNoteCreation())
+    setCreating(true)
   }
 
   function getListItem(note) {
@@ -192,22 +210,28 @@ const Notes = () =>  {
     }
   }
 
-  function onDone(note) {
-    if(note) {
-      dispatch(saveNote(note))
+  function onDone(newNote) {
+    if(newNote) {
+      const newNotes = [...notes]
+      const index = lodash.findIndex(newNotes, n => n.uri === newNote.uri);
+      if(index >=0) {
+        newNotes[index] = newNote;
+      } else {
+        newNotes.unshift(newNote);
+      }
+      setNotes(newNotes)
       dispatch(notifyInfo('Note sauvegardée'))
-    } else {
-      dispatch(cancelNoteCreation())
     }
+    setCreating(false)
   }
 
   function loadMore() {
     const newFilter = {
       ...filter,
-      offset: filter.offset+DEFAULT_NOTES_COUNT
+      offset: filter.offset + notes.length
     }
-    dispatch(launchSearch(newFilter, false))
     updateRouteParams(newFilter)
+    launchSearch(newFilter, false)
   }
 
   function navigateToNote(note) {
