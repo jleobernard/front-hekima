@@ -48,7 +48,7 @@ export async function searchNotes(filter) {
   if (filter.q) {
     // NLP Search
     [queryBuilder, noteIdsOrder] = await getNoteUrisByNLQuery(
-      filter.q,
+      filter,
       queryBuilder
     );
   } else {
@@ -69,7 +69,15 @@ export async function searchNotes(filter) {
   }
   return views;
 }
-async function getNoteUrisByNLQuery(q, queryBuilder) {
+async function getNoteUrisByNLQuery(filter, queryBuilder) {
+  let {q, tags} = filter
+  if(tags && !Array.isArray(tags)) {
+    tags = [tags]
+  }
+  if(tags) {
+    tags = tags.filter(t => !!t)
+  }
+  console.log(filter)
   const embeddingResponse = await fetch(
     process.env.REACT_APP_EMBEDDING_SERVICE_URL,
     {
@@ -85,13 +93,17 @@ async function getNoteUrisByNLQuery(q, queryBuilder) {
     return null;
   }
   const { embeddings } = await embeddingResponse.json();
+  const rpcQuery = 
+  {
+    embedding: embeddings[0],
+    match_threshold: 0.75,
+    match_count: 10
+  }
+  if(tags && tags.length > 0) {
+    rpcQuery['tag_uris'] = tags
+  }
   const { error: matchError, data: similarNotes } = await supabase.rpc(
-    "match_note_embeddings",
-    {
-      embedding: embeddings[0],
-      match_threshold: 0.75,
-      match_count: 10,
-    }
+    tags ? "match_note_embeddings_and_tags" : "match_note_embeddings",rpcQuery
   );
   const noteIds = similarNotes.map((n) => n.note_id);
   console.error(matchError);
