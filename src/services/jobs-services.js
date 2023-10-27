@@ -42,7 +42,7 @@ export async function insertJob(uri) {
     state: 'SENT'
   }
   lastUpdated = -1
-  return await supabase.from('jobs').insert(jobModel).select()
+  return await supabase.from('jobs').upsert(jobModel, {onConflict: "uri"}).select()
 }
 
 export async function deleteJob(uri) {

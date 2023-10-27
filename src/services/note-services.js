@@ -12,6 +12,7 @@ import TextStyle from "@tiptap/extension-text-style";
 import StarterKit from "@tiptap/starter-kit";
 import { generateJSON } from "@tiptap/react";
 import { generateText } from "@tiptap/core";
+import { clipVideo } from "./video-service";
 
 const re = RegExp("(^|[^#])#[^#]+?#[^#]", "g");
 const meaningLessWord = new Set(["exemple", "example", "examples", "exemples", "ex", "eg", "ie"]);
@@ -257,8 +258,19 @@ export async function refreshNote(note) {
       return false;
     }
   }
-  const result = await upsertEmbeddings(note);
-  return result;
+  const resultEmbeddings = await upsertEmbeddings(note);
+  let resultVideos = true;
+  if(note.subs && note.subs.length > 0) {
+    for(let i = 0; i < note.subs.length; i ++) {
+      const sub = note.subs[i];
+      try {
+        clipVideo(sub.name, sub.from, sub.to);
+      } catch(e) {
+
+      }
+    }
+  }
+  return resultEmbeddings && resultVideos;
 }
 async function upsertEmbeddings(note) {
   const value = note.valueJson;

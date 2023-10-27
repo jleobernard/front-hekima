@@ -2,30 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { getAccessToken } from "services/gcp-service";
 import { deleteJob, getJob, getJobUriForVideoClipping } from "services/jobs-services";
 import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
+import VideoThumbnailKO from "./video-thumbnail-ko";
+import VideoThumbnailLoading from "./video-thumbnail-loading";
 
 export default function VideoThumbnail({name, from, to}) {
     const [url, setUrl] = useState('')
     const [listenerSet, setListenerSet] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [state, setState] = useState('NA')
     const videoRef = useRef(null);
     const bucketName = process.env.REACT_APP_VIDEOS_BUCKET_NAME
     const videosRootUrl = `https://${bucketName}.storage.googleapis.com/videos`
     useEffect(() => {
-      async function fetchUrl(){
-        const jobUri = getJobUriForVideoClipping(name, from, to)
-        const job = await getJob(jobUri)
-        if(job) {
-          if (job.state === 'OK') {
-            await deleteJob(jobUri)
-            populateVideoUrl()
-          } else {
-            setLoading(false)
-          }
-        } else {
-          populateVideoUrl()
-        }
-      }
-      fetchUrl()
+      loadComponent()
     }, [name, from, to])
     useEffect(() => {
         if(videoRef === null) {
@@ -47,6 +36,24 @@ export default function VideoThumbnail({name, from, to}) {
         }
     }, [videoRef])
 
+    async function loadComponent() {
+      const jobUri = getJobUriForVideoClipping(name, from, to)
+      const job = await getJob(jobUri)
+      setState(job ? job.state : 'NA')
+      if(job) {
+        if (job.state === 'OK') {
+          await deleteJob(jobUri)
+          populateVideoUrl()
+          setState('OK')
+        } else {
+          setLoading(false)
+        }
+      } else {
+        populateVideoUrl()
+        setState('OK')
+      }
+    }
+
     async function populateVideoUrl() {
       const accessToken = await getAccessToken()
       setUrl(`${videosRootUrl}/${name}/${name}_${from}_${to}.mp4?access_token=${accessToken}`)
@@ -60,7 +67,22 @@ export default function VideoThumbnail({name, from, to}) {
             <source src={url} type="video/mp4" />
         </video>)
     }
-    return url ? 
-        renderVideo() :
-        <></>
+
+    let content;
+    switch(state) {
+      case 'LOADING':
+      case 'SENT':
+        content = <VideoThumbnailLoading name={name} from={from} to={to} reload={() => loadComponent()}/>
+        break;
+      case 'OK':
+        content = renderVideo()
+        break;
+      case 'KO':
+        content = <VideoThumbnailKO name={name} from={from} to={to} reload={() => loadComponent()}/>
+        break;
+      case 'NA':
+      default:
+        content = <></>
+    }
+    return content;
 }
