@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { getAccessToken } from "services/gcp-service";
 import { deleteJob, getJob, getJobUriForVideoClipping } from "services/jobs-services";
 import CircularProgress from "@mui/material/CircularProgress/CircularProgress";
 import VideoThumbnailKO from "./video-thumbnail-ko";
@@ -11,8 +10,7 @@ export default function VideoThumbnail({name, from, to}) {
     const [loading, setLoading] = useState(true)
     const [state, setState] = useState('NA')
     const videoRef = useRef(null);
-    const bucketName = process.env.REACT_APP_VIDEOS_BUCKET_NAME
-    const videosRootUrl = `https://${bucketName}.storage.googleapis.com/videos`
+    const videosRootUrl = process.env.REACT_APP_VIDEOS_DOWNLOADER_SERVICE_URL
     useEffect(() => {
       loadComponent()
     }, [name, from, to])
@@ -44,6 +42,7 @@ export default function VideoThumbnail({name, from, to}) {
         if (job.state === 'OK') {
           await deleteJob(jobUri)
           populateVideoUrl()
+          setLoading(false)
           setState('OK')
         } else {
           setLoading(false)
@@ -51,13 +50,12 @@ export default function VideoThumbnail({name, from, to}) {
       } else {
         populateVideoUrl()
         setState('OK')
+        setLoading(false)
       }
     }
 
     async function populateVideoUrl() {
-      const accessToken = await getAccessToken()
-      setUrl(`${videosRootUrl}/${name}/${name}_${from}_${to}.mp4?access_token=${accessToken}`)
-      setLoading(false)
+      setUrl(`${videosRootUrl}/${name}_${from}_${to}.mp4`)
     }
     function renderVideo() {
         return (

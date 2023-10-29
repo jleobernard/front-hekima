@@ -3,19 +3,28 @@ import { supabase } from "./supabase-client";
 const jobs = [];
 let lastUpdated = -1;
 const freshness = 60000;
+let searchJobsPromise = null;
 
 export async function searchJobs() {
-  const query = supabase.from("jobs").select(`uri, state`);
-  const {data, error} = await query;
-  if(error) {
-    console.error(error);
-    return null
-  } else {
-    lastUpdated = Date.now()
-    jobs.splice(0, jobs.length);
-    jobs.push(...data)
-    return jobs;
+  if(searchJobsPromise == null) {
+    searchJobsPromise = new Promise((resolve, reject) => {
+      const query = supabase.from("jobs").select(`uri, state`);
+      query.then(result => {
+        const {data, error} = result
+        if(error) {
+          console.error(error);
+          resolve(null)
+        } else {
+          lastUpdated = Date.now()
+          jobs.splice(0, jobs.length);
+          jobs.push(...data)
+          resolve(jobs);
+        }
+        searchJobsPromise = null;
+      });
+    })
   }
+  return searchJobsPromise
 }
 export async function getJob(uri, force) {
   if(force || Date.now() > lastUpdated + freshness) {
