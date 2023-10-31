@@ -425,3 +425,27 @@ export async function refreshAllNotes() {
     }
   }
 }
+
+
+export async function countNotes(filter) {
+  const query = supabase.from("note_details").select(
+    `*`, { count: 'exact', head: true }
+  );
+  if(filter.source) {
+    query.eq(
+      "source", filter.source
+    );
+  }
+  if(filter.tags && filter.tags.length > 0) {
+    query.contains(
+      "tags", filter.tags
+    );
+  }
+  const {count, error} = await query;
+  if(error) {
+    console.error(error)
+    return -1
+  } else {
+    return count
+  }
+}

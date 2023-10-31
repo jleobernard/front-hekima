@@ -9,6 +9,7 @@ import {SourcesSelector} from "../../components/filter/sources-selector";
 import {get} from "../../utils/http";
 import {FormControl, TextField} from "@mui/material";
 import {useNavigate} from "react-router-dom";
+import { countNotes } from "services/note-services";
 
 
 const QuizzInit = () => {
@@ -22,10 +23,10 @@ const QuizzInit = () => {
   const history = useNavigate()
 
   useEffect(() => {
-    get("/api/notes:count", {
+    countNotes({
       tags: (tags || []).map(t => t.uri),
       notTags: (notTags || []).map(t => t.uri),
-      sources: sources ? sources.uri : null
+      source: sources ? sources.uri : null
     })
     .then(count => setCount(count))
     .catch(_ => setCount(-1))
