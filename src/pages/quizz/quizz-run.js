@@ -1,22 +1,20 @@
 import React, {useEffect, useState} from "react";
-import {get, post} from "../../utils/http";
 import Header from "../../components/header/Header";
 import LoadingMask from "../../components/loading-mask/loading-mask";
-import Toaster from "../../components/Toaster";
 import {NoteDetail} from "../../components/note/note-detail";
 import { Rating } from '@mui/material';
 import {CircularProgress, IconButton, LinearProgress} from "@mui/material";
 import './quizz-run.scss'
 import {MAX_GRADE_QUIZZ} from "../../utils/const";
-import {ArrowForward} from "@mui/icons-material";
+import {ArrowForward, Refresh} from "@mui/icons-material";
 import {Visibility} from "@mui/icons-material";
-import {getNumberOfTitles} from "../../services/note-services";
+import {findNoteByUri, getNumberOfTitles, refreshNote} from "../../services/note-services";
 import {useNavigate} from "react-router-dom";
+import { notifyError, notifyInfo } from "store/features/notificationsSlice";
 
 const QuizzRun = () => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState({msg:"", sev: "info"})
   const [notes, setNotes] = useState([])
   const [note, setNote] = useState(null)
   const [position, setPosition] = useState(-1)
@@ -43,7 +41,7 @@ const QuizzRun = () => {
   useEffect(() => {
     if(notes && position >= 0 && notes.length > position) {
       setLoading(true)
-      get(`/api/notes/${notes[position].uri}`)
+      findNoteByUri(notes[position])
       .then(note => {
         setNote(note)
         setRating(0)
@@ -55,29 +53,35 @@ const QuizzRun = () => {
           setQuestionType("")
         }
       })
-      .catch(() => setError({msg: "Erreur lors du chargement de la note " + position, sev: "error"}))
+      .catch(() => notifyError("Erreur lors du chargement de la note " + position))
       .finally(() => setLoading(false))
     }
   }, [notes, position])
 
   function rate(rating) {
-    if(!saving) {
-      setSaving(true)
-      post("/api/quizz:answer", {noteUri: note.uri, score: rating})
-      .then(() => {
+    //if(!saving) {
+      //setSaving(true)
+      //post("/api/quizz:answer", {noteUri: note.uri, score: rating})
+      //.then(() => {
         if(position >= notes.length - 1) {
-          setError({msg: "Quizz terminé", sev: "info"})
-          setTimeout(() => history('/quizz/init'), 3000)
+          notifyInfo("Quizz terminé")
+          setTimeout(() => history('/quizz/init'), 1000)
         } else {
           setPosition(position + 1)
         }
-      })
-      .finally(() => setSaving(false))
-    }
+     // })
+     // .finally(() => setSaving(false))
+    //}
   }
 
   function getProgress() {
     return (position + 1) * 100 / (((notes|| []).length) || 1)
+  }
+
+  async function refreshNoteContent() {
+    setLoading(true)
+    await refreshNote(note)
+    setLoading(false)
   }
 
   return (
@@ -110,6 +114,15 @@ const QuizzRun = () => {
           />
           <IconButton
             edge="end"
+            className=""
+            color="inherit"
+            aria-label="refresh note"
+            onClick={() => refreshNoteContent()}
+            size="large">
+            <Refresh />
+          </IconButton>
+          <IconButton
+            edge="end"
             className="pass-button"
             color="inherit"
             aria-label="pass note"
@@ -123,7 +136,6 @@ const QuizzRun = () => {
 
       </div>
       <LoadingMask loading={loading}/>
-      <Toaster error={error.msg} severity={error.sev}/>
     </div>
   );
 }

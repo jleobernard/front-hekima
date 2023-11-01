@@ -40,7 +40,22 @@ export const EXTENSIONS = [
   }),
 ];
 export function getNumberOfTitles(note) {
+  if(note.valueJson) {
+    return getNumberOfTitlesFromJson(note.valueJson)
+  }
   return Array.from(note.valeur.matchAll(re)).length;
+}
+
+function getNumberOfTitlesFromJson(json) {
+  if(!json) {
+    return 0
+  }
+  if(json.type === 'heading') {
+    return 1
+  } else if(json.content) {
+    return json.content.reduce((acc, curr) => acc + getNumberOfTitlesFromJson(curr), 0)
+  }
+  return 0
 }
 
 export async function searchNotes(filter) {
@@ -448,4 +463,40 @@ export async function countNotes(filter) {
   } else {
     return count
   }
+}
+
+
+export async function generateQuizz(filter) {
+  const query = supabase.from("note_details").select(
+    `uri`, { count: 'exact' }
+  );
+  if(filter.source) {
+    query.eq(
+      "source", filter.source
+    );
+  }
+  if(filter.tags && filter.tags.length > 0) {
+    query.contains(
+      "tags", filter.tags
+    );
+  }
+  let notesForQuizz = []
+  const {data, error} = await query;
+  if(error) {
+    console.error(error)
+  } else {
+    const uris = shuffleArray(data)
+    notesForQuizz = uris.slice(0, filter.count).map(d => d.uri)
+  }
+  return notesForQuizz;
+}
+
+const shuffleArray = array => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+  return array
 }

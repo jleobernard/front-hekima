@@ -6,10 +6,10 @@ import {TagsSelector} from "../../components/filter/tags-selector";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import {SourcesSelector} from "../../components/filter/sources-selector";
-import {get} from "../../utils/http";
 import {FormControl, TextField} from "@mui/material";
 import {useNavigate} from "react-router-dom";
-import { countNotes } from "services/note-services";
+import { countNotes, generateQuizz } from "services/note-services";
+import { notifyError } from "store/features/notificationsSlice";
 
 
 const QuizzInit = () => {
@@ -36,18 +36,22 @@ const QuizzInit = () => {
     if(!loading) {
       setLoading(true)
       setError({msg:"", sev: "info"})
-      get("/api/quizz:generate", {
+      generateQuizz({
         tags: (tags || []).map(t => t.uri),
         notTags: (notTags || []).map(t => t.uri),
-        sources: sources ? sources.uri : null,
+        source: sources ? sources.uri : null,
         count: maxCards})
       .then(notes => {
-        localStorage.setItem("quizz", JSON.stringify(notes))
-        history("/quizz/run")
+        if(notes && notes.length > 0) {
+          localStorage.setItem("quizz", JSON.stringify(notes))
+          history("/quizz/run")
+        } else {
+          notifyError("Le quizz est vide")
+        }
       })
       .catch(err => {
         console.error(err)
-        setError({msg: "Erreur lors de la génération du quizz", sev: "error"})
+        notifyError("Erreur lors de la génération du quizz")
       })
       .finally(() => setLoading(false))
     }
