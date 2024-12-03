@@ -68,7 +68,8 @@ export async function searchNotes(filter) {
       queryBuilder
     );
   } else {
-    queryBuilder = getNoteUrisByFilter(filter, queryBuilder);
+    [queryBuilder] = await getNoteUrisByFilter(filter, queryBuilder);
+    queryBuilder = queryBuilder.order('created_at', { ascending: false })
   }
   const { data } = await queryBuilder.range(
     filter.offset,
@@ -247,15 +248,34 @@ function createBaseSelect() {
   `);
 }
 
-function getNoteUrisByFilter(filter, queryBuilder) {
-  if (filter.source) {
-    queryBuilder.eq(
-      "source_id",
-      supabase.from("source").select("id").eq("uri", filter.source)
-    );
+async function getNoteUrisByFilter(filter, queryBuilder) {
+  let {q, tags} = filter
+  const rpcQuery = {}
+  if(tags) {
+    if(Array.isArray(tags)) {
+      rpcQuery.tags = tags
+    } else {
+      rpcQuery.tags = [tags]
+    }
   }
-  queryBuilder.order("created_at", { ascending: false });
-  return queryBuilder;
+  if(rpcQuery.tags) {
+    rpcQuery.tags = rpcQuery.tags.filter(t => !!t).map(t => t.uri || t)
+  }
+  if (filter.source) {
+    rpcQuery.source = filter.source.uri || filter.source
+  }
+  const { error, data } = await supabase.rpc("get_filtered_notes", rpcQuery);
+  if(error) {
+    console.error(error)
+    return [queryBuilder];
+  } else {
+    const noteIds = data.map(n => n.note_id);
+    if(noteIds.length > 0) {
+      return [queryBuilder.in("id", noteIds)];
+    } else {
+      return [queryBuilder];
+    }
+  }
 }
 
 export async function refreshNote(note) {
