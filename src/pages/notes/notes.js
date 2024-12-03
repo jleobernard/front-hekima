@@ -85,9 +85,8 @@ const Notes = () =>  {
       offset: 0,
       ...newFilter
     }
-    const rawFilter = filterToRawQuery(updatedFilter)
-    updateRouteParams(rawFilter)
-    launchSearch(rawFilter, true)
+    updateRouteParams(filterToRawQuery(updatedFilter))
+    launchSearch(richFilterToFilter(updatedFilter), true)
   }
 
   function loadFilterFromURL() {
@@ -138,6 +137,21 @@ const Notes = () =>  {
     const source = filter.source ? filter.source.uri : ''
     const tags = (filter.tags || []).map(t => t.uri).join(',')
     const notTags = (filter.notTags || []).map(t => t.uri).join(',')
+    const q = (filter.q || '').trim()
+    return {
+      count: filter.count,
+      offset:filter.offset,
+      source,
+      tags,
+      notTags,
+      q
+    }
+  }
+
+  function richFilterToFilter(filter) {
+    const source = filter.source ? filter.source.uri : ''
+    const tags = (filter.tags || []).map(t => t.uri)
+    const notTags = (filter.notTags || []).map(t => t.uri)
     const q = (filter.q || '').trim()
     return {
       count: filter.count,
@@ -237,8 +251,8 @@ const Notes = () =>  {
   function navigateToNote(note) {
     const _filter = filter || {}
     const src = _filter.source ? _filter.source.uri : ''
-    const tags = (_filter.tags || []).map(t => t.uri).join(',')
-    const notTags = (_filter.notTags || []).map(t => t.uri).join(',')
+    const tags = (_filter.tags || []).map(t => t.uri || t).join(',')
+    const notTags = (_filter.notTags || []).map(t => t.uri || t).join(',')
     navigate(`/notes/${note.uri}?count=${_filter.count}&offset=${_filter.offset}&src=${src}&tags=${tags}&notTags=${notTags}`)
     return undefined;
   }
