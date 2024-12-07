@@ -1,0 +1,10 @@
+.button-list {
+    display: flex;
+    column-gap: 0.25em;
+}
+
+.button-selector-marker.true {
+    border: 1px solid;
+    border-radius: 50%;
+    width: 46px;
+}

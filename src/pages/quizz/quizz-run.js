@@ -11,18 +11,19 @@ import {Visibility} from "@mui/icons-material";
 import {findNoteByUri, getNumberOfTitles, refreshNote} from "../../services/note-services";
 import {useNavigate} from "react-router-dom";
 import { notifyError, notifyInfo } from "store/features/notificationsSlice";
+import LanguageTypeSelector from "../../components/language-type-selector/language-type-selector";
 
 const QuizzRun = () => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [notes, setNotes] = useState([])
+  const [originalNote, setOriginalNote] = useState(null)
   const [note, setNote] = useState(null)
   const [position, setPosition] = useState(-1)
   const [rating, setRating] = useState(0)
-  const [questionType, setQuestionType] = useState("")
   const [noteState, setNoteState] = useState("")
   const history = useNavigate()
-
+  const [types, setTypes] = useState(['local', 'foreign'])
   useEffect(() => {
     const rawQuizzQuery = localStorage.getItem("quizz")
     if(rawQuizzQuery) {
@@ -30,6 +31,10 @@ const QuizzRun = () => {
       if(notes && notes.length > 0) {
         setNotes(notes)
         setPosition(0)
+        const languageTypes = localStorage.getItem("languageTypes");
+        if(languageTypes) {
+          setTypes(JSON.parse(languageTypes))
+        }
       } else {
         history('/quizz/init')
       }
@@ -43,20 +48,20 @@ const QuizzRun = () => {
       setLoading(true)
       findNoteByUri(notes[position])
       .then(note => {
-        setNote(note)
+        setOriginalNote(note)
         setRating(0)
-        const nbTitles = getNumberOfTitles(note)
-        if(nbTitles > 0) {
-          setQuestionType(Math.random() >= 0.5 ? "ask-title" : "ask-value")
-          setNoteState("question")
-        } else {
-          setQuestionType("")
-        }
+        setNoteState("question")
       })
       .catch(() => notifyError("Erreur lors du chargement de la note " + position))
       .finally(() => setLoading(false))
     }
   }, [notes, position])
+
+  useEffect(() => {
+    if(originalNote && types) {
+      setNote(applyQuizzMask(originalNote))
+    }
+  }, [originalNote, types])
 
   function rate(rating) {
     //if(!saving) {
@@ -78,29 +83,84 @@ const QuizzRun = () => {
     return (position + 1) * 100 / (((notes|| []).length) || 1)
   }
 
+  function applyQuizzMask(note) {
+    const workingNote = deepCopy(note)
+    if(types.indexOf('foreign') < 0) {
+      workingNote.valueJson = replaceKoreanCharacters(workingNote.valueJson)
+    }
+    if(types.indexOf('local') < 0) {
+      workingNote.valueJson = replaceNonKoreanCharacters(workingNote.valueJson)
+    }
+    return workingNote
+  }
+  function replaceKoreanCharacters(json) {
+    const koreanRegex = /[\uAC00-\uD7A3]/g; // Matches all Hangul syllables (Korean characters)
+  
+    function traverse(node) {
+      if (node.type === 'text' && node.text) {
+        // Replace Korean characters in the text content
+        node.text = node.text.replace(koreanRegex, '*');
+      }
+  
+      // Recursively traverse child nodes if any
+      if (node.content) {
+        node.content.forEach(traverse);
+      }
+    }
+
+    traverse(json);
+    return json;
+  }
+  
+  function replaceNonKoreanCharacters(json) {
+    const nonKoreanRegex = /[^\uAC00-\uD7A3]/g; // Matches all characters except Hangul syllables (Korean characters)
+  
+    function traverse(node) {
+      if (node.type === 'text' && node.text) {
+        // Replace non-Korean characters in the text content
+        node.text = node.text.replace(nonKoreanRegex, '*');
+      }
+  
+      // Recursively traverse child nodes if any
+      if (node.content) {
+        node.content.forEach(traverse);
+      }
+    }
+  
+    traverse(json);
+    return json;
+  }
+
   async function refreshNoteContent() {
     setLoading(true)
     await refreshNote(note)
     setLoading(false)
   }
 
+  function deepCopy(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
   return (
     <div className="app quizz">
       <Header title="Quizz" goBack={true} withSearch={false}/>
       <LinearProgress variant="determinate" value={getProgress()} />
-      <div className={"quizz-note " + questionType + " " + noteState}>
-        {note && note.uri ? <NoteDetail note={note} /> : <></>}
+      <div className={"quizz-note " + noteState}>
+        {note && note.uri ? <NoteDetail note={noteState === 'question' ? note : originalNote} /> : <></>}
       </div>
       <div className="quizz-rating">
         {noteState === "question" ?
-          <IconButton
-            edge="end"
-            color="inherit"
-            aria-label="reveal note"
-            onClick={() => setNoteState("")}
-            size="large">
-            <Visibility />
-          </IconButton>
+          <div className='button-list'>
+            <LanguageTypeSelector type={types} onTypeChanged={setTypes}/>
+            <IconButton
+              edge="end"
+              color="inherit"
+              aria-label="reveal note"
+              onClick={() => setNoteState("")}
+              size="large">
+              <Visibility />
+            </IconButton>
+            </div>
           :
         <>
           <Rating
@@ -140,3 +200,4 @@ const QuizzRun = () => {
   );
 }
 export default QuizzRun;
+
