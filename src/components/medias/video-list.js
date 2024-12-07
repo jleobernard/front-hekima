@@ -295,6 +295,7 @@ export default function VideoList({title, videos, editable, onChange, className,
             <div className="video-groups">
               {groups.map(group => <Chip className={"video-group " + (group.selected ? "selected" : "")}
                                          index={`group-${group.name}`}
+                                         key={group.name}
                                          label={`${group.name} (${group.count})`}
                                          onClick={() => toggleGroup(group)}/>)}
             </div>

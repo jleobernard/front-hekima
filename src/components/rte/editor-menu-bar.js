@@ -1,5 +1,6 @@
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CodeIcon from '@mui/icons-material/Code';
+import PaletteIcon from '@mui/icons-material/Palette';
 import DeveloperModeIcon from '@mui/icons-material/DeveloperMode';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
@@ -16,9 +17,19 @@ import React, { useRef } from 'react';
 import './editor-menu-bar.scss';
 import { notifyError, notifyInfo } from 'store/features/notificationsSlice';
 
+const colourList = [
+  {label: 'Verbe', code: 'red'},
+  {label: 'Voc', code: 'blue'},
+  {label: 'Adv', code: 'cyan', light: true},
+  {label: 'Gram', code: 'green'},
+  {label: 'Expr', code: 'purple'},
+  {label: 'Prop', code: 'orange'},
+]
+
 const EditorMenuBar = ({ editor }) => {
   const [secondaryBar, setSecondaryBar] = React.useState('')
   const refInputFile = useRef(null)
+  
   
   function pictureChanged() {
     const file = document.getElementById('picture');
@@ -203,6 +214,9 @@ const EditorMenuBar = ({ editor }) => {
         onInput={event => editor.chain().focus().setColor(event.target.value).run()}
         value={editor.getAttributes('textStyle').color}
       />
+      <button type="button" onClick={() => toggleSecondaryBar('colour-list')}>
+        <PaletteIcon fontSize='small' />
+      </button>
     </>)
   }
 
@@ -210,45 +224,66 @@ const EditorMenuBar = ({ editor }) => {
     return (
       <>
       {secondaryBar === 'h' ? <> 
-        <button type="button"
+        <button type="button" key='h1'
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           className={editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}
         >
           H1
         </button>
-        <button type="button"
+        <button type="button" key='h2'
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           className={editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}
         >
           H2
         </button>
-        <button type="button"
+        <button type="button" key='h3'
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           className={editor.isActive('heading', { level: 3 }) ? 'is-active' : ''}
         >
           H3
         </button>
-        <button type="button"
+        <button type="button" key='h4'
           onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
           className={editor.isActive('heading', { level: 4 }) ? 'is-active' : ''}
         >
           H4
         </button>
-        <button type="button"
+        <button type="button" key='h5'
           onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()}
           className={editor.isActive('heading', { level: 5 }) ? 'is-active' : ''}
         >
           H5
         </button>
-        <button type="button"
+        <button type="button" key='h6'
           onClick={() => editor.chain().focus().toggleHeading({ level: 6 }).run()}
           className={editor.isActive('heading', { level: 6 }) ? 'is-active' : ''}
         >
           H6
         </button>
       </> : <></>}
+      {renderColourList()}
       </>
     )
+  }
+
+  function renderColourList() {
+    if(secondaryBar !== 'colour-list') {
+      return <></>
+    }
+    return (<div className='colour-items'>{colourList.map(item => renderColourItem(item))}</div>)
+  }
+  function renderColourItem(item) {
+    const eltWidth = `calc(100% / ${colourList.length})`
+    let classNames = 'colour-item'
+    if(item.light) {
+      classNames += ' light'
+    }
+    return <button key={item.label} className={classNames}
+                    style={{backgroundColor: item.code, width: eltWidth}}
+                    onClick={e => {
+                      e.preventDefault();
+                      editor.chain().focus().setColor(item.code).run()
+                    }}>{item.label}</button>
   }
 
   function renderTable() {

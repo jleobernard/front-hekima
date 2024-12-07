@@ -95,3 +95,18 @@
     font-weight: bold;
   }
 }
+
+
+.colour-item {
+  text-align: center;
+  color: white;
+  padding: 0.25em;
+  font-weight: bold;
+  border: none;
+  &.light {
+    color: black;
+  }
+}
+.colour-items {
+  display: flex;
+}
