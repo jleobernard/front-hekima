@@ -466,17 +466,22 @@ export async function refreshAllNotes() {
 
 
 export async function countNotes(filter) {
-  const query = supabase.from("note_details").select(
+  let query = supabase.from("note_details").select(
     `*`, { count: 'exact', head: true }
   );
   if(filter.source) {
-    query.eq(
+    query = query.eq(
       "source", filter.source
     );
   }
   if(filter.tags && filter.tags.length > 0) {
-    query.contains(
+    query = query.contains(
       "tags", filter.tags
+    );
+  }
+  if(filter.notTags && filter.notTags.length > 0) {
+    query = query.not(
+      "tags", "cs", `{"${filter.notTags.join('","')}"}`
     );
   }
   const {count, error} = await query;
@@ -490,17 +495,22 @@ export async function countNotes(filter) {
 
 
 export async function generateQuizz(filter) {
-  const query = supabase.from("note_details").select(
+  let query = supabase.from("note_details").select(
     `uri`, { count: 'exact' }
   );
   if(filter.source) {
-    query.eq(
+    query = query.eq(
       "source", filter.source
     );
   }
   if(filter.tags && filter.tags.length > 0) {
-    query.contains(
+    query = query.contains(
       "tags", filter.tags
+    );
+  }
+  if(filter.notTags && filter.notTags.length > 0) {
+    query = query.not(
+      "tags", "cs", `{"${filter.notTags.join('","')}"}`
     );
   }
   let notesForQuizz = []
