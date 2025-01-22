@@ -13,6 +13,8 @@ import StarterKit from "@tiptap/starter-kit";
 import { generateJSON } from "@tiptap/react";
 import { generateText } from "@tiptap/core";
 import { clipVideo } from "./video-service";
+import Underline from '@tiptap/extension-underline';
+
 
 const re = RegExp("(^|[^#])#[^#]+?#[^#]", "g");
 const meaningLessWord = new Set(["exemple", "example", "examples", "exemples", "ex", "eg", "ie"]);
@@ -38,6 +40,7 @@ export const EXTENSIONS = [
   Image.configure({
     inline: true,
   }),
+  Underline
 ];
 export function getNumberOfTitles(note) {
   if(note.valueJson) {

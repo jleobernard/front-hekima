@@ -10,9 +10,11 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import HorizontalRuleIcon from '@mui/icons-material/HorizontalRule';
 import RedoIcon from '@mui/icons-material/Redo';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
+import FormatUnderlined from '@mui/icons-material/FormatUnderlined';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import TitleIcon from '@mui/icons-material/Title';
 import UndoIcon from '@mui/icons-material/Undo';
+
 import React, { useRef } from 'react';
 import './editor-menu-bar.scss';
 import { notifyError, notifyInfo } from 'store/features/notificationsSlice';
@@ -103,7 +105,7 @@ const EditorMenuBar = ({ editor }) => {
 
   function renderMainBar() {
     return (<>
-    <button type="button"
+    <button type="button" key="bold"
         onClick={() => {editor.chain().focus().toggleBold().run(); setSecondaryBar('') }}
         disabled={
           !editor.can()
@@ -116,7 +118,12 @@ const EditorMenuBar = ({ editor }) => {
       >
         <FormatBoldIcon fontSize='small'/>
       </button>
-      <button type="button"
+      <button type="button" key="palette" onClick={() => toggleSecondaryBar('colour-list')}>
+        <PaletteIcon fontSize='small' />
+      </button>
+      <button type="button" key="photo" onClick={() => refInputFile.current.click()}><AddPhotoAlternateIcon  fontSize='small'/></button>
+      <button type="button" key="secondBar" onClick={() => toggleSecondaryBar('h')}><TitleIcon fontSize='small' /></button>
+      <button type="button" key="italic"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         disabled={
           !editor.can()
@@ -129,7 +136,20 @@ const EditorMenuBar = ({ editor }) => {
       >
         <FormatItalicIcon fontSize='small' />
       </button>
-      <button type="button"
+      <button type="button" key="underline"
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        disabled={
+          !editor.can()
+            .chain()
+            .focus()
+            .toggleUnderline()
+            .run()
+        }
+        className={editor.isActive('underline') ? 'is-active' : ''}
+      >
+        <FormatUnderlined fontSize='small' />
+      </button>
+      <button type="button" key="strike"
         onClick={() => editor.chain().focus().toggleStrike().run()}
         disabled={
           !editor.can()
@@ -142,7 +162,7 @@ const EditorMenuBar = ({ editor }) => {
       >
         <StrikethroughSIcon fontSize='small' />
       </button>
-      <button type="button"
+      <button type="button" key="code"
         onClick={() => editor.chain().focus().toggleCode().run()}
         disabled={
           !editor.can()
@@ -155,36 +175,35 @@ const EditorMenuBar = ({ editor }) => {
       >
         <CodeIcon fontSize='small' />
       </button>
-      <button type="button"
+      <button type="button" key="codeBlock"
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         className={editor.isActive('codeBlock') ? 'is-active' : ''}
       >
         <DeveloperModeIcon fontSize='small' />
       </button>
-      <button type="button" onClick={() => toggleSecondaryBar('h')}><TitleIcon fontSize='small' /></button>
-      <button type="button" onClick={() => toggleSecondaryBar('table')}><TableChartIcon fontSize='small' /></button>
-      <button type="button"
+      <button type="button" key="table" onClick={() => toggleSecondaryBar('table')}><TableChartIcon fontSize='small' /></button>
+      <button type="button" key="bulletList"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={editor.isActive('bulletList') ? 'is-active' : ''}
       >
         <FormatListBulletedIcon fontSize='small' />
       </button>
-      <button type="button"
+      <button type="button" key="oList"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={editor.isActive('orderedList') ? 'is-active' : ''}
       >
         <FormatListNumberedIcon fontSize='small' />
       </button>
-      <button type="button"
+      <button type="button" key="blockQuote"
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         className={editor.isActive('blockquote') ? 'is-active' : ''}
       >
         <FormatQuoteIcon fontSize='small' />
       </button>
-      <button type="button" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+      <button type="button" key="hRule" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
         <HorizontalRuleIcon  fontSize='small' />
       </button>
-      <button type="button"
+      <button type="button" key="undo"
         onClick={() => editor.chain().focus().undo().run()}
         disabled={
           !editor.can()
@@ -196,7 +215,7 @@ const EditorMenuBar = ({ editor }) => {
       >
         <UndoIcon  fontSize='small' />
       </button>
-      <button type="button"
+      <button type="button" key="redo"
         onClick={() => editor.chain().focus().redo().run()}
         disabled={
           !editor.can()
@@ -208,15 +227,11 @@ const EditorMenuBar = ({ editor }) => {
       >
       <RedoIcon  fontSize='small' />
       </button>
-      <button type="button" onClick={() => refInputFile.current.click()}><AddPhotoAlternateIcon  fontSize='small'/></button>
-      <input className='color-button'
+      <input className='color-button' key="colorInput"
         type="color"
         onInput={event => editor.chain().focus().setColor(event.target.value).run()}
         value={editor.getAttributes('textStyle').color}
       />
-      <button type="button" onClick={() => toggleSecondaryBar('colour-list')}>
-        <PaletteIcon fontSize='small' />
-      </button>
     </>)
   }
 
