@@ -174,7 +174,7 @@ const QuizzRun = () => {
           />
           <IconButton
             edge="end"
-            className=""
+            className="refresh-button"
             color="inherit"
             aria-label="refresh note"
             onClick={() => refreshNoteContent()}

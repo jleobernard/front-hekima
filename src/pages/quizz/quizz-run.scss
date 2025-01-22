@@ -19,6 +19,11 @@
       right: calc(50% - 110px);
       top: -8px;
     }
+    .refresh-button {
+      position: absolute;
+      bottom: -10px;
+      left: 0px;
+    }
   }
   .quizz-note {
     flex-grow: 0;
