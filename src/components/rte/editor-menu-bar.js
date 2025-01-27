@@ -73,7 +73,7 @@ const EditorMenuBar = ({ editor }) => {
                 } else {
                   notifyError('Erreur lors de l\'import dans GCS')
                   const gcsError = await response.text()
-                  notifyError(`Erreur lors de l\'import dans GCS : ${gcsError}`)
+                  notifyError(`Erreur lors de l'import dans GCS : ${gcsError}`)
                 }
               }).catch(err => notifyError(`Impossible de lire le fichier ${err}`))
             });
@@ -288,13 +288,12 @@ const EditorMenuBar = ({ editor }) => {
     return (<div className='colour-items'>{colourList.map(item => renderColourItem(item))}</div>)
   }
   function renderColourItem(item) {
-    const eltWidth = `calc(100% / ${colourList.length})`
     let classNames = 'colour-item'
     if(item.light) {
       classNames += ' light'
     }
     return <button key={item.label} className={classNames}
-                    style={{backgroundColor: item.code, width: eltWidth}}
+                    style={{backgroundColor: item.code}}
                     onClick={e => {
                       e.preventDefault();
                       editor.chain().focus().setColor(item.code).run()

@@ -90,9 +90,23 @@
   .editor-button-bar > button {
     width: 50px;
     height: 50px;
+    @media screen and (max-width: 768px) {
+      padding: 1em;
+      > svg {
+        width: 30px;
+        height: 30px;
+      }
+    }
   }
   &.secondary-editor-button-bar .editor-button-bar > button {
     font-weight: bold;
+    @media screen and (max-width: 768px) {
+      padding: 1em;
+      > svg {
+        width: 30px;
+        height: 30px;
+      }
+    }
   }
 }
 
@@ -100,9 +114,10 @@
 .colour-item {
   text-align: center;
   color: white;
-  padding: 0.25em;
+  padding: 1em;
   font-weight: bold;
   border: none;
+  flex-grow: 1;
   &.light {
     color: black;
   }
