@@ -513,6 +513,10 @@ export async function generateQuizz(filter) {
       "tags", "cs", `{"${filter.notTags.join('","')}"}`
     );
   }
+  query = query.order('interval', {ascending: true})
+               .order('repetitions', {ascending: true})
+               .order('ease', {ascending: true})
+  .limit(filter.count)
   let notesForQuizz = []
   const {data, error} = await query;
   if(error) {
@@ -523,6 +527,41 @@ export async function generateQuizz(filter) {
   }
   return notesForQuizz;
 }
+
+export async function rateNote(noteUri, rating) {
+  let {data, error} = await supabase.from("note").select(
+    `repetitions, ease, interval`, { count: 'exact' }
+  ).eq('uri', noteUri).single();
+  if(error) {
+    throw error
+  }
+  const {ease: previousEase, repetitions: previousRepetitions, interval: previousInterval} = data;
+  let ease, repetitions, interval;
+  if(rating >= 3) {
+    switch(repetitions) {
+      case 0:
+        interval = 1
+        break;
+      case 1:
+        interval = 6
+        break;
+      default:
+        interval = previousInterval * previousEase
+    }
+    interval = Math.ceil(interval)
+    ease = previousEase + (0.1 - (5 - rating) * (0.05 + (5 - rating) * 0.02))
+    repetitions = previousRepetitions + 1;
+  } else if(rating < 3) {
+    repetitions = 0
+    interval = 1
+    ease = previousEase
+  }
+  if(ease < 1.3) {
+    ease = 1.3
+  }
+  await supabase.from("note").update({ease, repetitions, interval}).eq('uri', noteUri)
+}
+
 
 const shuffleArray = array => {
   for (let i = array.length - 1; i > 0; i--) {

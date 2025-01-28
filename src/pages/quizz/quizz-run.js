@@ -8,7 +8,7 @@ import './quizz-run.scss'
 import {MAX_GRADE_QUIZZ} from "../../utils/const";
 import {ArrowForward, Refresh} from "@mui/icons-material";
 import {Visibility} from "@mui/icons-material";
-import {findNoteByUri, getNumberOfTitles, refreshNote} from "../../services/note-services";
+import {findNoteByUri, rateNote, refreshNote} from "../../services/note-services";
 import {useNavigate} from "react-router-dom";
 import { notifyError, notifyInfo } from "store/features/notificationsSlice";
 import LanguageTypeSelector from "../../components/language-type-selector/language-type-selector";
@@ -63,20 +63,23 @@ const QuizzRun = () => {
     }
   }, [originalNote, types])
 
-  function rate(rating) {
-    //if(!saving) {
-      //setSaving(true)
-      //post("/api/quizz:answer", {noteUri: note.uri, score: rating})
-      //.then(() => {
+  async function rate(rating) {
+    if(!saving) {
+      setSaving(true)
+      try {
+        await rateNote(notes[position], rating)
         if(position >= notes.length - 1) {
           notifyInfo("Quizz terminé")
           setTimeout(() => history('/quizz/init'), 1000)
         } else {
           setPosition(position + 1)
         }
-     // })
-     // .finally(() => setSaving(false))
-    //}
+      } catch(err) {
+        notifyError(err)
+      } finally {
+        setSaving(false)
+      }
+    }
   }
 
   function getProgress() {
