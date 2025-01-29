@@ -1,4 +1,4 @@
-import { supabaseNow } from "utils/date";
+import { dateToSupabaseFormat, supabaseNow } from "utils/date";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "./supabase-client";
 import { Color } from "@tiptap/extension-color";
@@ -513,7 +513,7 @@ export async function generateQuizz(filter) {
       "tags", "cs", `{"${filter.notTags.join('","')}"}`
     );
   }
-  query = query.order('interval', {ascending: true})
+  query = query.order('next_presentation_at', {ascending: true})
                .order('repetitions', {ascending: true})
                .order('ease', {ascending: true})
   .limit(filter.count)
@@ -559,7 +559,9 @@ export async function rateNote(noteUri, rating) {
   if(ease < 1.3) {
     ease = 1.3
   }
-  await supabase.from("note").update({ease, repetitions, interval}).eq('uri', noteUri)
+  const now = new Date()
+  const nextPresentationAt =  dateToSupabaseFormat(new Date(now.getTime() + interval * 24 * 60 * 60 * 1000));
+  await supabase.from("note").update({ease, repetitions, interval, 'next_presentation_at': nextPresentationAt}).eq('uri', noteUri)
 }
 
 

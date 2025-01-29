@@ -75,7 +75,7 @@ const QuizzRun = () => {
           setPosition(position + 1)
         }
       } catch(err) {
-        notifyError(err)
+        notifyError("Erreur lors de l'enregistrement de la note : " + err)
       } finally {
         setSaving(false)
       }
