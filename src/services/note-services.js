@@ -559,6 +559,9 @@ export async function rateNote(noteUri, rating) {
   if(ease < 1.3) {
     ease = 1.3
   }
+  if(interval < 1) {
+    interval = 1
+  }
   const now = new Date()
   const nextPresentationAt =  dateToSupabaseFormat(new Date(now.getTime() + interval * 24 * 60 * 60 * 1000));
   await supabase.from("note").update({ease, repetitions, interval, 'next_presentation_at': nextPresentationAt}).eq('uri', noteUri)
