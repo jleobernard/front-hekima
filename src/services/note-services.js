@@ -267,6 +267,9 @@ async function getNoteUrisByFilter(filter, queryBuilder) {
   if (filter.source) {
     rpcQuery.source = filter.source.uri || filter.source
   }
+  if (Object.keys(rpcQuery).length == 0) {
+    return [queryBuilder];
+  }
   const { error, data } = await supabase.rpc("get_filtered_notes", rpcQuery);
   if(error) {
     console.error(error)
