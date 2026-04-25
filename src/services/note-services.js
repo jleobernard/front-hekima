@@ -104,7 +104,7 @@ async function getNoteUrisByNLQuery(filter, queryBuilder) {
         "content-type": "application/json",
       },
       method: "POST",
-      body: JSON.stringify({ sentences: [q] }),
+      body: JSON.stringify({ sentences: [q], inputType: 'search_query' }),
     }
   );
   if (!embeddingResponse.ok) {
