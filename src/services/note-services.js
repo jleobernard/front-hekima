@@ -115,7 +115,7 @@ async function getNoteUrisByNLQuery(filter, queryBuilder) {
   const rpcQuery = 
   {
     embedding: embeddings[0],
-    match_threshold: 0.75,
+    match_threshold: 0.3,
     match_count: 10
   }
   if(tags && tags.length > 0) {
